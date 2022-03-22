@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="150dp"
+    android:layout_width="match_parent">
+
+    <TextView
+        android:id="@+id/graph_settings_title"
+        android:text="@string/graph_settings_title"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <GridLayout
+        android:id="@+id/scale_control_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:columnCount="2"
+        android:rowCount="3">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:text="Y: abs:"/>
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:textAlignment="center"
+            android:text="@string/scale_title"/>
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="@string/button_plus"
+            android:id="@+id/button_plus"
+            android:layout_marginRight="8dp"/>
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/axis_y_abs_switch"
+            android:layout_width="wrap_content"
+            android:minWidth="50dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"/>
+        <EditText
+            android:id="@+id/scale_factor"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:autofillHints="creditCardExpirationDate"
+            android:inputType="number|numberDecimal"
+            android:text="@string/scale_factor_default"
+            app:singleLine="true"
+            app:title="@string/scale_title" />
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="@string/button_minus"
+            android:id="@+id/button_minus"/>
+
+    </GridLayout>
+
+    <LinearLayout
+        android:id="@+id/graph_legend_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/line2D_expand_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/arrow_up_float"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/line2D_single"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    </LinearLayout>
+
+    <GridLayout
+        android:id="@+id/axis_x_limits_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:columnCount="2"
+        android:rowCount="2"
+        app:layout_constraintStart_toEndOf="@id/graph_legend_layout"
+        app:layout_constraintEnd_toStartOf="@id/scale_control_layout"
+        app:layout_constraintTop_toBottomOf="@id/graph_settings_title"
+        app:layout_constraintBottom_toTopOf="@id/axis_y_limits_layout">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:text="X min:"/>
+        <EditText
+            android:id="@+id/axis_x_min"
+            android:layout_width="wrap_content"
+            android:minWidth="50dp"
+            android:maxWidth="70dp"
+            android:layout_height="40dp"
+            app:singleLine="true"
+            android:inputType="number|numberDecimal"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:text="X max:"/>
+        <EditText
+            android:id="@+id/axis_x_max"
+            android:layout_width="wrap_content"
+            android:minWidth="50dp"
+            android:maxWidth="70dp"
+            android:layout_height="40dp"
+            app:singleLine="true"
+            android:inputType="number|numberDecimal"/>
+    </GridLayout>
+
+    <GridLayout
+        android:id="@+id/axis_y_limits_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:columnCount="2"
+        android:rowCount="2"
+        app:layout_constraintStart_toEndOf="@id/graph_legend_layout"
+        app:layout_constraintEnd_toStartOf="@id/scale_control_layout"
+        app:layout_constraintTop_toBottomOf="@id/axis_x_limits_layout"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:text="Y max:"/>
+        <EditText
+            android:id="@+id/axis_y_max"
+            android:layout_width="wrap_content"
+            android:minWidth="50dp"
+            android:maxWidth="70dp"
+            android:layout_height="40dp"
+            app:singleLine="true"
+            android:inputType="number|numberDecimal"/>
+    </GridLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

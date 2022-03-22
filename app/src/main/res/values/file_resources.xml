@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="file_writer_header">Сохранение данных в файл</string>
+    <string name="file_writer_filename_title">Постфикс файла для сохранения</string>
+    <string name="need_write_file_title">Сохранять данные в файл</string>
+    <string name="file_reader_header">Чтение данных из файла</string>
+    <string name="file_reader_filename_title">Список файлов для чтения</string>
+    <string name="need_read_file_title">Читать данные из файла</string>
+    <string name="read_file_header_title">Заголовок файла</string>
+</resources>

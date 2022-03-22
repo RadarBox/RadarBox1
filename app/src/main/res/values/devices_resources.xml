@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="device_prefix_list">
+        <item>rdr4_20</item>
+        <item>rdr4_22</item>
+    </string-array>
+    <string name="device_list_title">Список устройств</string>
+    <string name="device_settings_title">Настройки устройства</string>
+    <string name="device_settings_summary">Настройки частотных и временных параметров,
+    настройки усиления приёмников и пр.</string>
+    <string name="current_device_title">Подключенное устройство</string>
+    <string name="current_device_no_device">Нет устройства</string>
+    <string name="current_device_channel">Устройство подключено по каналу</string>
+    <!-- Меню коммуникации с устройством -->
+    <string name="data_channel_current_title">Текущий канал данных</string>
+    <string name="data_channel_current_disconnect">Нажмите для программного отключения от устройства по данному каналу</string>
+    <string name="data_channel_list_title">Список доступных каналов</string>
+    <string name="data_channel_selected_connect">Нажмите, чтобы переключиться на выбранный канал</string>
+    <string name="data_channel_selected_state">Состояние выбранного канала: </string>
+    <string name="data_channel_selected_settings">Настройки выбранного канала</string>
+    <string name="data_channel_selected_priority_title">Приоритет выбранного канала при автоматическом переключении</string>
+    <string name="data_channel_selected_need_disconnect_title">Нужно выключать выбранный канал при переключении с него?</string>
+    <string name="data_channel_no_connection">Нет связи с устройством ни по одному каналу</string>
+    <!-- Конфигурация и статус -->
+    <string name="set_configuration_title">Передать конфигурацию устройству</string>
+    <string name="set_configuration_summary">Отправить конфигурационные команды устройству</string>
+    <string name="get_status_title">Получить состояние устройства</string>
+    <string name="get_status_summary">Передать команды, заправшивающие состояние устройства</string>
+</resources>

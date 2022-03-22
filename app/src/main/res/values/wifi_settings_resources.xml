@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wifi_settings_title">Настройки Wi-Fi</string>
+    <string name="wifi_settings_summary">Имя, пароль точки доступа, настройки таймаутов и т.д.</string>
+    <string name="wifi_autoconnect_title">Подключаться автоматически</string>
+    <string name="wifi_ssid_title">SSID (Имя сети):</string>
+    <string name="wifi_password_title">Пароль:</string>
+    <string name="wifi_bssid_title">BSSID (AP MAC address):</string>
+    <string name="wifi_is_hidden_title">Скрытая сеть:</string>
+    <string name="wifi_connect_title_ON">Подключить Wi-Fi</string>
+    <string name="wifi_connect_status_CONNECTED">Подключен</string>
+    <string name="wifi_connect_status_NOT_CONNECTED">Отключен</string>
+    <string name="wifi_connect_title_OFF">Отключить Wi-Fi</string>
+    <string name="tcp_port_title">Порт TCP</string>
+    <string name="tcp_address_title">Адрес TCP</string>
+    <string name="tcp_connection_title_START">Запустить TCP сервер</string>
+    <string name="tcp_connection_status_OFF">Сервер выключен.</string>
+    <string name="tcp_connection_status_WAITING">Сервер запущен. Ожидание подключения.</string>
+    <string name="tcp_connection_status_CONNECTED">Сервер запущен. Клиент подключен.</string>
+    <string name="tcp_connection_title_STOP">Выключить TCP сервер</string>
+    <string name="wifi_dialog_title">Настройки Wi-Fi</string>
+    <string name="wifi_dialog_message">Невозможно работать по Wi-Fi. Wi-Fi в системе отключён.
+    Открыть системное меню Wi-Fi для включения?</string>
+</resources>

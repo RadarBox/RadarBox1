@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        app:key="wifi_autoconnect"
+        app:title="@string/wifi_autoconnect_title"/>
+
+    <EditTextPreference
+        app:key="wifi_ssid"
+        app:title="@string/wifi_ssid_title"
+        app:useSimpleSummaryProvider="true" />
+
+    <SwitchPreferenceCompat
+        app:key="wifi_is_hidden"
+        app:title="@string/wifi_is_hidden_title" />
+
+    <EditTextPreference
+        app:key="wifi_bssid"
+        app:title="@string/wifi_bssid_title"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        app:key="wifi_password"
+        app:title="@string/wifi_password_title"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        app:defaultValue=""
+        app:key="wifi_scan_result"
+        app:title="Результаты сканирования"
+        app:useSimpleSummaryProvider="true"/>
+
+    <Preference
+        app:title="@string/wifi_connect_title_ON"
+        app:key="wifi_connect"/>
+
+    <Preference
+        app:title="@string/wifi_connect_title_OFF"
+        app:key="wifi_disconnect"/>
+
+    <EditTextPreference
+        app:key="tcp_port"
+        app:title="@string/tcp_port_title"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        app:key="tcp_address"
+        app:title="@string/tcp_address_title"
+        app:useSimpleSummaryProvider="true" />
+
+    <Preference
+        app:title="@string/tcp_connection_title_START"
+        app:key="tcp_start_stop"/>
+
+    <Preference
+        app:title="Подключиться к серверу TCP"
+        app:key="tcp_connect"/>
+
+    <Preference
+        app:title="Открыть системное меню Wi-Fi"
+        app:key="wifi_menu_open"/>
+
+    <Preference
+        app:title="Включить сервер TCP"
+        app:key="tcp_open"/>
+
+    <Preference
+        app:title="Выключить сервер TCP"
+        app:key="tcp_close"/>
+
+    <Preference
+        app:title="Запустить ACCEPT TCP"
+        app:key="tcp_start_accept"/>
+
+    <Preference
+        app:title="Закрыть соединение TCP"
+        app:key="tcp_close_connection" />
+
+</PreferenceScreen>

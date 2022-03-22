@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <usb-device vendor-id="17920" product-id="63312"/> <!-- rdr 4.20 одноканальный застенный-->
+    <usb-device vendor-id="17920" product-id="63316"/> <!-- rdr 4.21 одноканальный сканер-->
+    <usb-device vendor-id="17920" product-id="63320"/> <!-- rdr 4.22 многоканальный застенный-->
+</resources>

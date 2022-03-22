@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">RadarBox1</string>
+    <string name="str_start">СТАРТ</string>
+    <string name="str_stop">СТОП</string>
+    <string name="str_exit">ВЫХОД</string>
+    <string name="str_yes">Да</string>
+    <string name="str_no">Нет</string>
+</resources>

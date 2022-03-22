@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GraphView">
+        <attr name="showLabelsX" format="boolean"/>
+        <attr name="showLabelsY" format="boolean"/>
+        <attr name="showTitleX" format="boolean"/>
+        <attr name="showTitleY" format="boolean"/>
+        <attr name="titleX" format="string"/>
+        <attr name="titleY" format="string"/>
+    </declare-styleable>
+    <!-- Общие параметры графики -->
+    <string name="scale_factor_default">2</string>
+    <!-- Graph Settings -->
+    <string name="frequency_title">Частота [МГц]</string>
+    <string name="level_title">Уровень</string>
+    <string name="graph_settings_title">Настройка графиков</string>
+    <string name="scale_title">Коэф. масшт. по Y</string>
+    <string name="legend_title">Показывать легенду</string>
+    <bool name="need_show_legend">false</bool>
+    <string name="button_plus">+</string>
+    <string name="button_minus">—</string>
+    <string name="scale_and_legend_title">Настройки масштаба, легенды</string>
+</resources>

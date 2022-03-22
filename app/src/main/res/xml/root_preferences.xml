@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Preference
+        app:key="current_device"
+        app:title="@string/current_device_title"
+        app:summary="@string/current_device_no_device"/>
+    <ListPreference
+        app:title="@string/device_list_title"
+        app:key="last_connected_device"
+        app:useSimpleSummaryProvider="true"/>
+    <Preference
+        app:fragment="org.rdr.radarbox.Device.DeviceFragment"
+        app:key="device_settings"
+        app:summary="@string/device_settings_summary"
+        app:title="@string/device_settings_title"/>
+    <PreferenceCategory app:title="@string/file_reader_header">
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="need_read"
+            app:title="@string/need_read_file_title" />
+        <ListPreference
+            app:dependency="need_read"
+            app:defaultValue="false"
+            app:key="file_reader_filename"
+            app:title="@string/file_reader_filename_title"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            app:dependency="need_read"
+            app:key="read_file_header"
+            app:title="@string/read_file_header_title"/>
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/file_writer_header">
+        <EditTextPreference
+            app:dependency="need_save"
+            app:key="file_writer_filename"
+            app:title="@string/file_writer_filename_title"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="need_save"
+            app:title="@string/need_write_file_title" />
+    </PreferenceCategory>
+
+
+</PreferenceScreen>
