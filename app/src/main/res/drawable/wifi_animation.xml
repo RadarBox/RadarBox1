@@ -6,4 +6,5 @@
     <item android:drawable="@drawable/baseline_network_wifi_2_bar_24" android:duration="200" />
     <item android:drawable="@drawable/baseline_network_wifi_3_bar_24" android:duration="200" />
     <item android:drawable="@drawable/baseline_network_wifi_4_bar_24" android:duration="200" />
+    <item android:drawable="@drawable/baseline_network_wifi_full_24" android:duration="200" />
 </animation-list>

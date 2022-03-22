@@ -3,18 +3,24 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_1_bar_24.xml" value="0.4036458333333333" />
-        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_2_bar_24.xml" value="0.4036458333333333" />
-        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_3_bar_24.xml" value="0.4036458333333333" />
-        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_4_bar_24.xml" value="0.4036458333333333" />
-        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_null_24.xml" value="0.4036458333333333" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_1_bar_24.xml" value="0.22" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_2_bar_24.xml" value="0.22" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_3_bar_24.xml" value="0.22" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_4_bar_24.xml" value="0.22" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_bad_24.xml" value="0.2095" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_null_24.xml" value="0.22" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_network_wifi_off_24.xml" value="0.4036458333333333" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_pause_24.xml" value="0.2095" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_play_arrow_24.xml" value="0.2095" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_play_disabled_24.xml" value="0.2095" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_signal_wifi_4_bar_24.xml" value="0.4036458333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_signal_wifi_bad_24.xml" value="0.4036458333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_signal_wifi_off_24.xml" value="0.4036458333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_signal_wifi_statusbar_null_24.xml" value="0.4036458333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/baseline_tune_24.xml" value="0.4036458333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/ic_launcher_background.xml" value="0.23541666666666666" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/outline_network_wifi_24.xml" value="0.2095" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/wifi_animation.xml" value="0.1875" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/activity_main.xml" value="0.26811594202898553" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/activity_settings.xml" value="0.21927083333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/device_fragment.xml" value="0.21927083333333333" />

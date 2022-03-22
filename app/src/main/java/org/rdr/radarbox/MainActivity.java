@@ -7,10 +7,8 @@ import androidx.lifecycle.MediatorLiveData;
 
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 
 import org.rdr.radarbox.DataChannels.DataChannelWiFi;
@@ -84,34 +82,32 @@ public class MainActivity extends AppCompatActivity {
                 .forEach(dataChannelWiFi -> {
                     dataChannelWiFi.getLiveState().observe(this,wifiState -> {
                         if(wifiState.equals(DataChannel.ChannelState.CONNECTING)) {
-                            btnWifi.setBackgroundResource(R.drawable.wifi_animation);
-                            ((AnimationDrawable) btnWifi.getBackground()).start();
+                            btnWifi.setImageResource(R.drawable.wifi_animation);
+                            ((AnimationDrawable) btnWifi.getDrawable()).start();
                         }
                         else if(wifiState.equals(DataChannel.ChannelState.DISCONNECTED))
-                            btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                    R.drawable.baseline_network_wifi_bad_24));
+                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_bad_24);
                         else if(wifiState.equals(DataChannel.ChannelState.SHUTDOWN))
-                            btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                    R.drawable.baseline_network_wifi_off_24));
+                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_off_24);
                         else {
-                            btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                    R.drawable.baseline_network_wifi_4_bar_24));
+                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_full_24);
                             ((DataChannelWiFi)dataChannelWiFi).getLiveWiFiSignalLevel().observe(this,
                             signalLevel -> {
                                 switch (signalLevel) {
-                                    case 0: btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                            R.drawable.baseline_network_wifi_null_24));
-                                    case 1: btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                            R.drawable.baseline_network_wifi_1_bar_24));
+                                    case 0:
+                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_null_24);
                                         break;
-                                    case 2: btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                            R.drawable.baseline_network_wifi_2_bar_24));
+                                    case 1:
+                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_1_bar_24);
                                         break;
-                                    case 3: btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                            R.drawable.baseline_network_wifi_3_bar_24));
+                                    case 2:
+                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_2_bar_24);
                                         break;
-                                    case 4: btnWifi.setBackground(AppCompatResources.getDrawable(this,
-                                            R.drawable.baseline_network_wifi_4_bar_24));
+                                    case 3:
+                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_3_bar_24);
+                                        break;
+                                    case 4:
+                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_full_24);
                                         break;
                                 }
                             });
