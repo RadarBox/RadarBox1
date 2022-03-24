@@ -18,6 +18,8 @@ import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
 import java.util.Objects;
 
+/** Главная активность приложения для отображения элементов управления и графиков сигналов
+ */
 public class MainActivity extends AppCompatActivity {
 
     @Override
