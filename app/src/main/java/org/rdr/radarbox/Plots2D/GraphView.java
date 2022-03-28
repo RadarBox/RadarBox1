@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
@@ -165,6 +166,7 @@ public class GraphView extends View implements Serializable {
         paint.setColor(value.data);
         paint.setStrokeWidth(3);
         paint.setStyle(Paint.Style.STROKE);
+        paint.setPathEffect(new DashPathEffect(new float[]{30,30},0));
 
         // Определение границ холста
         int height = canvas.getHeight();
