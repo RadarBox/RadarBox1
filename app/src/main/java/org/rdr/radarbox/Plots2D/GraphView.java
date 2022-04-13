@@ -1,5 +1,6 @@
 package org.rdr.radarbox.Plots2D;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -133,15 +134,16 @@ public class GraphView extends View implements Serializable {
         drawSNR(canvas);
     }
 
+    @SuppressLint("DefaultLocale")
     void drawSNR(Canvas canvas){
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 //        paint.setStyle(Paint.Style.STROKE);
-        paint.setTextSize(40);
+        paint.setTextSize(60);
         snr.calculateSNR(RadarBox.freqSignals.getRawFreqFrame());
         // Maximum SNR
-        canvas.drawText(String.valueOf(snr.getMaxSNR()),getWidth()-200,100,paint);
+        canvas.drawText(String.format("max %4.0f",snr.getMaxSNR()),getWidth()-300,100,paint);
         // Average SNR
-        canvas.drawText(String.valueOf(snr.getAvgSNR()),getWidth()-200,200,paint);
+        canvas.drawText(String.format("avg %4.3f",snr.getAvgSNR()),getWidth()-300,200,paint);
     }
 
     private void drawLines2D(Canvas canvas) {

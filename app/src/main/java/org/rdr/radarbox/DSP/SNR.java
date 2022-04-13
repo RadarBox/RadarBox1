@@ -12,8 +12,8 @@ public class SNR {
     short[][] accumulatedData;
     float[] arrayMaxSNR;
     float[] arrayAvgSNR;
-    float maxSNR;
-    float avgSNR;
+    float maxSNR = 0;
+    float avgSNR = 0;
     float[] arraySNR;
     int iFrame = 0;
     int iSNR = 0;
@@ -87,7 +87,6 @@ public class SNR {
     public float getAvgSNR() {
         return avgSNR;
     }
-
     public float getMaxSNR() {
         return maxSNR;
     }
