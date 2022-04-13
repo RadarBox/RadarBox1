@@ -14,6 +14,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
+import org.rdr.radarbox.DSP.SNR;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
@@ -41,6 +42,7 @@ public class GraphView extends View implements Serializable {
     private boolean mShowLabelsX, mShowLabelsY, mShowTitleX, mShowTitleY;
     private String mTitleX, mTitleY;
     private List<String> mLabelsX, mLabelsY;
+    private final SNR snr;
 
 
     public void addLine(Line2D line2D) {
@@ -54,6 +56,7 @@ public class GraphView extends View implements Serializable {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GraphView);
 
+        snr = new SNR();
         try {
             mShowLabelsX = a.getBoolean(R.styleable.GraphView_showLabelsX, false);
             mShowLabelsY = a.getBoolean(R.styleable.GraphView_showLabelsY, false);
@@ -126,6 +129,19 @@ public class GraphView extends View implements Serializable {
         drawLines2D(canvas);
         //Создание значний оси
         axisCaptions(canvas);
+        // Show SNR
+        drawSNR(canvas);
+    }
+
+    void drawSNR(Canvas canvas){
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//        paint.setStyle(Paint.Style.STROKE);
+        paint.setTextSize(40);
+        snr.calculateSNR(RadarBox.freqSignals.getRawFreqFrame());
+        // Maximum SNR
+        canvas.drawText(String.valueOf(snr.getMaxSNR()),getWidth()-200,100,paint);
+        // Average SNR
+        canvas.drawText(String.valueOf(snr.getAvgSNR()),getWidth()-200,200,paint);
     }
 
     private void drawLines2D(Canvas canvas) {
