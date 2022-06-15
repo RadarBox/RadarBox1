@@ -1,5 +1,6 @@
 package org.rdr.radarbox.Plots2D;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
+import org.rdr.radarbox.DSP.SNR;
+import org.rdr.radarbox.DSP.SettingsDSP;
 import org.rdr.radarbox.Plots2D.GraphView;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
@@ -25,6 +28,11 @@ import androidx.preference.PreferenceManager;
 public class TimeFreqGraphFragment extends Fragment {
     GraphView freqGraphView, timeGraphView;
     private SharedPreferences pref;
+
+    private static final char
+    SELECT_RAW = 0,
+    SELECT_SNR = 1;
+    private int flag;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -41,6 +49,9 @@ public class TimeFreqGraphFragment extends Fragment {
         resetAllFreqLines();
         // обновление графика происходит при получении нового кадра, номер кадра передаётся в качестве аргумента
         RadarBox.dataThreadService.getLiveFrameCounter().observe(getViewLifecycleOwner(),this::update);
+
+        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+        SettingsDSP.SettingsDspFragment.restorePreferences(getContext());
 
         Button settingsButton = view.findViewById(R.id.btn_grSettings);
         assert settingsButton!=null;
@@ -113,15 +124,23 @@ public class TimeFreqGraphFragment extends Fragment {
         for(int rx = 0; rx<rxN; rx++) {
             for(int tx=0; tx<txN; tx++) {
                 int line = rx*txN+tx;
-                freqGraphView.addLine(new Line2D(tempY, tempY,
-                        GraphColor.values()[line%GraphColor.values().length].argb,
-                        "r"+rx+"t"+tx+"re"));
-                freqGraphView.addLine(new Line2D(tempY, tempY,
-                        GraphColor.values()[(line+1)%GraphColor.values().length].argb,
-                        "r"+rx+"t"+tx+"im"));
-                freqGraphView.addLine(new Line2D(tempY, tempY,
-                        GraphColor.values()[(line+2)%GraphColor.values().length].argb,
-                        "r"+rx+"t"+tx+"abs"));
+                flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+                if (flag==SELECT_RAW) {
+                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                            GraphColor.values()[line % GraphColor.values().length].argb,
+                            "r" + rx + "t" + tx + "re"));
+                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                            GraphColor.values()[(line + 1) % GraphColor.values().length].argb,
+                            "r" + rx + "t" + tx + "im"));
+                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                            GraphColor.values()[(line + 2) % GraphColor.values().length].argb,
+                            "r" + rx + "t" + tx + "abs"));
+                }
+                else if (flag==SELECT_SNR){
+                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                            GraphColor.values()[(line + 2) % GraphColor.values().length].argb,
+                            "r" + rx + "t" + tx + "abs snr"));
+                }
             }
         }
     }
@@ -133,15 +152,21 @@ public class TimeFreqGraphFragment extends Fragment {
         if(freqGraphView.getLines().size()!=chN*3)
             resetAllFreqLines();
 
+        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
         double[] tempVector = new double[RadarBox.freqSignals.getFrequenciesMHz().length];
         for(int i = 0; i<tempVector.length;i++)
             tempVector[i]=RadarBox.freqSignals.getFrequenciesMHz()[i];
         // координата X
         for(int rx = 0; rx<rxN; rx++) {
             for (int tx = 0; tx < txN; tx++) {
-                freqGraphView.getLine("r" + rx + "t" + tx + "re").setX(tempVector);
-                freqGraphView.getLine("r" + rx + "t" + tx + "im").setX(tempVector);
-                freqGraphView.getLine("r" + rx + "t" + tx + "abs").setX(tempVector);
+                if (flag==SELECT_RAW) {
+                    freqGraphView.getLine("r" + rx + "t" + tx + "re").setX(tempVector);
+                    freqGraphView.getLine("r" + rx + "t" + tx + "im").setX(tempVector);
+                    freqGraphView.getLine("r" + rx + "t" + tx + "abs").setX(tempVector);
+                }
+                else if (flag==SELECT_SNR){
+                    freqGraphView.getLine("r" + rx + "t" + tx + "abs snr").setX(tempVector);
+                }
             }
         }
         // координата Y
@@ -149,16 +174,25 @@ public class TimeFreqGraphFragment extends Fragment {
         for(int rx = 0; rx<rxN; rx++) {
             for (int tx = 0; tx<txN; tx++) {
                 if(RadarBox.freqSignals.getRawFreqOneChannelSignal(rx,tx,rawFreqSignal)>=0) {
-                    for (int i = 0; i < tempVector.length; i++)
-                        tempVector[i] = rawFreqSignal[2 * i];
-                    freqGraphView.getLine("r" + rx + "t" + tx + "re").setY(tempVector);
-                    for (int i = 0; i < tempVector.length; i++)
-                        tempVector[i] = rawFreqSignal[2 * i + 1];
-                    freqGraphView.getLine("r" + rx + "t" + tx + "im").setY(tempVector);
-                    for(int i =0; i<tempVector.length; i++)
-                        tempVector[i]=Math.sqrt(rawFreqSignal[2*i]*rawFreqSignal[2*i]
-                                +rawFreqSignal[2*i+1]*rawFreqSignal[2*i+1]);
-                    freqGraphView.getLine("r" + rx + "t" + tx + "abs").setY(tempVector);
+                    if (flag==SELECT_RAW) {
+                        for (int i = 0; i < tempVector.length; i++)
+                            tempVector[i] = rawFreqSignal[2 * i];
+                        freqGraphView.getLine("r" + rx + "t" + tx + "re").setY(tempVector);
+                        for (int i = 0; i < tempVector.length; i++)
+                            tempVector[i] = rawFreqSignal[2 * i + 1];
+                        freqGraphView.getLine("r" + rx + "t" + tx + "im").setY(tempVector);
+                        for (int i = 0; i < tempVector.length; i++)
+                            tempVector[i] = Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
+                                    + rawFreqSignal[2 * i + 1] * rawFreqSignal[2 * i + 1]);
+                        freqGraphView.getLine("r" + rx + "t" + tx + "abs").setY(tempVector);
+                    }
+                    else if (flag==SELECT_SNR){
+                        for (int i = 0; i < tempVector.length; i++)
+                            tempVector[i] = Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
+                                    + rawFreqSignal[2 * i + 1] * rawFreqSignal[2 * i + 1]);
+                        SNR.calculateSNR(tempVector);
+                        freqGraphView.getLine("r" + rx + "t" + tx + "abs snr").setY(SNR.getArrayAvgSNR());
+                    }
                 }
             }
         }

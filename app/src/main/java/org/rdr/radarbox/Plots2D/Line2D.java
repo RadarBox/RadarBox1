@@ -6,7 +6,7 @@ import java.util.Arrays;
 public class Line2D implements Serializable {
     private double[] x;
     private double[] y;
-    private int color;
+    private int color; //заменить на PAINT
     private String legendName;
     private boolean needShow;
 

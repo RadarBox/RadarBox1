@@ -89,6 +89,7 @@
 
         <ImageButton
             android:id="@+id/btn_dsp"
+            android:onClick="onClickSettingsDsp"
             android:layout_width="60dp"
             android:layout_height="match_parent"
             app:srcCompat="@drawable/baseline_tune_24"
