@@ -1,0 +1,48 @@
+<config>
+    <device name="RDR4.21" rxN="1" txN="1" rxtxOrder="1" isComplex="true"/>
+    <integer_parameter id="Trep" name="Период сбора данных (мс)"
+        summary="При Trep=0 данные собираются по готовности предыдущих, в противном случае создаётся таймер с постоянным периодом"
+        min="0" step="1" max="1000" def="100" />
+    <integer_parameter id="F0" name="Начальная частота (МГц)"
+        summary=""
+        min="800" step="20" max="4400" def="800"/>
+    <integer_parameter id="dF" name="Шаг перестройки частоты (МГц)"
+        summary=""
+        min="0" step="20"  max="640"  def="20" />
+    <integer_parameter id="FN" name="Количество частот"
+        summary=""
+        min="1" step="1"  max="2048"  def="90" />
+    <integer_parameter id="t_paus" name="Пауза (мкс)"
+        summary="Пауза, которая выдерживается для захвата фазы ФАПЧ на каждой частоте"
+        min="0" step="1"  max="127"  def="40" />
+    <integer_parameter id="rx_amp" name="Усиление"
+        summary="усиление приемного канала"
+        min="0" step="1"  max="7"  def="6" />
+    <integer_parameter id="rx_att" name="Затухание"
+        summary="Затухание в аттенюаторе приемного канала"
+        min="0" step="1"  max="31"  def="8" />
+    <integer_parameter id="acc_coef" name="Коэффициент накопления (acc_coef)"
+        summary="Количество импульсов, накапливаемых на каждой частоте N=2^acc_coef"
+        min="0" step="1"  max="3"  def="3" />
+    <boolean_parameter id="filter" name="Запрет автовыбора фильтра гармоник"
+        summary="при свиппировании, начальное значение 0"
+        def="1" />
+    <integer_parameter id="PLL_Icp" name="Усиление Icp PLL ADF4351"
+        summary="код управления усилением фазового детектора синтезатора частоты ADF4351, начальное значение – 0"
+        min="0" step="1"  max="15"  def="0" />
+    <integer_parameter id="PwT" name="Выходная мощность передатчика"
+        summary="код управления выходной мощностью передатчика; начальное значение – 0;"
+        min="0" step="1"  max="3"  def="0" />
+    <integer_parameter id="PwLO" name="ISEL смесителя LTC5551"
+        summary="код управления мощностью опорного сигнала квадратурного смесителя; начальное значение – 1;"
+        min="0" step="1"  max="3"  def="0" />
+    <integer_parameter id="TS" name="Код выходного коммутатора"
+        summary="код управления внешним выходным коммутатором; начальное значение – 0;"
+        min="0" step="1"  max="3"  def="0" />
+    <integer_parameter id="RS" name="Код входного коммутатора"
+        summary="код управления внешним входным коммутатором; начальное значение – 0;"
+        min="0" step="1"  max="3"  def="0" />
+    <integer_parameter id="ADF4351" name="Параметры синтезатора ADF4351"
+        summary="Биты: 0 – cycle slip reduction, 1=mute until lock, 2..3=CLK divide mode;"
+        radix="16" min="0" step="1"  max="F"  def="0" />
+</config>

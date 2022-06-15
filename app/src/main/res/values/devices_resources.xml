@@ -2,6 +2,7 @@
 <resources>
     <string-array name="device_prefix_list">
         <item>rdr4_20</item>
+        <item>rdr4_21</item>
         <item>rdr4_22</item>
     </string-array>
     <string name="device_list_title">Список устройств</string>
