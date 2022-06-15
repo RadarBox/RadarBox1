@@ -196,6 +196,13 @@ public class FreqSignals {
         return freqInitMHz;
     }
 
+    /** <p>Возвращает шаг частоты в МГц.</p>
+     * @return шаг частоты в МГц
+     */
+    public int getFreqStepMHz() {
+        return freqStepMHz;
+    }
+
     /** <p>Возвращает общее количество приёмных каналов.</p>
      * @return количество приёмных каналов
      */
