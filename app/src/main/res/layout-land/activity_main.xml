@@ -5,49 +5,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".MainActivity">
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/status_bar_container"
-        android:layout_gravity="top|center"
+        android:layout_gravity="top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/main_data_view_container"
         android:name="org.rdr.radarbox.StatusBarFragment"/>
 
     <FrameLayout
         android:id="@+id/main_data_view_container"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/lyt_buttons"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/status_bar_container" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/lyt_buttons"
+        app:layout_constraintTop_toBottomOf="@+id/status_bar_container"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/lyt_buttons"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/main_data_view_container">
 
         <ImageButton
             android:id="@+id/btn_settings"
             android:layout_width="60dp"
-            android:layout_height="match_parent"
+            android:layout_height="60dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:srcCompat="@android:drawable/ic_menu_preferences"
             tools:layout_conversion_absoluteHeight="50dp"
             tools:layout_conversion_absoluteWidth="56dp"
@@ -56,23 +57,22 @@
         <ImageButton
             android:id="@+id/btn_wifi"
             android:layout_width="60dp"
-            android:layout_height="match_parent"
+            android:layout_height="60dp"
             android:onClick="onClickWifi"
-            app:layout_constraintEnd_toStartOf="@id/btn_exit"
-            app:layout_constraintStart_toEndOf="@id/btn_start"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_exit"
+            app:layout_constraintBottom_toTopOf="@id/btn_start"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:layout_conversion_absoluteHeight="50dp"
             tools:layout_conversion_absoluteWidth="56dp" />
 
         <ImageButton
             android:id="@+id/btn_start"
             android:layout_width="60dp"
-            android:layout_height="match_parent"
+            android:layout_height="60dp"
             android:onClick="onClickStartStop"
-
             android:src="@drawable/baseline_play_arrow_24"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_conversion_absoluteHeight="50dp"
             tools:layout_conversion_absoluteWidth="56dp" />
@@ -80,7 +80,7 @@
         <ImageButton
             android:id="@+id/btn_exit"
             android:layout_width="60dp"
-            android:layout_height="match_parent"
+            android:layout_height="60dp"
             android:onClick="onClickExit"
             android:src="@drawable/baseline_logout_24"
             app:layout_constraintEnd_toEndOf="parent"
@@ -91,11 +91,11 @@
         <ImageButton
             android:id="@+id/btn_dsp"
             android:layout_width="60dp"
-            android:layout_height="match_parent"
+            android:layout_height="60dp"
             app:srcCompat="@drawable/baseline_tune_24"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/btn_settings"
-            app:layout_constraintEnd_toStartOf="@id/btn_start"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/btn_settings"
+            app:layout_constraintTop_toBottomOf="@id/btn_start"
             tools:layout_conversion_absoluteHeight="50dp"
             tools:layout_conversion_absoluteWidth="56dp" />
     </androidx.constraintlayout.widget.ConstraintLayout>

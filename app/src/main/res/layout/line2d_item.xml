@@ -13,14 +13,14 @@
     <TextView
         android:id="@+id/legend_name"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         app:layout_constraintStart_toEndOf="@id/line_type"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
     <CheckBox
         android:id="@+id/need_show"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         app:layout_constraintStart_toEndOf="@id/legend_name"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>

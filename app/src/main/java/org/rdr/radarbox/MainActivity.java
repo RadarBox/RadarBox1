@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPostCreate(savedInstanceState);
         ImageButton btnStartStop = findViewById(R.id.btn_start);
         MediatorLiveData<Integer> liveDataMerger = new MediatorLiveData<>();
+        RadarBox.device.communication.getSelectedChannel().getName();
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveCurrentSource(),value -> {
             if(value.equals(DataThreadService.DataSource.NO_SOURCE))
                 liveDataMerger.setValue(0);

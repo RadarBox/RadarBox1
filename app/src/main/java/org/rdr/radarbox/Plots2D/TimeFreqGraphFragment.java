@@ -1,16 +1,22 @@
 package org.rdr.radarbox.Plots2D;
 
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.Toast;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import org.rdr.radarbox.Plots2D.GraphView;
 import org.rdr.radarbox.R;
@@ -24,6 +30,7 @@ import androidx.preference.PreferenceManager;
 
 public class TimeFreqGraphFragment extends Fragment {
     GraphView freqGraphView, timeGraphView;
+    GraphSettingsFragment graphSettingsFragment = null;
     private SharedPreferences pref;
     @Nullable
     @Override
@@ -41,24 +48,58 @@ public class TimeFreqGraphFragment extends Fragment {
         resetAllFreqLines();
         // обновление графика происходит при получении нового кадра, номер кадра передаётся в качестве аргумента
         RadarBox.dataThreadService.getLiveFrameCounter().observe(getViewLifecycleOwner(),this::update);
-
-        Button settingsButton = view.findViewById(R.id.btn_grSettings);
-        assert settingsButton!=null;
-        settingsButton.setOnClickListener(new View.OnClickListener() {
+        // создание фрагмента с настройками графика, который будет выдвигаться с помощью свайпа
+        graphSettingsFragment = new GraphSettingsFragment();
+        // Передаём весь объект с графиками в бандл, чтобы его мог открыть фрагмент с настройками
+        Bundle args = new Bundle();
+        args.putSerializable("GraphView", freqGraphView);
+        graphSettingsFragment.setArguments(args);
+        // Настраиваем действие свайпа вверх-вниз, когда ориентация вертикальная и влево-вправо, когда горизонтальная
+        final GestureDetector gestureDetector = new GestureDetector(getActivity(), new GestureDetector.SimpleOnGestureListener(){
             @Override
-            public void onClick(View v) {
-                GraphSettingsFragment graphSettingsFragment = new GraphSettingsFragment();
-                // Передаём весь объект с графиками в бандл, чтобы его мог открыть фрагмент с настройками
-                Bundle args = new Bundle();
-                args.putSerializable("GraphView", freqGraphView);
-                graphSettingsFragment.setArguments(args);
-
-                getParentFragmentManager()
-                        .beginTransaction()
-                        .add(R.id.graph_settings_container, graphSettingsFragment)
-                        .addToBackStack(null)
-                        .commit();
-
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                final int SWIPE_MIN_DISTANCE = 120;
+                final int SWIPE_MAX_OFF_PATH = 250;
+                final int SWIPE_THRESHOLD_VELOCITY = 200;
+                try {
+                    int orientation = view.getContext().getResources().getConfiguration().orientation;
+                    if(orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        if(Math.abs(e1.getX() - e2.getX()) > SWIPE_MAX_OFF_PATH)
+                            return false;
+                        if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
+                                && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                            openGraphSettings();
+                        }
+                        else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
+                                && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                            closeGraphSettings();
+                        }
+                    }
+                    else { // ГОРИЗОНТАЛЬНАЯ ОРИЕНТАЦИЯ
+                        if(Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                            return false;
+                        if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
+                                && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                            openGraphSettings();
+                        } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+                                && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                            closeGraphSettings();
+                        }
+                    }
+                } catch (Exception e) {
+                    // nothing
+                }
+                return super.onFling(e1, e2, velocityX, velocityY);
+            }
+        });
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
             }
         });
 
@@ -68,37 +109,37 @@ public class TimeFreqGraphFragment extends Fragment {
             FrameLayout graphContainer = view.findViewById(R.id.graph_container);
             graphContainer.post(() -> {
                 ViewGroup.LayoutParams params = graphContainer.getLayoutParams();
-                params.height = view.getHeight()-
-                        view.findViewById(R.id.graph_settings_container).getHeight();
+                int orientation = view.getContext().getResources().getConfiguration().orientation;
+                if(orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    params.height = view.getHeight() -
+                            view.findViewById(R.id.graph_settings_container).getHeight();
+                }
+                else {
+                    params.width = view.getWidth() -
+                            view.findViewById(R.id.graph_settings_container).getWidth();
+                }
                 graphContainer.setLayoutParams(params);
             });
         });
 
-        getParentFragmentManager().addOnBackStackChangedListener(
-                new FragmentManager.OnBackStackChangedListener() {
-                    @Override
-                    public void onBackStackChanged() {
-                        if(getParentFragmentManager().getBackStackEntryCount()==0) {
-                            settingsButton.setVisibility(View.VISIBLE);
-                        }
-                        else {
-                            settingsButton.setVisibility(View.GONE);
-                        }
-                    }
-                });
-        view.setOnKeyListener( new View.OnKeyListener() {
-            @Override
-            public boolean onKey( View v, int keyCode, KeyEvent event )
-            {
-                if( keyCode == KeyEvent.KEYCODE_BACK ) {
-                    settingsButton.setVisibility(View.VISIBLE);
-                    return true;
-                }
-                else return false;
-            }
-        } );
-
         return view;
+    }
+
+    private void openGraphSettings() {
+        if(!graphSettingsFragment.isAdded())
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.graph_settings_container, graphSettingsFragment)
+                    .addToBackStack(null)
+                    .commit();
+    }
+
+    private void closeGraphSettings() {
+        if(graphSettingsFragment.isAdded())
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .remove(graphSettingsFragment)
+                    .commit();
     }
 
     private void resetAllFreqLines() {
@@ -171,6 +212,8 @@ public class TimeFreqGraphFragment extends Fragment {
         pref.edit().putFloat("FreqGraphView"+"xMin",(float)freqGraphView.getxMin()).apply();
         pref.edit().putFloat("FreqGraphView"+"yMax",(float)freqGraphView.getyMax()).apply();
         pref.edit().putFloat("FreqGraphView"+"yMin",(float)freqGraphView.getyMin()).apply();
+        if(graphSettingsFragment.isAdded())
+            closeGraphSettings();
         super.onPause();
     }
 }

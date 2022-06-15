@@ -21,7 +21,10 @@
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/ic_launcher_background.xml" value="0.23541666666666666" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/outline_network_wifi_24.xml" value="0.2095" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/drawable/wifi_animation.xml" value="0.1875" />
-        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/activity_main.xml" value="0.26811594202898553" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout-land/activity_main.xml" value="0.1" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout-land/graph_settings_fragment.xml" value="0.22" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout-land/time_freq_graph_fragment.xml" value="0.11979166666666667" />
+        <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/activity_main.xml" value="0.25" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/activity_settings.xml" value="0.21927083333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/device_fragment.xml" value="0.21927083333333333" />
         <entry key="..\:/Projects/Android/RadarBox1/app/src/main/res/layout/fragment_device.xml" value="0.1685185185185185" />
@@ -43,7 +46,7 @@
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_12" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

@@ -2,8 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_height="150dp"
-    android:layout_width="match_parent">
+    android:layout_height="match_parent"
+    android:layout_width="150dp">
 
     <TextView
         android:id="@+id/graph_settings_title"
@@ -20,34 +20,28 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="8dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:columnCount="2"
-        android:rowCount="3">
+        app:layout_constraintTop_toBottomOf="@id/graph_settings_title"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/graph_legend_layout"
+        android:columnCount="1"
+        android:rowCount="6">
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:text="Y: abs:"/>
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/axis_y_abs_switch"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_gravity="center"
-            android:text="Y: abs:"/>
+            android:minWidth="50dp" />
         <TextView
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
             android:textAlignment="center"
             android:text="@string/scale_title"/>
-        <Button
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:text="@string/button_plus"
-            android:id="@+id/button_plus"
-            android:layout_marginRight="8dp"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/axis_y_abs_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_gravity="center"
-            android:minWidth="50dp" />
         <EditText
             android:id="@+id/scale_factor"
             android:layout_width="50dp"
@@ -58,6 +52,13 @@
             android:text="@string/scale_factor_default"
             app:singleLine="true"
             app:title="@string/scale_title" />
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="@string/button_plus"
+            android:id="@+id/button_plus"
+            android:layout_marginRight="8dp"/>
+
         <Button
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -72,8 +73,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginLeft="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/graph_settings_title"
+        app:layout_constraintLeft_toLeftOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/line2D_expand_button"
@@ -84,8 +85,9 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/line2D_single"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="100dp"
             android:layout_gravity="bottom"
+            android:maxHeight="50dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
     </LinearLayout>
 
@@ -94,15 +96,27 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:columnCount="2"
-        android:rowCount="2"
-        app:layout_constraintStart_toEndOf="@id/graph_legend_layout"
-        app:layout_constraintEnd_toStartOf="@id/scale_control_layout"
-        app:layout_constraintTop_toBottomOf="@id/graph_settings_title"
-        app:layout_constraintBottom_toTopOf="@id/axis_y_limits_layout">
+        android:columnCount="1"
+        android:rowCount="6"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/graph_legend_layout"
+        app:layout_constraintBottom_toBottomOf="parent">
         <TextView
             android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:text="Y max:"/>
+        <EditText
+            android:id="@+id/axis_y_max"
+            android:layout_width="wrap_content"
+            android:minWidth="50dp"
+            android:maxWidth="70dp"
             android:layout_height="40dp"
+            app:singleLine="true"
+            android:inputType="number|numberDecimal"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
             android:layout_gravity="center"
             android:text="X min:"/>
         <EditText
@@ -115,7 +129,7 @@
             android:inputType="number|numberDecimal"/>
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="20dp"
             android:layout_gravity="center"
             android:text="X max:"/>
         <EditText
@@ -127,33 +141,5 @@
             app:singleLine="true"
             android:inputType="number|numberDecimal"/>
     </GridLayout>
-
-    <GridLayout
-        android:id="@+id/axis_y_limits_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:columnCount="2"
-        android:rowCount="2"
-        app:layout_constraintStart_toEndOf="@id/graph_legend_layout"
-        app:layout_constraintEnd_toStartOf="@id/scale_control_layout"
-        app:layout_constraintTop_toBottomOf="@id/axis_x_limits_layout"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:text="Y max:"/>
-        <EditText
-            android:id="@+id/axis_y_max"
-            android:layout_width="wrap_content"
-            android:minWidth="50dp"
-            android:maxWidth="70dp"
-            android:layout_height="40dp"
-            app:singleLine="true"
-            android:inputType="number|numberDecimal"/>
-    </GridLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
