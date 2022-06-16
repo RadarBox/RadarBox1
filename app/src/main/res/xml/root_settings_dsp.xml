@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="DSP settings">
+        <Preference
+            android:fragment="org.rdr.radarbox.DSP.FreqSignals"
+            android:key="freq_signals_settings"
+            android:title="FreqSignals"
+            android:summary="Параметры зондирования"/>
+        <Preference
+            android:fragment="org.rdr.radarbox.DSP.SNR"
+            android:key="snr_settings"
+            android:title="SNR"
+            android:summary="Оценка шума"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Show Figures">
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/select_freq_chart"
+            android:entryValues="@array/select_freq_chart_value"
+            android:key="select_freq_signal"
+            android:title="List preference" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
