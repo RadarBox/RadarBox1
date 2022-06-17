@@ -38,6 +38,8 @@ public class TimeFreqGraphFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
+        // добавить проверку savedInstanceState
+
         View view = inflater.inflate(R.layout.time_freq_graph_fragment,container,false);
         pref = PreferenceManager.getDefaultSharedPreferences(this.requireContext());
         freqGraphView = view.findViewById(R.id.graph);
