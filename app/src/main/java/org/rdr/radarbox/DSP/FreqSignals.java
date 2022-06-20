@@ -33,7 +33,7 @@ public class FreqSignals extends PreferenceFragmentCompat {
 
     }
 
-    EditTextPreference pref;
+    Preference pref;
     Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -50,21 +50,15 @@ public class FreqSignals extends PreferenceFragmentCompat {
     void setNewParameters(){
         pref = findPreference("freqInitMHz");
         assert pref != null;
-        if (Objects.equals(pref.getText(), "Default value"))
-            pref.setText(Integer.toString(freqInitMHz));
-        freqInitMHz = Integer.parseInt(pref.getText());
+        pref.setSummary(Integer.toString(freqInitMHz));
 
         pref = findPreference("freqStepMHz");
         assert pref != null;
-        if (Objects.equals(pref.getText(), "Default value"))
-            pref.setText(Integer.toString(freqStepMHz));
-        freqStepMHz = Integer.parseInt(pref.getText());
+        pref.setSummary(Integer.toString(freqStepMHz));
 
         pref = findPreference("FN");
         assert pref != null;
-        if (Objects.equals(pref.getText(), "Default value"))
-            pref.setText(Integer.toString(FN));
-        FN = Integer.parseInt(pref.getText());
+        pref.setSummary(Integer.toString(FN));
     }
 
     void bindSummaryValue(Preference preference){
@@ -80,20 +74,17 @@ public class FreqSignals extends PreferenceFragmentCompat {
 
         pref = findPreference("freqInitMHz");
         assert pref != null;
-        pref.setSummary(pref.getText());
-        pref.setDefaultValue(Integer.toString(freqInitMHz));
+        pref.setSummary(Integer.toString(freqInitMHz));
         bindSummaryValue(pref);
 
         pref = findPreference("freqStepMHz");
         assert pref != null;
-        pref.setSummary(pref.getText());
-        pref.setDefaultValue(Integer.toString(freqStepMHz));
+        pref.setSummary(Integer.toString(freqStepMHz));
         bindSummaryValue(pref);
 
         pref = findPreference("FN");
         assert pref != null;
-        pref.setSummary(pref.getText());
-        pref.setDefaultValue(Integer.toString(FN));
+        pref.setSummary(Integer.toString(FN));
         bindSummaryValue(pref);
     }
 
