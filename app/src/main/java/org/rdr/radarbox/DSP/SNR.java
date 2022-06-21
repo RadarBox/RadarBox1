@@ -27,7 +27,7 @@ public class SNR extends PreferenceFragmentCompat {
     static double[] arrayAvgSNR;
     static double maxSNR = 0;
     static double avgSNR = 0;
-    static double[] arraySNR;
+    static double[][] arraySNR;
     static int iFrame = 0;
     static int iSNR = 0;
 
@@ -71,56 +71,42 @@ public class SNR extends PreferenceFragmentCompat {
 
     }
 
-    public static void calculateSNR(double[] rawFreqFrame){
-        accumulatedData = new double[nAccumulated][rawFreqFrame.length];
+    public static void calculateSNR(double[] rawFreqFrame) {
+        int nF = rawFreqFrame.length;
+        accumulatedData = new double[nAccumulated][nF];
         // Raw Data Accumulation
-        for (int f=0; f<rawFreqFrame.length; f++)
+        for (int f = 0; f < nF; f++)
             accumulatedData[iFrame][f] = rawFreqFrame[f];
         iFrame++;
         if (iFrame >= nAccumulated)
             iFrame = 0;
 
-        arrayMaxSNR = new double[nSnrAccumulated];
-        arrayAvgSNR = new double[nSnrAccumulated];
+        arrayAvgSNR = new double[nF];
         // Null SNRs
-        for (int i=0; i<nSnrAccumulated; i++) {
-            arrayAvgSNR[i] =0;
-            arrayMaxSNR[i] = 0;
-        }
+        for (int i = 0; i < nSnrAccumulated; i++)
+            arrayAvgSNR[i] = 0;
 
-        arraySNR = new double[rawFreqFrame.length];
+        arraySNR = new double[nSnrAccumulated][nF];
         // Variance Calculation
-        float mu ;
-        for(int f=0; f<rawFreqFrame.length; f++){
+        float mu;
+        for (int f = 0; f < nF; f++) {
             // Mu
             mu = 0;
-            for (int n=0; n<nAccumulated; n++)
+            for (int n = 0; n < nAccumulated; n++)
                 mu += accumulatedData[n][f];
             mu /= nAccumulated;
             // Variance
+//            for (int n = 0; n < nAccumulated; n++)
+//                arraySNR[iSNR][f] = (float) Math.pow((accumulatedData[n][f] - mu), 2);
+//            arraySNR[iSNR][f] /= nAccumulated - 1;
+//             Average SNR
             for (int n=0; n<nAccumulated; n++)
-                arraySNR[f] = (float)Math.pow((accumulatedData[n][f]-mu),2);
-            arraySNR[f] /= nAccumulated-1;
-            // Maximum SNR
-            if (arraySNR[f]>arrayMaxSNR[iSNR])
-                arrayMaxSNR[iSNR] = arraySNR[f];
-            // Average SNR
-            arrayAvgSNR[iSNR] += arraySNR[f];
-        }
-        arrayAvgSNR[iSNR] /= rawFreqFrame.length;
-
-        iSNR++;
-        if (iSNR >= nSnrAccumulated) {
-            // Average estimation
-            avgSNR = 0;
-            maxSNR = 0;
-            for (int i=0; i<nSnrAccumulated; i++){
-                avgSNR += arrayAvgSNR[i];
-                maxSNR += arrayMaxSNR[i];
-            }
-            avgSNR /= nSnrAccumulated;
-            maxSNR /= nSnrAccumulated;
-            iSNR = 0;
+                arrayAvgSNR[f] += (float) Math.pow((accumulatedData[n][f] - mu), 2);
+            arrayAvgSNR[f] /= nAccumulated-1;
+            arrayAvgSNR[f] /= 100;
+//            iSNR++;
+//            if (iSNR >= nSnrAccumulated)
+//                iSNR = 0;
         }
     }
 
@@ -132,8 +118,5 @@ public class SNR extends PreferenceFragmentCompat {
     }
     public static double[] getArrayAvgSNR() {
         return arrayAvgSNR;
-    }
-    public static double[] getArrayMaxSNR() {
-        return arrayMaxSNR;
     }
 }

@@ -19,7 +19,7 @@
             android:entries="@array/select_freq_chart"
             android:entryValues="@array/select_freq_chart_value"
             android:key="select_freq_signal"
-            android:title="List preference" />
+            android:title="Select signal to display" />
     </PreferenceCategory>
 
 </PreferenceScreen>
