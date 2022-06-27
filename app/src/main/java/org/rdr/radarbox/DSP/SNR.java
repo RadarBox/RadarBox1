@@ -28,7 +28,6 @@ public class SNR extends PreferenceFragmentCompat {
     static double avgSNR = 0;
     static double[][] arraySNR;
     private int iFrame = 0;
-    static int iSNR = 0;
 
     public SNR(int length){
         reinitSNR(length);

@@ -235,7 +235,7 @@ public class TimeFreqGraphFragment extends Fragment {
         int rxN = RadarBox.freqSignals.getRxN();
         int txN = RadarBox.freqSignals.getTxN();
         int chN = rxN*txN;
-        if(freqGraphView.getLines().size()!=chN*3)
+        if(freqGraphView.getLines().size()!=chN)
             resetAllFreqLines();
 
         double[] tempVector = new double[RadarBox.freqSignals.getFrequenciesMHz().length];
