@@ -22,14 +22,17 @@ import org.rdr.radarbox.RadarBox;
 public class SNR extends PreferenceFragmentCompat {
     static int nAccumulated = 10;
     static int nSnrAccumulated = 10;
-    static double[][] accumulatedData;
-    static double[] arrayMaxSNR;
-    static double[] arrayAvgSNR;
+    double[][] accumulatedData;
+    double[] arrayAvgSNR;
     static double maxSNR = 0;
     static double avgSNR = 0;
     static double[][] arraySNR;
-    static int iFrame = 0;
+    private int iFrame = 0;
     static int iSNR = 0;
+
+    public SNR(int length){
+        reinitSNR(length);
+    }
 
     EditTextPreference pref;
     Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
@@ -71,9 +74,15 @@ public class SNR extends PreferenceFragmentCompat {
 
     }
 
-    public static void calculateSNR(double[] rawFreqFrame) {
-        int nF = rawFreqFrame.length;
+    public void reinitSNR(int nF){
         accumulatedData = new double[nAccumulated][nF];
+        arrayAvgSNR = new double[nF];
+    }
+
+    public void calculateSNR(double[] rawFreqFrame) {
+        int nF = rawFreqFrame.length;
+        if (nF!=arrayAvgSNR.length)
+            reinitSNR(nF);
         // Raw Data Accumulation
         for (int f = 0; f < nF; f++)
             accumulatedData[iFrame][f] = rawFreqFrame[f];
@@ -81,7 +90,7 @@ public class SNR extends PreferenceFragmentCompat {
         if (iFrame >= nAccumulated)
             iFrame = 0;
 
-        arrayAvgSNR = new double[nF];
+
         // Null SNRs
         for (int i = 0; i < nSnrAccumulated; i++)
             arrayAvgSNR[i] = 0;
@@ -103,20 +112,20 @@ public class SNR extends PreferenceFragmentCompat {
             for (int n=0; n<nAccumulated; n++)
                 arrayAvgSNR[f] += (float) Math.pow((accumulatedData[n][f] - mu), 2);
             arrayAvgSNR[f] /= nAccumulated-1;
-            arrayAvgSNR[f] /= 100;
+            arrayAvgSNR[f] *= 5;
 //            iSNR++;
 //            if (iSNR >= nSnrAccumulated)
 //                iSNR = 0;
         }
     }
 
-    public static double getAvgSNR() {
+    public double getAvgSNR() {
         return avgSNR;
     }
-    public static double getMaxSNR() {
+    public double getMaxSNR() {
         return maxSNR;
     }
-    public static double[] getArrayAvgSNR() {
+    public double[] getArrayAvgSNR() {
         return arrayAvgSNR;
     }
 }
