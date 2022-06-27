@@ -1,11 +1,13 @@
 package org.rdr.radarbox.Plots2D;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
@@ -13,6 +15,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
+import org.rdr.radarbox.DSP.SNR;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
@@ -40,6 +43,7 @@ public class GraphView extends View implements Serializable {
     private boolean mShowLabelsX, mShowLabelsY, mShowTitleX, mShowTitleY;
     private String mTitleX, mTitleY;
     private List<String> mLabelsX, mLabelsY;
+    private final SNR snr;
 
 
     public void addLine(Line2D line2D) {
@@ -53,6 +57,7 @@ public class GraphView extends View implements Serializable {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GraphView);
 
+        snr = new SNR();
         try {
             mShowLabelsX = a.getBoolean(R.styleable.GraphView_showLabelsX, false);
             mShowLabelsY = a.getBoolean(R.styleable.GraphView_showLabelsY, false);
@@ -125,6 +130,20 @@ public class GraphView extends View implements Serializable {
         drawLines2D(canvas);
         //Создание значний оси
         axisCaptions(canvas);
+        // Show SNR
+        drawSNR(canvas);
+    }
+
+    @SuppressLint("DefaultLocale")
+    void drawSNR(Canvas canvas){
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//        paint.setStyle(Paint.Style.STROKE);
+        paint.setTextSize(60);
+        snr.calculateSNR(RadarBox.freqSignals.getRawFreqFrame());
+        // Maximum SNR
+        canvas.drawText(String.format("max %4.0f",snr.getMaxSNR()),getWidth()-300,100,paint);
+        // Average SNR
+        canvas.drawText(String.format("avg %4.3f",snr.getAvgSNR()),getWidth()-300,200,paint);
     }
 
     private void drawLines2D(Canvas canvas) {
@@ -165,6 +184,7 @@ public class GraphView extends View implements Serializable {
         paint.setColor(value.data);
         paint.setStrokeWidth(3);
         paint.setStyle(Paint.Style.STROKE);
+        paint.setPathEffect(new DashPathEffect(new float[]{30,30},0));
 
         // Определение границ холста
         int height = canvas.getHeight();
