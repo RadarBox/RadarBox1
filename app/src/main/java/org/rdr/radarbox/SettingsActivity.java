@@ -16,15 +16,18 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PersistableBundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.Device.DeviceConfigurationFragment;
 import org.rdr.radarbox.File.Sender;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -36,14 +39,21 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         TextView textViewLogger = findViewById(R.id.logger_view);
+        final NestedScrollView scrollView = (NestedScrollView)findViewById(R.id.logger_scroll);
         try {
             textViewLogger.setText(
                     new String(Files.readAllBytes(RadarBox.logger.getFileLog().toPath())));
-            int textHeight = textViewLogger.getHeight();
-            ((NestedScrollView)findViewById(R.id.logger_scroll)).scrollBy(0,textHeight); //fullScroll(View.FOCUS_DOWN);
+            scrollView.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        textViewLogger.setOnLongClickListener(new OnLongClickFileOpener());
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -53,16 +63,29 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    private class OnLongClickFileOpener implements View.OnLongClickListener {
+        @Override
+        public boolean onLongClick(View view) {
+            System.out.println("LONG CLICK");
+            return false;
+        }
+    }
+
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         if (savedInstanceState == null) {
-            TextView textViewLogger = findViewById(R.id.logger_view);
-            NestedScrollView scrollView = findViewById(R.id.logger_scroll);
-            textViewLogger.setMovementMethod(new ScrollingMovementMethod());
             RadarBox.logger.getLiveLastStringWritten().observe(this,lastString-> {
+                TextView textViewLogger = findViewById(R.id.logger_view);
+                textViewLogger.setMovementMethod(new ScrollingMovementMethod());
                 textViewLogger.append("\n"+lastString);
-                scrollView.fullScroll(View.FOCUS_DOWN);
+                NestedScrollView scrollView = findViewById(R.id.logger_scroll);
+                scrollView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                    }
+                });
             });
         }
     }
