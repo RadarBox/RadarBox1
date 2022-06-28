@@ -52,7 +52,6 @@ public class TimeFreqGraphFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         // добавить проверку savedInstanceState
-
         View view = inflater.inflate(R.layout.time_freq_graph_fragment,container,false);
         pref = PreferenceManager.getDefaultSharedPreferences(this.requireContext());
         freqGraphView = view.findViewById(R.id.graph);
@@ -119,30 +118,11 @@ public class TimeFreqGraphFragment extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 return gestureDetector.onTouchEvent(event);
-
-        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
-        SettingsDSP.SettingsDspFragment.restorePreferences(getContext());
-
-        Button settingsButton = view.findViewById(R.id.btn_grSettings);
-        assert settingsButton!=null;
-        settingsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                GraphSettingsFragment graphSettingsFragment = new GraphSettingsFragment();
-                // Передаём весь объект с графиками в бандл, чтобы его мог открыть фрагмент с настройками
-                Bundle args = new Bundle();
-                args.putSerializable("GraphView", freqGraphView);
-                graphSettingsFragment.setArguments(args);
-
-                getParentFragmentManager()
-                        .beginTransaction()
-                        .add(R.id.graph_settings_container, graphSettingsFragment)
-                        .addToBackStack(null)
-                        .commit();
-
             }
         });
 
+        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+        SettingsDSP.SettingsDspFragment.restorePreferences(getContext());
         view.findViewById(R.id.graph_settings_container).addOnLayoutChangeListener(
                 (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
 
@@ -229,7 +209,7 @@ public class TimeFreqGraphFragment extends Fragment {
                         "r" + rx + "t" + tx + "abs snr"));
             }
         }
-}
+    }
 
     private void resetSNR(){
         int rxN = RadarBox.freqSignals.getRxN();

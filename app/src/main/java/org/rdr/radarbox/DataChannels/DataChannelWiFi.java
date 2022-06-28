@@ -388,7 +388,8 @@ public class DataChannelWiFi extends DataChannel {
         } catch (IllegalArgumentException e) {
             Log.i("WIFI", e.toString());
         }
-        mConnectivityManager.requestNetwork(mWifiNetworkRequest, mNetworkCallback);
+        //Таймаут к попытке подключения 6 секунд
+        mConnectivityManager.requestNetwork(mWifiNetworkRequest, mNetworkCallback,6000);
         liveStatusWiFi.postValue(StatusWiFi.CONNECTING);
         liveChannelState.postValue(ChannelState.CONNECTING);
         return true;
