@@ -1,93 +1,130 @@
 package org.rdr.radarbox.DSP;
 
-import android.graphics.Canvas;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+
+import androidx.preference.EditTextPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
-public class SNR {
-    int nAccumulated = 10;
-    int nFrequencies;
-    int nSnrAccumulated = 10;
-    short[][] accumulatedData;
-    float[] arrayMaxSNR;
-    float[] arrayAvgSNR;
-    float maxSNR = 0;
-    float avgSNR = 0;
-    float[] arraySNR;
-    int iFrame = 0;
-    int iSNR = 0;
-    private int FN, rxN, txN, chN, frameSize, freqInitMHz, freqStepMHz;
+/**
+ * Класс для оценки отношения сигнал-шум. Внутри него можно получать актульную информацию об
+ * актульаных средних значениях ОСШ {@link #getAvgSNR()},
+ * о максимальном ОСШ {@link #getMaxSNR()}
+ * @author Козлов Роман Юрьевич
+ * @version 0.1
+ */
 
-    public SNR(){
-        // Get another class variables
-        this.FN = RadarBox.freqSignals.getFN();
-        this.chN = RadarBox.freqSignals.getChN();
-        this.frameSize = RadarBox.freqSignals.getFrameSize();
-        this.rxN = RadarBox.freqSignals.getRxN();
-        this.txN = RadarBox.freqSignals.getTxN();
-        this.freqInitMHz = RadarBox.freqSignals.getFreqInitMHz();
-        this.freqStepMHz = RadarBox.freqSignals.getFreqStepMHz();
-        // Init
-        arrayMaxSNR = new float[nSnrAccumulated];
-        arrayAvgSNR = new float[nSnrAccumulated];
-        this.nFrequencies = 2*FN*chN;
-        accumulatedData = new short[nAccumulated][nFrequencies];
-        arraySNR = new float[nFrequencies];
+public class SNR extends PreferenceFragmentCompat {
+    static int nAccumulated = 10;
+    static int nSnrAccumulated = 10;
+    double[][] accumulatedData;
+    double[] arrayAvgSNR;
+    static double maxSNR = 0;
+    static double avgSNR = 0;
+    static double[][] arraySNR;
+    private int iFrame = 0;
+
+    public SNR(int length){
+        reinitSNR(length);
     }
 
-    public void calculateSNR(short[] rawFreqFrame){
+    EditTextPreference pref;
+    Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            String stringValue = newValue.toString();
+            if (preference instanceof EditTextPreference) {
+                preference.setSummary(stringValue);
+                ((EditTextPreference) preference).setText(stringValue);
+            }
+            return false;
+        }
+    };
+
+    void bindSummaryValue(Preference preference){
+        preference.setOnPreferenceChangeListener(listener);
+        listener.onPreferenceChange(preference,
+                PreferenceManager.getDefaultSharedPreferences(preference.getContext())
+                        .getString(preference.getKey(),""));
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+        setPreferencesFromResource(R.xml.settings_dsp_snr,rootKey);
+
+            pref = findPreference("nAccumulated");
+            assert pref != null;
+            bindSummaryValue(pref);
+            pref.setSummary(pref.getText());
+//        pref.setText(Integer.toString(nAccumulated));
+            pref.setDefaultValue(Integer.toString(nAccumulated));
+
+        pref = findPreference("nSnrAccumulated");
+        assert pref != null;
+        bindSummaryValue(pref);
+        pref.setSummary(pref.getText());
+//        pref.setText(Integer.toString(nSnrAccumulated));
+        pref.setDefaultValue(Integer.toString(nSnrAccumulated));
+
+    }
+
+    public void reinitSNR(int nF){
+        accumulatedData = new double[nAccumulated][nF];
+        arrayAvgSNR = new double[nF];
+    }
+
+    public void calculateSNR(double[] rawFreqFrame) {
+        int nF = rawFreqFrame.length;
+        if (nF!=arrayAvgSNR.length)
+            reinitSNR(nF);
         // Raw Data Accumulation
-        for (int f=0; f<nFrequencies; f++)
+        for (int f = 0; f < nF; f++)
             accumulatedData[iFrame][f] = rawFreqFrame[f];
         iFrame++;
         if (iFrame >= nAccumulated)
             iFrame = 0;
 
+
         // Null SNRs
-        for (int i=0; i<nSnrAccumulated; i++) {
-            arrayAvgSNR[i] =0;
-            arrayMaxSNR[i] = 0;
-        }
+        for (int i = 0; i < nSnrAccumulated; i++)
+            arrayAvgSNR[i] = 0;
+
+        arraySNR = new double[nSnrAccumulated][nF];
         // Variance Calculation
-        float mu ;
-        for(int f=0; f<nFrequencies; f++){
+        float mu;
+        for (int f = 0; f < nF; f++) {
             // Mu
             mu = 0;
-            for (int n=0; n<nAccumulated; n++)
+            for (int n = 0; n < nAccumulated; n++)
                 mu += accumulatedData[n][f];
             mu /= nAccumulated;
             // Variance
+//            for (int n = 0; n < nAccumulated; n++)
+//                arraySNR[iSNR][f] = (float) Math.pow((accumulatedData[n][f] - mu), 2);
+//            arraySNR[iSNR][f] /= nAccumulated - 1;
+//             Average SNR
             for (int n=0; n<nAccumulated; n++)
-                arraySNR[f] = (float)Math.pow((accumulatedData[n][f]-mu),2);
-            arraySNR[f] /= nAccumulated-1;
-            // Maximum SNR
-            if (arraySNR[f]>arrayMaxSNR[iSNR])
-                arrayMaxSNR[iSNR] = arraySNR[f];
-            // Average SNR
-            arrayAvgSNR[iSNR] += arraySNR[f];
-        }
-        arrayAvgSNR[iSNR] /= nFrequencies;
-
-        iSNR++;
-        if (iSNR >= nSnrAccumulated) {
-            // Average estimation
-            avgSNR = 0;
-            maxSNR = 0;
-            for (int i=0; i<nSnrAccumulated; i++){
-                avgSNR += arrayAvgSNR[i];
-                maxSNR += arrayMaxSNR[i];
-            }
-            avgSNR /= nSnrAccumulated;
-            maxSNR /= nSnrAccumulated;
-            iSNR = 0;
+                arrayAvgSNR[f] += (float) Math.pow((accumulatedData[n][f] - mu), 2);
+            arrayAvgSNR[f] /= nAccumulated-1;
+            arrayAvgSNR[f] *= 5;
+//            iSNR++;
+//            if (iSNR >= nSnrAccumulated)
+//                iSNR = 0;
         }
     }
 
-    public float getAvgSNR() {
+    public double getAvgSNR() {
         return avgSNR;
     }
-    public float getMaxSNR() {
+    public double getMaxSNR() {
         return maxSNR;
+    }
+    public double[] getArrayAvgSNR() {
+        return arrayAvgSNR;
     }
 }

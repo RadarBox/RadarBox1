@@ -5,12 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.MediatorLiveData;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 
+import org.rdr.radarbox.DSP.SettingsDSP;
 import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
 import org.rdr.radarbox.File.Sender;
@@ -121,6 +123,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickSettings(View view) {
         Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
+    public void onClickSettingsDsp(View view){
+        Intent intent = new Intent(this, SettingsDSP.class);
         startActivity(intent);
     }
 

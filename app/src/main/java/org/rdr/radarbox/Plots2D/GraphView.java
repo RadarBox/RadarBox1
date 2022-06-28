@@ -1,6 +1,7 @@
 package org.rdr.radarbox.Plots2D;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,8 +17,11 @@ import android.util.TypedValue;
 import android.view.View;
 
 import org.rdr.radarbox.DSP.SNR;
+import org.rdr.radarbox.DSP.SettingsDSP;
+import org.rdr.radarbox.MainActivity;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
+import org.xmlpull.v1.XmlPullParserException;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
@@ -43,7 +47,6 @@ public class GraphView extends View implements Serializable {
     private boolean mShowLabelsX, mShowLabelsY, mShowTitleX, mShowTitleY;
     private String mTitleX, mTitleY;
     private List<String> mLabelsX, mLabelsY;
-    private final SNR snr;
 
 
     public void addLine(Line2D line2D) {
@@ -57,7 +60,6 @@ public class GraphView extends View implements Serializable {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GraphView);
 
-        snr = new SNR();
         try {
             mShowLabelsX = a.getBoolean(R.styleable.GraphView_showLabelsX, false);
             mShowLabelsY = a.getBoolean(R.styleable.GraphView_showLabelsY, false);
@@ -127,23 +129,13 @@ public class GraphView extends View implements Serializable {
         // Создание сетки
         drawGrid(canvas);
         //Рисование сигнала
-        drawLines2D(canvas);
+            drawLines2D(canvas);
         //Создание значний оси
         axisCaptions(canvas);
-        // Show SNR
-        drawSNR(canvas);
     }
 
-    @SuppressLint("DefaultLocale")
-    void drawSNR(Canvas canvas){
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//        paint.setStyle(Paint.Style.STROKE);
-        paint.setTextSize(60);
-        snr.calculateSNR(RadarBox.freqSignals.getRawFreqFrame());
-        // Maximum SNR
-        canvas.drawText(String.format("max %4.0f",snr.getMaxSNR()),getWidth()-300,100,paint);
-        // Average SNR
-        canvas.drawText(String.format("avg %4.3f",snr.getAvgSNR()),getWidth()-300,200,paint);
+    void drawTime(Canvas canvas){
+
     }
 
     private void drawLines2D(Canvas canvas) {

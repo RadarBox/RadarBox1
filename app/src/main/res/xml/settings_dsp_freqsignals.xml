@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <PreferenceCategory android:title="Настройка FreqSignals">
+
+        <Preference
+            android:defaultValue="Default value"
+            android:key="freqInitMHz"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="freqInitMHz"
+            android:summary="0"/>
+        <Preference
+            android:defaultValue="Default value"
+            android:key="freqStepMHz"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="freqStepMHz"
+            android:summary="0"/>
+        <Preference
+            android:defaultValue="Default value"
+            android:key="FN"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="FN"
+            android:summary="0"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
