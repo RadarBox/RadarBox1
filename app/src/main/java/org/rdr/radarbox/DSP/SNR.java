@@ -18,7 +18,7 @@ import org.rdr.radarbox.RadarBox;
  * @author Козлов Роман Юрьевич
  * @version 0.1
  */
-//
+
 public class SNR extends PreferenceFragmentCompat {
     static int nAccumulated = 10;
     static int nSnrAccumulated = 10;
