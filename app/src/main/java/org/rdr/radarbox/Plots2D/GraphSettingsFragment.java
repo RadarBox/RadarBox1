@@ -3,6 +3,8 @@ package org.rdr.radarbox.Plots2D;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.InputType;
+import android.text.method.DigitsKeyListener;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -27,6 +29,8 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.textfield.TextInputEditText;
 
 
 public class GraphSettingsFragment extends Fragment {
@@ -57,28 +61,53 @@ public class GraphSettingsFragment extends Fragment {
         final TypedValue value = new TypedValue();
         this.getContext().getTheme().resolveAttribute(R.attr.colorOnPrimary,value,true);
         view.setBackgroundColor(value.data);
-
         EditText scaleFactor = view.findViewById(R.id.scale_factor);
+        final String[] oldTextScaleFactor = new String[1];
+        oldTextScaleFactor [0] = scaleFactor.getText().toString();
+        scaleFactor.setOnKeyListener((v, keyCode, event) -> {
+                    if(event.getAction() == KeyEvent.ACTION_DOWN &&
+                            (keyCode == KeyEvent.KEYCODE_ENTER) ) {
+                        if (scaleFactor.getText().toString().isEmpty()){
+                            scaleFactor.setText(oldTextScaleFactor[0]);
+                        }
+                        graphView.scaleYlimitMul(Double.parseDouble(scaleFactor.getText().toString()));
+                        graphView.scaleYlimitDev(Double.parseDouble(scaleFactor.getText().toString()));
+                        graphView.invalidate();
+                        return true;
+                    }
+                    return false;
+                }
+        );
+
 
         EditText axisXmin = view.findViewById(R.id.axis_x_min);
         axisXmin.setText(Double.toString(graphView.getxMin()));
+        final String[] oldTextXmin = new String[1];
+        oldTextXmin [0] = axisXmin.getText().toString();
         axisXmin.setOnKeyListener((v, keyCode, event) -> {
-            if(event.getAction() == KeyEvent.ACTION_DOWN &&
-                    (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                graphView.setxMin(Double.parseDouble(axisXmin.getText().toString()));
-                graphView.invalidate();
-
-
-                return true;
-            }
-            return false;
-        }
+                    if(event.getAction() == KeyEvent.ACTION_DOWN &&
+                            (keyCode == KeyEvent.KEYCODE_ENTER) ) {
+                        if (axisXmin.getText().toString().isEmpty()){
+                            axisXmin.setText(oldTextXmin[0]);
+                        }
+                        graphView.setxMin(Double.parseDouble(axisXmin.getText().toString()));
+                        graphView.invalidate();
+                        return true;
+                    }
+                    return false;
+                }
         );
+
         EditText axisXmax = view.findViewById(R.id.axis_x_max);
         axisXmax.setText(Double.toString(graphView.getxMax()));
+        final String[] oldTextXmax = new String[1];
+        oldTextXmax [0] = axisXmax.getText().toString();
         axisXmax.setOnKeyListener((v, keyCode, event) -> {
                     if(event.getAction() == KeyEvent.ACTION_DOWN &&
                             (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                        if (axisXmax.getText().toString().isEmpty()) {
+                            axisXmax.setText(oldTextXmax[0]);
+                        }
                         graphView.setxMax(Double.parseDouble(axisXmax.getText().toString()));
                         graphView.invalidate();
                         return true;
@@ -88,9 +117,14 @@ public class GraphSettingsFragment extends Fragment {
         );
         EditText axisYmax = view.findViewById(R.id.axis_y_max);
         axisYmax.setText(Double.toString(graphView.getyMax()));
+        final String[] oldTextYmax = new String[1];
+        oldTextYmax [0] = axisYmax.getText().toString();
         axisYmax.setOnKeyListener((v, keyCode, event) -> {
                     if(event.getAction() == KeyEvent.ACTION_DOWN &&
                             (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                        if (axisYmax.getText().toString().isEmpty()) {
+                            axisYmax.setText(oldTextYmax[0]);
+                        }
                         graphView.setyMax(Double.parseDouble(axisYmax.getText().toString()));
                         if(graphView.getyMin()!=0f)
                             graphView.setyMin(-1*Double.parseDouble(axisYmax.getText().toString()));
