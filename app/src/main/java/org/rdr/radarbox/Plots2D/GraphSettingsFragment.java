@@ -67,6 +67,8 @@ public class GraphSettingsFragment extends Fragment {
                     (keyCode == KeyEvent.KEYCODE_ENTER)) {
                 graphView.setxMin(Double.parseDouble(axisXmin.getText().toString()));
                 graphView.invalidate();
+
+
                 return true;
             }
             return false;
