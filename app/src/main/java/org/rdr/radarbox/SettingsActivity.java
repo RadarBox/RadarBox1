@@ -12,19 +12,23 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PersistableBundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.Device.DeviceConfigurationFragment;
 import org.rdr.radarbox.File.Sender;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -36,14 +40,23 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         TextView textViewLogger = findViewById(R.id.logger_view);
+        final NestedScrollView scrollView = (NestedScrollView)findViewById(R.id.logger_scroll);
         try {
             textViewLogger.setText(
                     new String(Files.readAllBytes(RadarBox.logger.getFileLog().toPath())));
-            int textHeight = textViewLogger.getHeight();
-            ((NestedScrollView)findViewById(R.id.logger_scroll)).scrollBy(0,textHeight); //fullScroll(View.FOCUS_DOWN);
+            scrollView.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        OnLongClickFileOpener fileOpener = new OnLongClickFileOpener(this,
+                "storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/log.txt");
+        textViewLogger.setOnLongClickListener(fileOpener);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -57,12 +70,17 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         if (savedInstanceState == null) {
-            TextView textViewLogger = findViewById(R.id.logger_view);
-            NestedScrollView scrollView = findViewById(R.id.logger_scroll);
-            textViewLogger.setMovementMethod(new ScrollingMovementMethod());
             RadarBox.logger.getLiveLastStringWritten().observe(this,lastString-> {
+                TextView textViewLogger = findViewById(R.id.logger_view);
+                textViewLogger.setMovementMethod(new ScrollingMovementMethod());
                 textViewLogger.append("\n"+lastString);
-                scrollView.fullScroll(View.FOCUS_DOWN);
+                NestedScrollView scrollView = findViewById(R.id.logger_scroll);
+                scrollView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                    }
+                });
             });
         }
     }
@@ -203,5 +221,32 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
             });
         }
+    }
+}
+
+class OnLongClickFileOpener implements View.OnLongClickListener {
+    private Context parentObject;
+    private String filePath;
+
+    public OnLongClickFileOpener(Context parent, String path) {
+        parentObject = parent;
+        filePath = path;
+    }
+
+    @Override
+    public boolean onLongClick(View view) {
+        File file = new File(filePath);
+
+        Uri uri = FileProvider.getUriForFile(parentObject,
+                "org.rdr.radarbox.file_provider", file);
+        String mime = parentObject.getContentResolver().getType(uri);
+
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, mime);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Intent chosenIntent = Intent.createChooser(intent, "Открыть файл в...");
+        parentObject.startActivity(chosenIntent);
+        return false;
     }
 }
