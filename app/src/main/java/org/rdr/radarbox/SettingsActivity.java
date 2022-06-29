@@ -66,7 +66,18 @@ public class SettingsActivity extends AppCompatActivity {
     private class OnLongClickFileOpener implements View.OnLongClickListener {
         @Override
         public boolean onLongClick(View view) {
-            System.out.println("LONG CLICK");
+            File file = new File("storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/log.txt");
+
+            Uri uri = FileProvider.getUriForFile(SettingsActivity.this,
+                    "org.rdr.radarbox.file_provider", file);
+            String mime = getContentResolver().getType(uri);
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, mime);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chosenIntent = Intent.createChooser(intent, "Открыть файл логирования в...");
+            startActivity(chosenIntent);
             return false;
         }
     }
