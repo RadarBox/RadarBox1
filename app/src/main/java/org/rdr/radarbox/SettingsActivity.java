@@ -12,6 +12,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -53,32 +54,15 @@ public class SettingsActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        textViewLogger.setOnLongClickListener(new OnLongClickFileOpener());
+        OnLongClickFileOpener fileOpener = new OnLongClickFileOpener(this,
+                "storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/log.txt");
+        textViewLogger.setOnLongClickListener(fileOpener);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.settings_container, new SettingsFragment())
                     .commit();
-        }
-    }
-
-    private class OnLongClickFileOpener implements View.OnLongClickListener {
-        @Override
-        public boolean onLongClick(View view) {
-            File file = new File("storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/log.txt");
-
-            Uri uri = FileProvider.getUriForFile(SettingsActivity.this,
-                    "org.rdr.radarbox.file_provider", file);
-            String mime = getContentResolver().getType(uri);
-
-            Intent intent = new Intent();
-            intent.setAction(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, mime);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            Intent chosenIntent = Intent.createChooser(intent, "Открыть файл логирования в...");
-            startActivity(chosenIntent);
-            return false;
         }
     }
 
@@ -237,5 +221,32 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
             });
         }
+    }
+}
+
+class OnLongClickFileOpener implements View.OnLongClickListener {
+    private Context parentObject;
+    private String filePath;
+
+    public OnLongClickFileOpener(Context parent, String path) {
+        parentObject = parent;
+        filePath = path;
+    }
+
+    @Override
+    public boolean onLongClick(View view) {
+        File file = new File(filePath);
+
+        Uri uri = FileProvider.getUriForFile(parentObject,
+                "org.rdr.radarbox.file_provider", file);
+        String mime = parentObject.getContentResolver().getType(uri);
+
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, mime);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Intent chosenIntent = Intent.createChooser(intent, "Открыть файл в...");
+        parentObject.startActivity(chosenIntent);
+        return false;
     }
 }
