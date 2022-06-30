@@ -1,11 +1,14 @@
 package org.rdr.radarbox.Plots2D;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
@@ -13,8 +16,12 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
+import org.rdr.radarbox.DSP.SNR;
+import org.rdr.radarbox.DSP.SettingsDSP;
+import org.rdr.radarbox.MainActivity;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
+import org.xmlpull.v1.XmlPullParserException;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
@@ -122,9 +129,13 @@ public class GraphView extends View implements Serializable {
         // Создание сетки
         drawGrid(canvas);
         //Рисование сигнала
-        drawLines2D(canvas);
+            drawLines2D(canvas);
         //Создание значний оси
         axisCaptions(canvas);
+    }
+
+    void drawTime(Canvas canvas){
+
     }
 
     private void drawLines2D(Canvas canvas) {
@@ -165,6 +176,7 @@ public class GraphView extends View implements Serializable {
         paint.setColor(value.data);
         paint.setStrokeWidth(3);
         paint.setStyle(Paint.Style.STROKE);
+        paint.setPathEffect(new DashPathEffect(new float[]{30,30},0));
 
         // Определение границ холста
         int height = canvas.getHeight();

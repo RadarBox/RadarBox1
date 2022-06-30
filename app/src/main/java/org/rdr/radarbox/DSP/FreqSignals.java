@@ -1,10 +1,19 @@
 package org.rdr.radarbox.DSP;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
+import org.rdr.radarbox.R;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import static org.rdr.radarbox.RadarBox.logger;
+
+import android.os.Bundle;
+
+import androidx.preference.EditTextPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 /**
  * Класс для работы с частотными сигналами. Внутри него можно получать актульную информацию об
@@ -13,7 +22,7 @@ import static org.rdr.radarbox.RadarBox.logger;
  * @author Сапронов Данил Игоревич
  * @version 0.1
  */
-public class FreqSignals {
+public class FreqSignals extends PreferenceFragmentCompat {
     private int FN, rxN, txN, chN, frameSize, freqInitMHz, freqStepMHz;
     private short[] rawFreqFrame;
     private short[] rawFreqFrameReshuffled;
@@ -24,6 +33,61 @@ public class FreqSignals {
 
     }
 
+    Preference pref;
+    Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            String stringValue = newValue.toString();
+            if (preference instanceof EditTextPreference) {
+                preference.setSummary(stringValue);
+                ((EditTextPreference) preference).setText(stringValue);
+                setNewParameters();
+            }
+            return false;
+        }
+    };
+
+    void setNewParameters(){
+        pref = findPreference("freqInitMHz");
+        assert pref != null;
+        pref.setSummary(Integer.toString(freqInitMHz));
+
+        pref = findPreference("freqStepMHz");
+        assert pref != null;
+        pref.setSummary(Integer.toString(freqStepMHz));
+
+        pref = findPreference("FN");
+        assert pref != null;
+        pref.setSummary(Integer.toString(FN));
+    }
+
+    void bindSummaryValue(Preference preference){
+        preference.setOnPreferenceChangeListener(listener);
+        listener.onPreferenceChange(preference,
+                PreferenceManager.getDefaultSharedPreferences(preference.getContext())
+                        .getString(preference.getKey(),""));
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+        setPreferencesFromResource(R.xml.settings_dsp_freqsignals,rootKey);
+
+        pref = findPreference("freqInitMHz");
+        assert pref != null;
+        pref.setSummary(Integer.toString(freqInitMHz));
+        bindSummaryValue(pref);
+
+        pref = findPreference("freqStepMHz");
+        assert pref != null;
+        pref.setSummary(Integer.toString(freqStepMHz));
+        bindSummaryValue(pref);
+
+        pref = findPreference("FN");
+        assert pref != null;
+        pref.setSummary(Integer.toString(FN));
+        bindSummaryValue(pref);
+    }
+
     /** Функция, изменяющая параметры частотных сигналов. Вызывается при смене устройства
      * либо при переходе между работой с устройством и работой с файлом.
      * @param deviceConfig новая конфигурация устройства /
@@ -32,6 +96,7 @@ public class FreqSignals {
      * и установлены
      */
     public boolean updateSignalParameters(DeviceConfiguration deviceConfig) {
+
         rxN=deviceConfig.getRxN();
         txN=deviceConfig.getTxN();
         rxtxOrder = new int[rxN][txN];
@@ -194,6 +259,13 @@ public class FreqSignals {
      */
     public int getFreqInitMHz() {
         return freqInitMHz;
+    }
+
+    /** <p>Возвращает шаг частоты в МГц.</p>
+     * @return шаг частоты в МГц
+     */
+    public int getFreqStepMHz() {
+        return freqStepMHz;
     }
 
     /** <p>Возвращает общее количество приёмных каналов.</p>
