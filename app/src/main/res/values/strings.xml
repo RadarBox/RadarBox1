@@ -5,6 +5,8 @@
     <string name="str_exit">ВЫХОД</string>
     <string name="str_yes">Да</string>
     <string name="str_no">Нет</string>
+    <string name="str_ok">OK</string>
+    <string name="str_close">Закрыть</string>
     <string-array name="select_freq_chart">
         <item>Raw data</item>
         <item>SNR</item>

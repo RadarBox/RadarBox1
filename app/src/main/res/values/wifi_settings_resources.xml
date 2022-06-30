@@ -21,4 +21,10 @@
     <string name="wifi_dialog_title">Настройки Wi-Fi</string>
     <string name="wifi_dialog_message">Невозможно работать по Wi-Fi. Wi-Fi в системе отключён.
     Открыть системное меню Wi-Fi для включения?</string>
+    <string name="wifi_no_access_location_title">Нет доступа к местоположению</string>
+    <string name="wifi_no_access_location_message">Без доступа к местоположению
+    не получится автоматически считать MAC-адрес устройства. Каждый раз будет появляться окно подключения.</string>
+    <string name="wifi_ask_access_location_title">Доступ к местополжению</string>
+    <string name="wifi_ask_access_location_message">Предоставить приложению доступ к местоположению?</string>
+    <string name="wifi_open_app_settings">Настройки приложения</string>
 </resources>
