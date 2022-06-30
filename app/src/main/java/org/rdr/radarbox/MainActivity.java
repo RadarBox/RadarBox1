@@ -118,6 +118,13 @@ public class MainActivity extends AppCompatActivity {
                             });
                         }
                     });
+                    // при длинном нажатии происходит отключение от устройства по Wi-Fi
+                    btnWifi.setOnLongClickListener(v -> {
+                        if(dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTED) ||
+                                dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTING))
+                            return dataChannelWiFi.disconnect();
+                        else return false;
+                    });
                 });
     }
 
