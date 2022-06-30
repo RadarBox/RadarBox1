@@ -1,14 +1,23 @@
 package org.rdr.radarbox;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MediatorLiveData;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
+import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -35,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.main_data_view_container, TimeFreqGraphFragment.class,null)
                     .commit();
         }
+        createLocationPermissionRequest();
         //ImageButton btnWifi = findViewById(R.id.btn_wifi);
         /*
         Observer<DataThreadService.DataThreadState> dataThreadObserver =
@@ -118,6 +128,13 @@ public class MainActivity extends AppCompatActivity {
                             });
                         }
                     });
+                    // при длинном нажатии происходит отключение от устройства по Wi-Fi
+                    btnWifi.setOnLongClickListener(v -> {
+                        if(dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTED) ||
+                                dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTING))
+                            return dataChannelWiFi.disconnect();
+                        else return false;
+                    });
                 });
     }
 
@@ -154,13 +171,99 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickWifi(View view) {
-        if(RadarBox.device.communication.channelSet.stream().anyMatch(
+        if (RadarBox.device.communication.channelSet.stream().anyMatch(
                 dataChannel -> dataChannel.getName().equals("WiFi"))) {
-            RadarBox.device.communication.channelSet.stream().filter(
-                    dataChannel -> dataChannel.getName().equals("WiFi"))
-                    .forEach(dataChannelWiFi -> {
-                        dataChannelWiFi.connect();
-                    });
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                RadarBox.device.communication.channelSet.stream().filter(
+                                dataChannel -> dataChannel.getName().equals("WiFi"))
+                        .forEach(dataChannelWiFi -> {
+                            dataChannelWiFi.connect();
+                        });
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog
+                        .Builder(RadarBox.getCurrentActivity());
+                alertDialogBuilder.setTitle(getString(R.string.wifi_ask_access_location_title));
+                alertDialogBuilder
+                        .setMessage(getString(R.string.wifi_no_access_location_message) + "\n" +
+                                getString(R.string.wifi_ask_access_location_message))
+                        .setCancelable(false)
+                        .setPositiveButton(getString(R.string.str_yes),
+                                (dialog, which) -> {
+                                    locationPermissionRequest.launch(new String[]{
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                    });
+                                })
+                        .setNegativeButton(getString(R.string.str_no),
+                                (dialog, which) -> {
+                                    RadarBox.device.communication.channelSet.stream().filter(
+                                                    dataChannel -> dataChannel.getName().equals("WiFi"))
+                                            .forEach(dataChannelWiFi -> {
+                                                dataChannelWiFi.connect();
+                                            });
+                                    dialog.dismiss();
+                                });
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+            } else {
+                locationPermissionRequest.launch(new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                });
+            }
         }
+    }
+
+    private ActivityResultLauncher<String[]> locationPermissionRequest;
+    /** Метод создаёт запрос на получение доступа к местоположению.
+     * Это необходимо для автоматического подключения к точке доступа (для считывания её MAC адреса)
+     * без открытия диалога с прогрессом подключения.
+     */
+    private void createLocationPermissionRequest() {
+        locationPermissionRequest =
+                registerForActivityResult(new ActivityResultContracts
+                                .RequestMultiplePermissions(), result -> {
+                            Boolean fineLocationGranted = result.getOrDefault(
+                                    Manifest.permission.ACCESS_FINE_LOCATION, false);
+                            Boolean coarseLocationGranted = result.getOrDefault(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,false);
+                            if (fineLocationGranted != null && fineLocationGranted) {
+                                // Precise location access granted.
+                                RadarBox.logger.add("PRECISE LOCATION ACCESS GRANTED");
+                                RadarBox.device.communication.channelSet.stream().filter(
+                                                dataChannel -> dataChannel.getName().equals("WiFi"))
+                                        .forEach(dataChannelWiFi -> {
+                                            dataChannelWiFi.connect();
+                                        });
+                            } else if (coarseLocationGranted != null && coarseLocationGranted) {
+                                // Only approximate location access granted.
+                                RadarBox.logger.add("ONLY APPROXIMATE LOCATION ACCESS GRANTED");
+                            } else {
+                                AlertDialog.Builder alertDialogBuilder = new AlertDialog
+                                        .Builder(RadarBox.getCurrentActivity());
+                                alertDialogBuilder.setTitle(getString(R.string.wifi_no_access_location_title));
+                                alertDialogBuilder
+                                        .setMessage(getString(R.string.wifi_no_access_location_message))
+                                        .setCancelable(true)
+                                        .setNeutralButton(getString(R.string.str_close),
+                                                (dialog, which) -> {
+                                                    dialog.dismiss();
+                                                    RadarBox.device.communication.channelSet.stream().filter(
+                                                                    dataChannel -> dataChannel.getName().equals("WiFi"))
+                                                            .forEach(dataChannelWiFi -> {
+                                                                dataChannelWiFi.connect();
+                                                            });
+                                                }).setPositiveButton(getString(R.string.wifi_open_app_settings),
+                                                (dialog,which) -> {
+                                                    startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                                            Uri.fromParts("package", getPackageName(), null)));
+                                                    dialog.dismiss();
+                                                });
+                                AlertDialog alertDialog = alertDialogBuilder.create();
+                                alertDialog.show();
+                            }
+                        }
+                );
     }
 }
