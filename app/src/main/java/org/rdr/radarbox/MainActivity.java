@@ -149,8 +149,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickExit(View view) {
-        this.finish();
-        System.exit(0);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog
+                .Builder(this);
+        alertDialogBuilder.setTitle(getString(R.string.str_exit));
+        alertDialogBuilder
+                .setMessage(getString(R.string.str_exit_msg))
+                .setCancelable(true)
+                .setPositiveButton(getString(R.string.str_yes),
+                        (dialog, which) -> {
+                            this.finish();
+                            System.exit(0);
+                        }).setNegativeButton(getString(R.string.str_no),
+                        (dialog,which) -> dialog.dismiss()).create().show();
     }
 
     public void onClickStartStop(View view) {
@@ -241,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
                                 RadarBox.logger.add("ONLY APPROXIMATE LOCATION ACCESS GRANTED");
                             } else {
                                 AlertDialog.Builder alertDialogBuilder = new AlertDialog
-                                        .Builder(RadarBox.getCurrentActivity());
+                                        .Builder(this);
                                 alertDialogBuilder.setTitle(getString(R.string.wifi_no_access_location_title));
                                 alertDialogBuilder
                                         .setMessage(getString(R.string.wifi_no_access_location_message))

@@ -148,14 +148,14 @@ public class GraphSettingsFragment extends Fragment {
         });
         Button buttonPlus = view.findViewById(R.id.button_plus);
         buttonPlus.setOnClickListener(v -> {
-            graphView.scaleYlimitDev(Integer.parseInt(scaleFactor.getText().toString()));
+            graphView.scaleYlimitDev(Double.parseDouble(scaleFactor.getText().toString()));
             axisYmax.setText(Double.toString(graphView.getyMax()));
             graphView.invalidate();
         });
 
         Button buttonMinus = view.findViewById(R.id.button_minus);
         buttonMinus.setOnClickListener(v -> {
-            graphView.scaleYlimitMul(Integer.parseInt(scaleFactor.getText().toString()));
+            graphView.scaleYlimitMul(Double.parseDouble(scaleFactor.getText().toString()));
             axisYmax.setText(Double.toString(graphView.getyMax()));
             graphView.invalidate();
         });
