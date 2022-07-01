@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.Environment;
 import android.os.Parcel;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
@@ -15,6 +14,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,27 +32,27 @@ import androidx.preference.PreferenceManager;
 
 /**
  * Класс для чтения данных из файла
- * @author Сапронов Данил Игоревич
+ * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
  * @version 0.1
  */
 public class Reader {
-    Context context;
+    private Context context;
     private int fileReadFrameCount;
     private int curReadFrame;
     private final File directoryDocuments;
     private File fileRead = null;
     private MappedByteBuffer fileReadBuffer;
     private ShortBuffer fileReadShortBuffer;
-    private DeviceConfiguration virtualDeviceConfiguration=null;
+    private DeviceConfiguration virtualDeviceConfiguration = null;
 
-    public Reader(Context context) {
-        this.context = context;
-        directoryDocuments = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+    public Reader(Context context_) {
+        context = context_;
+        directoryDocuments = context.getExternalFilesDir(Helpers.defaultFolderPath);
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         String dataReadFilename = pref.getString("file_reader_filename","");
-        RadarBox.logger.add(this,dataReadFilename);
+        RadarBox.logger.add(this, dataReadFilename);
         if(!dataReadFilename.isEmpty()) {
-            this.setFileRead(dataReadFilename);
+            setFileRead(dataReadFilename);
         }
     }
 
@@ -72,6 +72,7 @@ public class Reader {
             listOfFiles = new String[]{};
         return listOfFiles;
     }
+
     /** Открытие файла с заданным имененем и парсинг шапки файла
      * @param name - имя файла, включая расширение *.data
      * @return true, если файл успешно открыт
@@ -81,7 +82,7 @@ public class Reader {
         fileRead = new File(directoryDocuments.getPath()+"/"+name);
         if (fileRead.exists()) {
             try {
-                parseReadFileHeader();
+                readFile();
             } catch (IOException e) {
                 RadarBox.logger.add(e.toString());
                 fileRead = null;
@@ -97,7 +98,13 @@ public class Reader {
      * узнать параметры устройства, с которого были записаны данные
      * @throws IOException
      */
-    private void parseReadFileHeader() throws IOException {
+    private void readFile() throws IOException {
+        try {
+            ZipManager zipManager = new ZipManager(new File(Helpers.defaultFolderAbsPath + "/Arch.zip"));
+            zipManager.unzipFile();
+        } catch (Exception e) {
+            RadarBox.logger.add(this,e.getLocalizedMessage()+"\n\tCould not unzip file");
+        }
         FileInputStream fileReadStream = new FileInputStream(fileRead);
         // формирование конфигурации устройства из заголовка файла
         virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
