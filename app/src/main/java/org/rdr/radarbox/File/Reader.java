@@ -1,50 +1,49 @@
 package org.rdr.radarbox.File;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.Parcel;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.RadarBox;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
+import java.io.FileNotFoundException;
 import java.nio.InvalidMarkException;
+import java.nio.BufferUnderflowException;
+
+import java.nio.ByteOrder;
+
+import java.io.InputStream;
+import java.io.FileInputStream;
 import java.nio.MappedByteBuffer;
 import java.nio.ShortBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
 
 import androidx.preference.PreferenceManager;
 
 /**
- * Класс для чтения данных из файла
+ * Класс для чтения данных из файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.1
+ * @version 0.2.0
  */
 public class Reader {
     private Context context;
-    private int fileReadFrameCount;
-    private int curReadFrame;
-    private final File directoryDocuments;
     private File fileRead = null;
-    private MappedByteBuffer fileReadBuffer;
-    private ShortBuffer fileReadShortBuffer;
+    private ZipManager zipManager;
+    private final File directoryDocuments;
     private DeviceConfiguration virtualDeviceConfiguration = null;
 
+    private MappedByteBuffer fileReadBuffer;
+    private ShortBuffer fileReadShortBuffer;
+
+    private int fileReadFrameCount;
+    private int curReadFrame;
+
+    // Initialize methods
     public Reader(Context context_) {
         context = context_;
         directoryDocuments = context.getExternalFilesDir(Helpers.defaultFolderPath);
@@ -56,62 +55,65 @@ public class Reader {
         }
     }
 
-    /** Возвращает конфигурацию устройства, считанную из заголовка файла либо null.
-     * @return null, если файл с данными не открыт или в открытом файле отстутствует заголовок с
-     * конфигурацией устройства
+    // Get methods
+    /** Текущий открытый архив с файлом для чтения радиолокационных данных.
+     * @return null, если открытого архива не существует.
+     */
+    public final File getFileRead() {return fileRead;}
+
+    /** Возвращает конфигурацию устройства, считанную из файла, либо null.
+     * @return null, если файл с конфигурацией не открыт.
      */
     public DeviceConfiguration getVirtualDeviceConfiguration() {return virtualDeviceConfiguration;}
 
-    /** Получение списка всех файлов в директории с расширением .data
-     * @return перечень файлов с расширением .data, пустой список во всех остальных случаях
-     */
-    public String[] getFilesList() {
-        String[] listOfFiles = new String[]{};
-        listOfFiles = directoryDocuments.list((d, s) -> s.toLowerCase().endsWith(".data"));
-        if (listOfFiles==null)
-            listOfFiles = new String[]{};
-        return listOfFiles;
-    }
-
-    /** Открытие файла с заданным имененем и парсинг шапки файла
-     * @param name - имя файла, включая расширение *.data
-     * @return true, если файл успешно открыт
-     * и двоичные данные в нём преобразованы для дальнешего считывания.
+    // Set methods
+    /** Распаковка файла с заданным имененем и открытие его содержимого.
+     * @param name - имя файла, включая расширение .zip
+     * @return true, если файлы успешно открыты
+     * и двоичные данные в data-файле преобразованы для дальнешего считывания.
      */
     public boolean setFileRead(String name) {
-        fileRead = new File(directoryDocuments.getPath()+"/"+name);
-        if (fileRead.exists()) {
-            try {
-                readFile();
-            } catch (IOException e) {
-                RadarBox.logger.add(e.toString());
-                fileRead = null;
-                e.printStackTrace();
-                return false;
-            }
-            return true;
+        fileRead = new File(directoryDocuments.getPath() + "/" + name);
+        try {
+            zipManager = new ZipManager(fileRead);
+        } catch (NoAZipFileException | FileNotFoundException e) {
+            RadarBox.logger.add(e.toString());
+            e.printStackTrace();
+            return false;
         }
-        else return false;
+        try {
+            readFile();
+            return true;
+        } catch (IOException e) {
+            RadarBox.logger.add(e.toString());
+            fileRead = null;
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    /** Анализ заголовка файла и создание виртуальной конфигурации устройства, из которой можно
-     * узнать параметры устройства, с которого были записаны данные
+    // Main methods
+    /** Создание виртуальной конфигурации устройства, из которой можно
+     * узнать параметры устройства, с которого были записаны данные;
+     * Считывание данных из data-файла
      * @throws IOException
      */
     private void readFile() throws IOException {
-        try {
-            ZipManager zipManager = new ZipManager(new File(Helpers.defaultFolderAbsPath + "/Arch.zip"));
-            zipManager.unzipFile();
-        } catch (Exception e) {
-            RadarBox.logger.add(this,e.getLocalizedMessage()+"\n\tCould not unzip file");
-        }
-        FileInputStream fileReadStream = new FileInputStream(fileRead);
-        // формирование конфигурации устройства из заголовка файла
-        virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
-                "virtual", fileReadStream);
+        zipManager.unzipFile();
+        File folder = zipManager.getUnzipFolder();
 
-        fileReadBuffer = fileReadStream.getChannel()
-                .map(FileChannel.MapMode.READ_ONLY,0,fileRead.length());
+        FileInputStream configReadStream = new FileInputStream(folder.getAbsolutePath() + "/" +
+                Helpers.fileNamesMap.get("config"));
+        virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
+                "virtual", configReadStream);
+        System.out.println("Config read");
+
+        File dataFile = new File(folder.getAbsolutePath() + "/" +
+                Helpers.fileNamesMap.get("data"));
+        FileInputStream dataReadStream = new FileInputStream(dataFile);
+        fileReadBuffer = dataReadStream.getChannel().map(
+                FileChannel.MapMode.READ_ONLY,0, dataFile.length());
+        /*
         boolean isEndOfConfigReached = false;
         while(fileReadBuffer.hasRemaining() && !isEndOfConfigReached) {
             byte[] endOfConfig = ("</config>").getBytes(StandardCharsets.UTF_8);
@@ -120,8 +122,9 @@ public class Reader {
                     isEndOfConfigReached = true; //достигнут конец заголовка файла
                     break;
                 }
-        }
-        fileReadBuffer.get(); //переход на новую строку
+        } */
+        // fileReadBuffer.get(); //переход на новую строку */
+
         fileReadBuffer.mark(); //отметка, с которой можно начать читать данные типа short
         // создание буфера типа short для удобного считывания данных
         fileReadShortBuffer = fileReadBuffer.order(ByteOrder.BIG_ENDIAN).asShortBuffer();
@@ -129,10 +132,23 @@ public class Reader {
         // установка отметки в нулевую позицию для возможности в будущем перечитывать данные
         fileReadShortBuffer.mark();
         curReadFrame=0;
+        System.out.println("Data read");
+    }
+
+    // Help methods
+    /** Получение списка всех файлов в директории с расширением .zip
+     * @return перечень файлов с расширением .zip, пустой список во всех остальных случаях
+     */
+    public String[] getFilesList() {
+        // String[] listOfFiles = new String[]{};
+        String[] listOfFiles = directoryDocuments.list((d, s) -> s.toLowerCase().endsWith(".zip"));
+        if (listOfFiles == null)
+            listOfFiles = new String[]{};
+        return listOfFiles;
     }
 
     public int getFileReadFrameCount() {
-        if (fileReadFrameCount>0)
+        if (fileReadFrameCount > 0)
             return fileReadFrameCount;
         else
             return -1;
@@ -144,34 +160,33 @@ public class Reader {
             curReadFrame++;
         }
         catch (BufferUnderflowException e) {
-            RadarBox.logger.add(this,e.toString()+"\n\tCouldn't read "+curReadFrame
-                    +"-th frame. \n\tFileBuffer position: "+fileReadBuffer.position()
-                    +"\n\tReading elements count: "+dest.length+"(int16)"
-                    +"\n\tElements remaining in buffer: "+fileReadShortBuffer.remaining()+"(int16)");
+            RadarBox.logger.add(this,e.toString() + "\n\tCouldn't read " + curReadFrame
+                    + "-th frame. \n\tFileBuffer position: " + fileReadBuffer.position()
+                    + "\n\tReading elements count: " + dest.length + "(int16)"
+                    + "\n\tElements remaining in buffer: " + fileReadShortBuffer.remaining()
+                    + "(int16)");
             try {
                 fileReadShortBuffer.reset();
                 curReadFrame=0;
 
             } catch (InvalidMarkException e2) {
-                RadarBox.logger.add(this,e2.getLocalizedMessage()+"\n\tCouldn't reload file");
+                RadarBox.logger.add(this,e2.getLocalizedMessage() +
+                        "\n\tCouldn't reload file");
                 //RadarBox.mainDataThread.extraStop();
             }
         }
     }
 
-    /** Текущий открытый файл для чтения радиолокационных данных.
-     * @return null, если открытого для чтения данных файла не существует.
-     */
-    public final File getFileRead() {return fileRead;}
-
-    /** Класс наследник {@link #DeviceConfiguration} для считывания конфигурации устройства
-     * из заголовка файла c данными вместо конфигурационного файла устройства */
+    // Classes
+    // Help classes
+    /** Класс-наследник {@link #DeviceConfiguration} для считывания конфигурации устройства
+     * из конфигурационного файла */
     class VirtualDeviceConfiguration extends DeviceConfiguration {
 
         public VirtualDeviceConfiguration(Context context, String devicePrefix, InputStream configFileStream) {
             super(context, devicePrefix);
 
-            if(fileRead!=null) {
+            if(fileRead != null) {
                 try {
                     parseConfigurationHeader(configFileStream);
                 } catch (XmlPullParserException | IOException e) {
