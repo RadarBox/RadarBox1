@@ -75,16 +75,10 @@ public class Reader {
     public boolean setFileRead(String name) {
         fileRead = new File(defaultDirectory.getPath() + "/" + name);
         try {
-            ZipManager.archiveFolder(new File("storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/Test"));
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-        try {
             if (zipManager == null) {
                 zipManager = new ZipManager(fileRead);
             } else {
                 zipManager.setZipFile(fileRead);
-                System.out.println("SET!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
         } catch (NoAZipFileException | FileNotFoundException e) {
             RadarBox.logger.add(e.toString());
@@ -115,8 +109,9 @@ public class Reader {
                 Helpers.fileNamesMap.get("config"));
         virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
                 "virtual", configReadStream);
+        configReadStream.close();
 
-        File dataFile = new File(folder.getAbsolutePath() + "/" +
+        File dataFile = new File(folder.getPath() + "/" +
                 Helpers.fileNamesMap.get("data"));
         FileInputStream dataReadStream = new FileInputStream(dataFile);
         fileReadBuffer = dataReadStream.getChannel().map(
@@ -130,8 +125,8 @@ public class Reader {
                     isEndOfConfigReached = true; //достигнут конец заголовка файла
                     break;
                 }
-        } */
-        // fileReadBuffer.get(); //переход на новую строку */
+        }
+        fileReadBuffer.get(); //переход на новую строку */
 
         fileReadBuffer.mark(); //отметка, с которой можно начать читать данные типа short
         // создание буфера типа short для удобного считывания данных
@@ -139,7 +134,8 @@ public class Reader {
 
         // установка отметки в нулевую позицию для возможности в будущем перечитывать данные
         fileReadShortBuffer.mark();
-        curReadFrame=0;
+        curReadFrame = 0;
+        dataReadStream.close();
     }
 
     /**
