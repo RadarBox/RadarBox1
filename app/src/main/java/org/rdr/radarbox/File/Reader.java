@@ -28,13 +28,13 @@ import androidx.preference.PreferenceManager;
 /**
  * Класс для чтения данных из файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.0
+ * @version 0.2.1
  */
 public class Reader {
     private Context context;
     private File fileRead = null;
-    private ZipManager zipManager;
-    private final File directoryDocuments;
+    private ZipManager zipManager = null;
+    private final File defaultDirectory;
     private DeviceConfiguration virtualDeviceConfiguration = null;
 
     private MappedByteBuffer fileReadBuffer;
@@ -46,7 +46,7 @@ public class Reader {
     // Initialize methods
     public Reader(Context context_) {
         context = context_;
-        directoryDocuments = context.getExternalFilesDir(Helpers.defaultFolderPath);
+        defaultDirectory = context.getExternalFilesDir(Helpers.defaultFolderPath);
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         String dataReadFilename = pref.getString("file_reader_filename","");
         RadarBox.logger.add(this, dataReadFilename);
@@ -66,16 +66,26 @@ public class Reader {
      */
     public DeviceConfiguration getVirtualDeviceConfiguration() {return virtualDeviceConfiguration;}
 
-    // Set methods
+    // Main methods
     /** Распаковка файла с заданным имененем и открытие его содержимого.
      * @param name - имя файла, включая расширение .zip
      * @return true, если файлы успешно открыты
      * и двоичные данные в data-файле преобразованы для дальнешего считывания.
      */
     public boolean setFileRead(String name) {
-        fileRead = new File(directoryDocuments.getPath() + "/" + name);
+        fileRead = new File(defaultDirectory.getPath() + "/" + name);
         try {
-            zipManager = new ZipManager(fileRead);
+            ZipManager.archiveFolder(new File("storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/Test"));
+        } catch (IOException e) {
+            System.out.println(e.toString());
+        }
+        try {
+            if (zipManager == null) {
+                zipManager = new ZipManager(fileRead);
+            } else {
+                zipManager.setZipFile(fileRead);
+                System.out.println("SET!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
         } catch (NoAZipFileException | FileNotFoundException e) {
             RadarBox.logger.add(e.toString());
             e.printStackTrace();
@@ -92,10 +102,9 @@ public class Reader {
         return false;
     }
 
-    // Main methods
     /** Создание виртуальной конфигурации устройства, из которой можно
      * узнать параметры устройства, с которого были записаны данные;
-     * Считывание данных из data-файла
+     * Считывание данных из data-файла.
      * @throws IOException
      */
     private void readFile() throws IOException {
@@ -106,7 +115,6 @@ public class Reader {
                 Helpers.fileNamesMap.get("config"));
         virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
                 "virtual", configReadStream);
-        System.out.println("Config read");
 
         File dataFile = new File(folder.getAbsolutePath() + "/" +
                 Helpers.fileNamesMap.get("data"));
@@ -132,7 +140,15 @@ public class Reader {
         // установка отметки в нулевую позицию для возможности в будущем перечитывать данные
         fileReadShortBuffer.mark();
         curReadFrame=0;
-        System.out.println("Data read");
+    }
+
+    /**
+     * Завершение работы и удаление распакованных файлов.
+     */
+    public void close() {
+        if (zipManager != null) {
+            zipManager.close();
+        }
     }
 
     // Help methods
@@ -141,7 +157,7 @@ public class Reader {
      */
     public String[] getFilesList() {
         // String[] listOfFiles = new String[]{};
-        String[] listOfFiles = directoryDocuments.list((d, s) -> s.toLowerCase().endsWith(".zip"));
+        String[] listOfFiles = defaultDirectory.list((d, s) -> s.toLowerCase().endsWith(".zip"));
         if (listOfFiles == null)
             listOfFiles = new String[]{};
         return listOfFiles;

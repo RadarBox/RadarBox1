@@ -10,17 +10,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Paths;
 
 import java.util.LinkedList;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Универсальный класс для работы с zip-архивами.
  * @author Шишмарев Ростислав Иванович
- * @version -
+ * @version v1.0.0
  */
 public class ZipManager {
     private File mainZipFile = null;
@@ -36,18 +38,6 @@ public class ZipManager {
     public ZipManager(File zipFile) throws FileNotFoundException, NoAZipFileException {
         checkFile(zipFile);
         mainZipFile = zipFile;
-    }
-
-    /**
-     * Конструктор, принимающий путь до файла.
-     * @param absolutePath - абсолютный путь до zip-архива.
-     * @throws FileNotFoundException - если файл не найден;
-     * @throws NoAZipFileException - если передан путь не к zip-файлу.
-     */
-    public ZipManager(String absolutePath) throws FileNotFoundException, NoAZipFileException {
-        File file = new File(absolutePath);
-        checkFile(file);
-        mainZipFile = file;
     }
 
     private void checkFile(File file) throws FileNotFoundException, NoAZipFileException {
@@ -87,38 +77,26 @@ public class ZipManager {
         mainUnzippedFolder = null;
     }
 
-    /**
-     * Смена файла, с которым работает ZipManager.
-     * @param absolutePath - абсолютный путь до zip-архива.
-     * @throws FileNotFoundException - если файл не найден;
-     * @throws NoAZipFileException - если передан путь не к zip-файлу.
-     */
-    public void setZipFile(String absolutePath) throws FileNotFoundException, NoAZipFileException {
-        File zipFile = new File(absolutePath);
-        checkFile(zipFile);
-        mainZipFile = zipFile;
-        mainUnzippedFolder = null;
-    }
-
     // <Main methods>
     // Unzip methods
     /**
      * Рекурсивно распаковывает файлы zip-архива, переданного в конструктор,
-     * в папку <Имя архива (без .zip)>_unzipped. Директории в архиве игнорирует.
+     * в папку <Имя архива (без .zip)>[_<Номер (если папка уже есть)>].
      * <b>Если такая папка уже существует, она будет удалена</b>.
-     * @throws IOException
+     * Директории в архиве игнорирует.
+     * @throws IOException - при ошибке системы ввода/вывода.
      */
     public void unzipFile() throws IOException {
         mainUnzippedFolder = new File(mainZipFile.getParent() + "/" +
                 getUnzippedFolderName(mainZipFile));
-        removeTreeIfExists(mainUnzippedFolder);
+        Helpers.removeTreeIfExists(mainUnzippedFolder);
         unzipFileRecursive(mainZipFile);
     }
 
     /**
      * Скрытая реалиэация метода {@link #unzipFile()}.
      * @param zipFile - zip-файл, который нужно распаковать.
-     * @throws IOException
+     * @throws IOException - при ошибке системы ввода/вывода.
      */
     private void unzipFileRecursive(File zipFile) throws IOException {
         String folderName = getUnzippedFolderName(zipFile);
@@ -160,7 +138,7 @@ public class ZipManager {
     }
 
     private String getUnzippedFolderName(File zipFile) {
-        return zipFile.getName().substring(0, zipFile.getName().lastIndexOf('.')) + "_unzipped";
+        return zipFile.getName().substring(0, zipFile.getName().lastIndexOf('.'));
     }
 
     /**
@@ -177,62 +155,70 @@ public class ZipManager {
      */
     public void close(boolean deleteUnzippedFolder) {
         if(deleteUnzippedFolder) {
-            removeTreeIfExists(mainUnzippedFolder);
+            Helpers.removeTreeIfExists(mainUnzippedFolder);
         }
         mainZipFile = null;
         mainUnzippedFolder = null;
     }
 
-    // Archive methods (Isn`t ready)
-    public static void archiveFolder(File folderToBeArchived)
-            throws IOException, FileNotFoundException {
+    // Archive methods
+    /**
+     * Рекурсивно архивирует директорию в файл <Имя папки>[_<Номер (если папка уже есть)>].zip
+     * (все вложенные папки тоже архивируются).
+     * @param folderToBeArchived - объект {@link File} директории, которую надо архивировать.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     * @return объект {@link File} zip-архива.
+     */
+    public static File archiveFolder(File folderToBeArchived)
+            throws IOException, NotDirectoryException, FileNotFoundException {
         if (!folderToBeArchived.exists()) {
             throw new FileNotFoundException("No such file or directory: " +
                     folderToBeArchived.getAbsolutePath());
         }
-        archiveFolderRecursive(folderToBeArchived);
-    }
-
-    private static void archiveFolderRecursive(File folder) throws IOException {}
-    // </ Main methods>
-
-    // Help methods
-    /**
-     * Удаление папки со всем её содержимым (при её наличии).
-     * @param folder - папка.
-     * @return true, если директория существовала, false в противном случае.
-     */
-    public static boolean removeTreeIfExists(File folder) {
-        try {
-            removeTree(folder);
-        } catch (FileNotFoundException e) {
-            return false;
+        if (!folderToBeArchived.isDirectory()) {
+            throw new NotDirectoryException("Path " + folderToBeArchived.getAbsolutePath() +
+                    " is not a path to directory");
         }
-        return true;
+        return archiveFolderRecursive(folderToBeArchived);
     }
 
     /**
-     * Удаление папки со всем её содержимым.
-     * @param folder - папка.
-     * @throws FileNotFoundException - если директория не найдена.
+     * Скрытая реалиэация метода {@link #archiveFolder(File)}.
+     * @param folder - объект {@link File} директории, которую надо архивировать.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     * @return объект {@link File} zip-архива.
      */
-    public static void removeTree(File folder) throws FileNotFoundException {
-        if (!folder.exists()) {
-            throw new FileNotFoundException("No such file or directory: " +
-                    folder.getAbsolutePath());
-        }
-        File[] contents = folder.listFiles();
-        if (contents == null){
-            return;
-        }
-        for (File file : contents) {
-            if (file.isFile()) {
-                file.delete();
-            } else {
-                removeTree(file);
+    private static File archiveFolderRecursive(File folder) throws IOException {
+        String[] listOfFiles = folder.list();
+        File zipFile = Helpers.createUniqueFile(folder.getAbsolutePath() + ".zip");
+        FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
+        ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+
+        LinkedList<File> filesToArchive = new LinkedList<File>();
+        for (String fileName : listOfFiles) {
+            File file = new File(folder.getAbsolutePath() + "/" + fileName);
+            if (file.isDirectory()) {
+                filesToArchive.add(archiveFolderRecursive(file));
+                continue;
             }
+            addEntryToZip(zipOutputStream, file);
         }
-        folder.delete();
+        for (File file : filesToArchive) {
+            addEntryToZip(zipOutputStream, file);
+            file.delete();
+        }
+        zipOutputStream.close();
+        fileOutputStream.close();
+        return zipFile;
+    }
+
+    private static void addEntryToZip(ZipOutputStream zipOutputStream, File file)
+            throws IOException {
+        ZipEntry entry = new ZipEntry(file.getName());
+        zipOutputStream.putNextEntry(entry);
+        byte[] data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
+        zipOutputStream.write(data, 0, data.length);
+        zipOutputStream.closeEntry();
     }
 }
 
