@@ -48,7 +48,6 @@ public class Writer {
     }
 
     // Get methods
-
     /**
      * Возвращает последний записанный архив (файл {@link File}).
      * @return null, если архивы ещё не были созданы.

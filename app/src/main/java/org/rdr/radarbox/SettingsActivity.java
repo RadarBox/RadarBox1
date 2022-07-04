@@ -55,7 +55,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         OnLongClickFileOpener fileOpener = new OnLongClickFileOpener(this,
-                "storage/emulated/0/Android/data/org.rdr.radarbox/files/Documents/log.txt");
+                RadarBox.logger.getFileLog().getPath());
         textViewLogger.setOnLongClickListener(fileOpener);
 
         if (savedInstanceState == null) {

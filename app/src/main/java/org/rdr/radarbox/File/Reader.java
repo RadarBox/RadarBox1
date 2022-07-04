@@ -28,7 +28,7 @@ import androidx.preference.PreferenceManager;
 /**
  * Класс для чтения данных из файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.1
+ * @version 0.2.2
  */
 public class Reader {
     private Context context;
@@ -47,11 +47,13 @@ public class Reader {
     public Reader(Context context_) {
         context = context_;
         defaultDirectory = context.getExternalFilesDir(Helpers.defaultFolderPath);
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        String dataReadFilename = pref.getString("file_reader_filename","");
-        RadarBox.logger.add(this, dataReadFilename);
-        if(!dataReadFilename.isEmpty()) {
-            setFileRead(dataReadFilename);
+        if (Helpers.autoRunReader) {
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+            String dataReadFilename = pref.getString("file_reader_filename","");
+            RadarBox.logger.add(this, dataReadFilename);
+            if(!dataReadFilename.isEmpty()) {
+                setFileRead(dataReadFilename);
+            }
         }
     }
 
@@ -105,8 +107,8 @@ public class Reader {
         zipManager.unzipFile();
         File folder = zipManager.getUnzipFolder();
 
-        FileInputStream configReadStream = new FileInputStream(folder.getAbsolutePath() + "/" +
-                Helpers.fileNamesMap.get("config"));
+        FileInputStream configReadStream = new FileInputStream(folder.getAbsolutePath() +
+                "/" + Helpers.fileNamesMap.get("config"));
         virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
                 "virtual", configReadStream);
         configReadStream.close();
@@ -116,19 +118,8 @@ public class Reader {
         FileInputStream dataReadStream = new FileInputStream(dataFile);
         fileReadBuffer = dataReadStream.getChannel().map(
                 FileChannel.MapMode.READ_ONLY,0, dataFile.length());
-        /*
-        boolean isEndOfConfigReached = false;
-        while(fileReadBuffer.hasRemaining() && !isEndOfConfigReached) {
-            byte[] endOfConfig = ("</config>").getBytes(StandardCharsets.UTF_8);
-            for(int i=0; endOfConfig[i]==fileReadBuffer.get(); i++)
-                if(i==endOfConfig.length-1) { //найдено ключевое слово
-                    isEndOfConfigReached = true; //достигнут конец заголовка файла
-                    break;
-                }
-        }
-        fileReadBuffer.get(); //переход на новую строку */
-
         fileReadBuffer.mark(); //отметка, с которой можно начать читать данные типа short
+
         // создание буфера типа short для удобного считывания данных
         fileReadShortBuffer = fileReadBuffer.order(ByteOrder.BIG_ENDIAN).asShortBuffer();
 
@@ -152,7 +143,6 @@ public class Reader {
      * @return перечень файлов с расширением .zip, пустой список во всех остальных случаях
      */
     public String[] getFilesList() {
-        // String[] listOfFiles = new String[]{};
         String[] listOfFiles = defaultDirectory.list((d, s) -> s.toLowerCase().endsWith(".zip"));
         if (listOfFiles == null)
             listOfFiles = new String[]{};
@@ -195,7 +185,8 @@ public class Reader {
      * из конфигурационного файла */
     class VirtualDeviceConfiguration extends DeviceConfiguration {
 
-        public VirtualDeviceConfiguration(Context context, String devicePrefix, InputStream configFileStream) {
+        public VirtualDeviceConfiguration(Context context, String devicePrefix,
+                                          InputStream configFileStream) {
             super(context, devicePrefix);
 
             if(fileRead != null) {
@@ -220,15 +211,16 @@ public class Reader {
 
         protected BooleanParameter readBooleanParameter(XmlPullParser parser) {
             BooleanParameter parameter = super.readBooleanParameter(parser);
-            parameter.setValue(Boolean.parseBoolean(parser
-                    .getAttributeValue(null,"value")));
+            parameter.setValue(Boolean.parseBoolean(parser.getAttributeValue(
+                    null,"value")));
             return parameter;
         }
 
         protected IntegerParameter readIntegerParameter(XmlPullParser parser) {
             IntegerParameter parameter = super.readIntegerParameter(parser);
             parameter.setValue(Integer.parseInt(
-                        (parser.getAttributeValue(null,"value")),parameter.getRadix()));
+                        (parser.getAttributeValue(null,"value")),
+                    parameter.getRadix()));
             return parameter;
         }
     }

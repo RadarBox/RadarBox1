@@ -11,6 +11,7 @@ import java.util.HashMap;
  * Класс-хранилище констант и функций для работы пакета File.
  */
 public class Helpers {
+    public static boolean autoRunReader = false;
     static final String defaultFolderPath = Environment.DIRECTORY_DOCUMENTS;
     static final Map<String,String> fileNamesMap = makeFileNamesMap();
 
