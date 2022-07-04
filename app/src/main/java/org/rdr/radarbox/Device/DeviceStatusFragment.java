@@ -6,19 +6,17 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
-import android.widget.Space;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
+import org.w3c.dom.Text;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
@@ -36,15 +34,57 @@ public class DeviceStatusFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 //        View view = inflater.inflate(R.id.device_container, container, false);
-        LinearLayoutCompat linearLayout = new LinearLayoutCompat(container.getContext());
-        linearLayout.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        linearLayout.setOrientation(LinearLayoutCompat.VERTICAL);
+        LinearLayoutCompat mainLinearLayout = new LinearLayoutCompat(container.getContext());
+        mainLinearLayout.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mainLinearLayout.setOrientation(LinearLayoutCompat.VERTICAL);
+
+        LinearLayoutCompat statusListLinearLayout = new LinearLayoutCompat(container.getContext());
+        statusListLinearLayout.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        statusListLinearLayout.setOrientation(LinearLayoutCompat.VERTICAL);
+
         NestedScrollView scrollView = new NestedScrollView(container.getContext());
         scrollView.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        scrollView.addView(linearLayout);
-        //((NestedScrollView)view).addView(scrollView);
+        scrollView.addView(statusListLinearLayout);
+        createStatusList(statusListLinearLayout);
 
         LinearLayoutCompat.LayoutParams layoutParams =new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        MaterialButton getStatusButton = new MaterialButton(mainLinearLayout.getContext());
+        getStatusButton.setLayoutParams(layoutParams);
+        getStatusButton.setText(R.string.get_status_summary);
+        getStatusButton.setOnClickListener(v -> {
+            Thread thread = new Thread(() -> {
+                if(RadarBox.device.getStatus()) {
+                    requireActivity().runOnUiThread(() -> {
+                        changeStatusListValues();
+                        Snackbar.make(requireView(), "GET STATUS OK", Snackbar.LENGTH_SHORT)
+                                .show();
+                    });
+                } else {
+                    requireActivity().runOnUiThread(() -> {
+                        changeStatusListValues();
+                        Snackbar.make(requireView(), "GET STATUS ERROR", Snackbar.LENGTH_SHORT)
+                                .show();
+                    });
+                }
+            });
+            thread.start();
+        });
+        mainLinearLayout.addView(scrollView);
+
+        mainLinearLayout.addView(getStatusButton);
+        return mainLinearLayout;
+    }
+
+    /** Создаётся список со статусными параметрами, где каждой строке в списке присваивается id.
+     * По этому ID в дальнейшем меняются значения, в функции changeStatusListValues() при удачной
+     * отправке статусной команды.
+     * @param linearLayout - линейный макет, в который будут добавляться строки значениями статусных
+     *                     параметров
+     */
+    private void createStatusList(LinearLayoutCompat linearLayout) {
+        LinearLayoutCompat.LayoutParams layoutParams =new LinearLayoutCompat
+                .LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int id_status_counter = 0;
         for (Object statusEntry:RadarBox.device.status.getStatusList()) {
             if(statusEntry.getClass().getSuperclass().equals(DeviceStatus.SimpleStatusEntry.class)) {
                 DeviceStatus.SimpleStatusEntry simple = (DeviceStatus.SimpleStatusEntry) statusEntry;
@@ -76,10 +116,10 @@ public class DeviceStatusFragment extends Fragment {
                             ((DeviceStatus.IntegerStatusEntry) simple).getValue()));
                 else if(statusEntry.getClass().equals(DeviceStatus.FloatStatusEntry.class))
                     textViewValue.setText(Float.toString(((DeviceStatus.FloatStatusEntry) simple).getValue()));
-
+                textViewValue.setId(id_status_counter); id_status_counter++;
                 linearLayout.addView(oneRaw);
             }
-            if(statusEntry.getClass().equals(DeviceStatus.ComplexStatusEntry.class)) {
+            else if(statusEntry.getClass().equals(DeviceStatus.ComplexStatusEntry.class)) {
                 DeviceStatus.ComplexStatusEntry complex = (DeviceStatus.ComplexStatusEntry) statusEntry;
                 TableLayout complexTable = new TableLayout(this.requireContext());
                 layoutParams.weight=1.0f;
@@ -102,6 +142,7 @@ public class DeviceStatusFragment extends Fragment {
                     bitValue.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
                     nextRow.addView(bitName);
                     nextRow.addView(bitValue);
+                    bitValue.setId(id_status_counter); id_status_counter++;
                     complexTable.addView(nextRow);
                     if(!bit.bitSummary().isEmpty())
                         nextRow.setOnClickListener(v ->
@@ -111,6 +152,35 @@ public class DeviceStatusFragment extends Fragment {
                 linearLayout.addView(complexTable);
             }
         }
-        return scrollView;
+    }
+
+    /** Метод проходится последовательно по списку статусных параметров и изменяет их значения,
+     * в соответствии с заданным ранее id в функции createStatusList()
+     */
+    private void changeStatusListValues() {
+        int id_status_counter = 0;
+        for (Object statusEntry:RadarBox.device.status.getStatusList()) {
+            if(statusEntry.getClass().getSuperclass().equals(DeviceStatus.SimpleStatusEntry.class)) {
+                DeviceStatus.SimpleStatusEntry simple = (DeviceStatus.SimpleStatusEntry) statusEntry;
+
+                if(statusEntry.getClass().equals(DeviceStatus.IntegerStatusEntry.class)) {
+                    ((TextView)(this.requireView().findViewById(id_status_counter)))
+                            .setText(Integer.toString(((DeviceStatus.IntegerStatusEntry) simple).getValue()));
+                }
+                else if(statusEntry.getClass().equals(DeviceStatus.FloatStatusEntry.class)) {
+                    ((TextView)(this.requireView().findViewById(id_status_counter)))
+                            .setText(Float.toString(((DeviceStatus.FloatStatusEntry) simple).getValue()));
+                }
+                id_status_counter++;
+            }
+            else if(statusEntry.getClass().equals(DeviceStatus.ComplexStatusEntry.class)) {
+                DeviceStatus.ComplexStatusEntry complex = (DeviceStatus.ComplexStatusEntry) statusEntry;
+                for (DeviceStatus.ComplexStatusEntry.Bit bit: complex.getBits()) {
+                    ((TextView)(this.requireView().findViewById(id_status_counter)))
+                            .setText(Integer.toString(bit.getBitVal()));
+                    id_status_counter++;
+                }
+            }
+        }
     }
 }

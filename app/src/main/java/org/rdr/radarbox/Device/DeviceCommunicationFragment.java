@@ -4,10 +4,13 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
@@ -28,11 +31,15 @@ public class DeviceCommunicationFragment extends PreferenceFragmentCompat {
         setConfiguration.setOnPreferenceClickListener(preference -> {
             Thread thread = new Thread(() -> {
                 if(RadarBox.device.setConfiguration()) {
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(),
-                            "SET CONFIG OK", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> {
+                        Snackbar.make(requireView(), "SET CONFIG OK", Snackbar.LENGTH_SHORT)
+                                .show();
+                    });
                 } else {
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(),
-                            "SET CONFIG ERROR", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> {
+                        Snackbar.make(requireView(), "SET CONFIG ERROR", Snackbar.LENGTH_SHORT)
+                                .show();
+                    });
                 }
             });
             thread.start();
@@ -44,11 +51,15 @@ public class DeviceCommunicationFragment extends PreferenceFragmentCompat {
         getStatus.setOnPreferenceClickListener(preference -> {
             Thread thread = new Thread(() -> {
                 if(RadarBox.device.getStatus()) {
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(),
-                            "GET STATUS OK", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> {
+                        Snackbar.make(requireView(), "GET STATUS OK", Snackbar.LENGTH_SHORT)
+                                .show();
+                    });
                 } else {
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(),
-                            "GET STATUS ERROR", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> {
+                        Snackbar.make(requireView(), "GET STATUS ERROR", Snackbar.LENGTH_SHORT)
+                                .show();
+                    });
                 }
             });
             thread.start();

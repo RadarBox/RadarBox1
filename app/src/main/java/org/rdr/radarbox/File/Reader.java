@@ -78,6 +78,10 @@ public class Reader {
      * и двоичные данные в нём преобразованы для дальнешего считывания.
      */
     public boolean setFileRead(String name) {
+        if(!name.endsWith(".data")) {
+            RadarBox.logger.add(this,"Failed to read file: "+name+". Wrong file type");
+            return false;
+        }
         fileRead = new File(directoryDocuments.getPath()+"/"+name);
         if (fileRead.exists()) {
             try {
