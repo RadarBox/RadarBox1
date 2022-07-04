@@ -47,12 +47,12 @@ public class Reader {
     public Reader(Context context_) {
         context = context_;
         defaultDirectory = context.getExternalFilesDir(Helpers.defaultFolderPath);
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        String dataReadFilename = pref.getString("file_reader_filename","");
-        RadarBox.logger.add(this, dataReadFilename);
-        if(!dataReadFilename.isEmpty()) {
-            setFileRead(dataReadFilename);
-        }
+//        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+//        String dataReadFilename = pref.getString("file_reader_filename","");
+//        RadarBox.logger.add(this, dataReadFilename);
+//        if(!dataReadFilename.isEmpty()) {
+//            setFileRead(dataReadFilename);
+//        }
     }
 
     // Get methods
@@ -87,6 +87,7 @@ public class Reader {
         }
         try {
             readFile();
+            RadarBox.logger.add(this,"File "+name+" is open for reading");
             return true;
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
