@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.Device.DeviceConfigurationFragment;
+import org.rdr.radarbox.File.Helpers;
 import org.rdr.radarbox.File.Sender;
 
 import java.io.File;
@@ -118,10 +119,21 @@ public class SettingsActivity extends AppCompatActivity {
             readFileName.setEntryValues(RadarBox.fileReader.getFilesList());
             readFileName.setEntries(readFileName.getEntryValues());
             readFileName.setOnPreferenceChangeListener((preference, newValue) -> {
-                if(!RadarBox.fileReader.setFileRead(newValue.toString())) return false;
-                if(RadarBox.fileReader.getVirtualDeviceConfiguration()==null) return false;
+                if(!RadarBox.fileReader.setFileRead(newValue.toString())) {
+                    RadarBox.logger.add(this,"FileReader.setFileRead("+newValue+") is FALSE");
+                    return false;
+                }
+                if(RadarBox.fileReader.getVirtualDeviceConfiguration()==null) {
+                    RadarBox.logger.add(this,"FileReader.getVirtualDeviceConfiguration() is NULL");
+                    return false;
+                }
                 if(!RadarBox.freqSignals.updateSignalParameters(
-                            RadarBox.fileReader.getVirtualDeviceConfiguration())) return false;
+                            RadarBox.fileReader.getVirtualDeviceConfiguration())) {
+                    RadarBox.logger.add(this,"FreqSignals.updateSignalParameters("+
+                            RadarBox.fileReader.getVirtualDeviceConfiguration().getDevicePrefix()+
+                            ") is FALSE");
+                    return false;
+                }
                 int period = RadarBox.fileReader.getVirtualDeviceConfiguration()
                         .getIntParameterValue("Trep");
                 if(period==-1) {
@@ -176,6 +188,17 @@ public class SettingsActivity extends AppCompatActivity {
                     // если в данный момент в списке файлов не выбран не один из них, то установить первый
                     if(!Arrays.asList(readFileName.getEntries()).contains(readFileName.getValue()))
                         readFileName.setValue(readFileName.getEntries()[0].toString());
+                    // если в RadarBox.fileReader сейчас не открыт никакой файл ЛИБО
+                    // если выбранный файл из списка не соответствует открытому файлу в RadarBox.fileReader
+                    if(RadarBox.fileReader.getFileRead()==null ||
+                            !RadarBox.fileReader.getFileRead().getName().equals(readFileName.getValue())) {
+                        RadarBox.logger.add(this, "File "+readFileName.getValue()+" was not opened. Opening it...");
+                        // попытаться установить открыть файл для чтения
+                        if(!RadarBox.fileReader.setFileRead(readFileName.getValue())) {
+                            RadarBox.logger.add(this, "ERROR on opening File "+readFileName.getValue());
+                            return false;
+                        }
+                    }
                     if(RadarBox.dataThreadService.setDataSource(DataThreadService.DataSource.FILE))
                         return true;
                     else

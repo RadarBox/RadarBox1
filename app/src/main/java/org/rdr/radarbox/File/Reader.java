@@ -89,6 +89,7 @@ public class Reader {
         }
         try {
             readFile();
+            RadarBox.logger.add(this,"File "+name+" is open for reading");
             return true;
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
@@ -185,8 +186,7 @@ public class Reader {
      * из конфигурационного файла */
     class VirtualDeviceConfiguration extends DeviceConfiguration {
 
-        public VirtualDeviceConfiguration(Context context, String devicePrefix,
-                                          InputStream configFileStream) {
+        public VirtualDeviceConfiguration(Context context, String devicePrefix, InputStream configFileStream) {
             super(context, devicePrefix);
 
             if(fileRead != null) {
