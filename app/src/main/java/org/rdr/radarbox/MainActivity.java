@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveCurrentSource(),value -> {
             if(value.equals(DataThreadService.DataSource.NO_SOURCE))
                 liveDataMerger.setValue(0);
+            else
+                liveDataMerger.setValue(2);
                 });
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveDataThreadState(),value ->{
             if(value.equals(DataThreadService.DataThreadState.STARTED))
