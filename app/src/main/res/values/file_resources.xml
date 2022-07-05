@@ -6,5 +6,5 @@
     <string name="file_reader_header">Чтение данных из файла</string>
     <string name="file_reader_filename_title">Список файлов для чтения</string>
     <string name="need_read_file_title">Читать данные из файла</string>
-    <string name="read_file_header_title">Заголовок файла</string>
+    <string name="read_file_config_title">Конфигурация устройства из файла</string>
 </resources>

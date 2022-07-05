@@ -211,8 +211,8 @@ public class SettingsActivity extends AppCompatActivity {
                     return true;
                 }
             }));
-            // показать заголовок текущего файла
-            final Preference readFileHeader = findPreference("read_file_header");
+            // показать конфигурацию устройства для текущего файла
+            final Preference readFileHeader = findPreference("read_file_config");
             assert readFileHeader != null;
             readFileHeader.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
