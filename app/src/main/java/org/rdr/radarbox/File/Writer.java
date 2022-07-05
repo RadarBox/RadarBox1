@@ -23,7 +23,7 @@ import androidx.preference.PreferenceManager;
 /**
  * Класс для записи данных и создания файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.1
+ * @version 0.2.2
  */
 public class Writer {
     Context context;
@@ -38,7 +38,7 @@ public class Writer {
     // Initialize methods
     public Writer(Context context_) {
         context = context_;
-        defaultDirectory = context.getExternalFilesDir(Helpers.defaultFolderPath);
+        defaultDirectory = context.getExternalFilesDir(Helpers.defaultUserFilesFolderPath);
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         dataWriteFilenamePostfix = pref.getString("file_writer_filename","");
         // Устанавливать пункт "Сохранять данные" в false при запуске программы
@@ -61,7 +61,7 @@ public class Writer {
 
     // Set methods
     /** Задаёт новый постфикс в имени всех последующих файлов архивов.
-     * Имя архива будет представлять собой следующий формат: <дата> <время>_<постфикс>.zip
+     * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
      * @param postfix - постфикс в имени файла
      */
     public void setDataWriteFilenamePostfix (String postfix) {
@@ -78,22 +78,20 @@ public class Writer {
 
     // Main methods
     /** Создание папки с файлами для дальнейшей архивации:
-     *   - Файл конфигурации (.xml) -- описание текущих настроек радара и всей необходимой
+     *   <br />- Файл конфигурации (.xml) -- описание текущих настроек радара и всей необходимой
      *   информации для правильной интерпретации данных в будущем
-     *   - Файл данных (.data) (пустой) -- файл, куда будут записываться двоичный код данных,
+     *   <br />- Файл данных (.data) (пустой) -- файл, куда будут записываться двоичный код данных,
      *   переданных радаром.
-     *   ---------- ^ сделано
-     *   - Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
+     *   <br />---------- ^ сделано
+     *   <br />- Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
      *   информация, которая меняется в процессе сканирования.
-     *   - Папка дополнительной информации (тоже будет архивирована).
+     *   <br />- Папка дополнительной информации (тоже будет архивирована).
      */
     public void createNewWriteFile() {
         if (!needSaveData)
             return;
-        String name = new Timestamp(System.currentTimeMillis()).toString() + "_" +
-                dataWriteFilenamePostfix;
         folderWrite = Helpers.createUniqueFile(defaultDirectory.getAbsolutePath() +
-                "/" + name);
+                "/" + createFileName());
         folderWrite.mkdir();
 
         try {
@@ -102,11 +100,17 @@ public class Writer {
             createStatusFile();
             createAdditionalFolder();
         } catch (IOException e) {
-            RadarBox.logger.add(this, "CreateNewWriteFile error: " +
+            RadarBox.logger.add(this, "ERROR: CreateNewWriteFile error: " +
                     e.getLocalizedMessage());
             e.printStackTrace();
-            closeWriteFile();
+            endWritingToFile();
         }
+    }
+
+    private String createFileName() {
+        String name = new Timestamp(System.currentTimeMillis()).toString();
+        name = name.replace(' ', '_').replace('.', ':');
+        return name + "_" + dataWriteFilenamePostfix;
     }
 
     private void createConfigFile() throws IOException {
@@ -159,17 +163,24 @@ public class Writer {
             } catch (IOException e) {
                 RadarBox.logger.add(e.toString());
                 e.printStackTrace();
+                endWritingToFile();
             }
         }
     }
 
     /** Закрывает файл данных для записи и создаёт архив со всеми файлами.
-     * Имя архива будет представлять собой следующий формат: <дата> <время>_<постфикс>.zip */
-    public void closeWriteFile() {
+     * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip */
+    public void endWritingToFile() {
+        if (dataWriteStream == null || folderWrite == null) {
+            RadarBox.logger.add(this,
+                    "WARNING: end of writing file when file is not being written");
+            return;
+        }
         try {
             dataWriteStream.close();
             zipFile = ZipManager.archiveFolder(folderWrite);
             Helpers.removeTree(folderWrite);
+            RadarBox.logger.add(this, "INFO: End of creation file " + zipFile.getName());
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
             e.printStackTrace();

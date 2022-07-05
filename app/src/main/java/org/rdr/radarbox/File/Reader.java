@@ -47,7 +47,7 @@ public class Reader {
     // Initialize methods
     public Reader(Context context_) {
         context = context_;
-        defaultDirectory = context.getExternalFilesDir(Helpers.defaultFolderPath);
+        defaultDirectory = context.getExternalFilesDir(Helpers.defaultUserFilesFolderPath);
         if (Helpers.autoRunReader) {
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
             String dataReadFilename = pref.getString("file_reader_filename","");
@@ -90,7 +90,7 @@ public class Reader {
         }
         try {
             readFile();
-            RadarBox.logger.add(this,"File " + name + " has been read");
+            RadarBox.logger.add(this,"INFO: File " + name + " has been read");
             return true;
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());

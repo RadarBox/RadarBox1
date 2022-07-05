@@ -6,7 +6,6 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.preference.PreferenceManager;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
@@ -20,6 +19,7 @@ import org.rdr.radarbox.File.Sender;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
 import java.util.Objects;
+import java.io.File;
 
 /** Главная активность приложения для отображения элементов управления и графиков сигналов
  */
@@ -151,11 +151,20 @@ public class MainActivity extends AppCompatActivity {
         else {
             RadarBox.dataThreadService.stop();
             // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
-            if(RadarBox.fileWriter.isNeedSaveData() &&
-                    PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean("need_send",false))
-                Sender.createDialogToSendFile(this,
-                    RadarBox.fileWriter.getFileWrite()); // TODO здесь вылетает ошибка, если пытаться отправить только что записанный файл
+            if (RadarBox.fileWriter.isNeedSaveData()) {
+                // Сохранение файла
+                RadarBox.fileWriter.endWritingToFile();
+                if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
+                        "need_send", false)) {
+                    File fileToSend = RadarBox.fileWriter.getFileWrite();
+                    if (fileToSend != null) {
+                        Sender.createDialogToSendFile(this,
+                                RadarBox.fileWriter.getFileWrite());
+                    } else {
+                        RadarBox.logger.add("Error in Writer: file to send is null");
+                    }
+                }
+            }
         }
     }
 

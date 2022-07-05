@@ -12,7 +12,7 @@ import java.util.HashMap;
  */
 public class Helpers {
     public static boolean autoRunReader = false;
-    static final String defaultFolderPath = Environment.DIRECTORY_DOCUMENTS;
+    static final String defaultUserFilesFolderPath = Environment.DIRECTORY_DOCUMENTS;
     static final Map<String,String> fileNamesMap = makeFileNamesMap();
 
     private static Map<String,String> makeFileNamesMap() {

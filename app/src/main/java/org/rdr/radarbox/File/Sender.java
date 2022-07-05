@@ -14,6 +14,11 @@ import org.rdr.radarbox.BuildConfig;
 
 import java.io.File;
 
+/**
+ * Класс для отправки архивов с данными.
+ * @author Сапронов Данил Игоревич
+ * @version 1.0.0
+ */
 public class Sender {
     private static String lastExtraText = "";
     public static void createDialogToSendFile(Context context, File file){
