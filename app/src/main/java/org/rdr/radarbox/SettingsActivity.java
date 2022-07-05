@@ -9,6 +9,7 @@ import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 import androidx.preference.SwitchPreferenceCompat;
 
 import android.app.AlertDialog;
@@ -146,23 +147,26 @@ public class SettingsActivity extends AppCompatActivity {
                 ).findAny().ifPresent(parameter ->
                         ((DeviceConfiguration.IntegerParameter)parameter).getLiveValue()
                                 .observeForever(value->RadarBox.dataThreadService.setPeriod(value)));
+                // Если выбрано "Отправлять файлы", то вызвать диалог, отправляющий файл
+                if(PreferenceManager.getDefaultSharedPreferences(
+                                this.requireContext()).getBoolean("need_send",false))
+                    Sender.createDialogToSendFile(this.requireContext(),
+                            RadarBox.fileReader.getFileRead());
 
-                Sender.createDialogToSendFile(this.requireContext(),
-                        RadarBox.fileReader.getFileRead());
                 return true;
             });
             // разрешение на запись файла данных
             final SwitchPreferenceCompat needSave = findPreference("need_save");
             assert needSave != null;
             needSave.setOnPreferenceChangeListener(((preference, newValue) -> {
-                if(RadarBox.dataThreadService.getLiveCurrentSource()
-                        .getValue().equals(DataThreadService.DataSource.DEVICE))
+                if(!RadarBox.dataThreadService.getLiveCurrentSource()
+                        .getValue().equals(DataThreadService.DataSource.NO_SOURCE)) // TODO заменить на DEVICE и убрать ! после тестов
                     RadarBox.fileWriter.setNeedSaveData(Boolean.parseBoolean(newValue.toString()));
                 return true;
             }));
             RadarBox.dataThreadService.getLiveCurrentSource().observe(this,
                     currentDataSource->{
-                if(currentDataSource.equals(DataThreadService.DataSource.DEVICE)) {
+                if(!currentDataSource.equals(DataThreadService.DataSource.NO_SOURCE)) { // TODO заменить на DEVICE и убрать ! после тестов
                     needSave.setEnabled(true);
                 }
                 else {
@@ -243,6 +247,21 @@ public class SettingsActivity extends AppCompatActivity {
                 RadarBox.fileWriter.setDataWriteFilenamePostfix(newValue.toString());
                 return true;
             });
+            // Отправка файлов по сети при записи
+            final SwitchPreferenceCompat needSend = findPreference("need_send");
+            assert needSend != null;
+            needSend.setOnPreferenceChangeListener(((preference, newValue) -> true));
+            RadarBox.dataThreadService.getLiveCurrentSource().observe(this,
+                    currentDataSource->{
+                        if(!currentDataSource.equals(DataThreadService.DataSource.NO_SOURCE)) {
+                            needSend.setEnabled(true);
+                        }
+                        else {
+                            needSend.getOnPreferenceChangeListener().onPreferenceChange(needSend, Boolean.FALSE);
+                            needSend.setChecked(false);
+                            needSend.setEnabled(false);
+                        }
+                    });
         }
     }
 }

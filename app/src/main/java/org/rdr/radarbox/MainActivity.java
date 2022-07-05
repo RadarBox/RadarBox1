@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.MediatorLiveData;
+import androidx.preference.PreferenceManager;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -149,9 +150,12 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             RadarBox.dataThreadService.stop();
-            if(RadarBox.fileWriter.isNeedSaveData())
+            // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
+            if(RadarBox.fileWriter.isNeedSaveData() &&
+                    PreferenceManager.getDefaultSharedPreferences(this)
+                            .getBoolean("need_send",false))
                 Sender.createDialogToSendFile(this,
-                    RadarBox.fileWriter.getFileWrite());
+                    RadarBox.fileWriter.getFileWrite()); // TODO здесь вылетает ошибка, если пытаться отправить только что записанный файл
         }
     }
 
