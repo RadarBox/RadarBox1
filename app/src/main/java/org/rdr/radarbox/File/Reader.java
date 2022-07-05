@@ -2,6 +2,7 @@ package org.rdr.radarbox.File;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.fonts.SystemFonts;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.RadarBox;
@@ -28,7 +29,7 @@ import androidx.preference.PreferenceManager;
 /**
  * Класс для чтения данных из файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.2
+ * @version 0.2.3
  */
 public class Reader {
     private Context context;
@@ -89,7 +90,7 @@ public class Reader {
         }
         try {
             readFile();
-            RadarBox.logger.add(this,"File "+name+" is open for reading");
+            RadarBox.logger.add(this,"File " + name + " has been read");
             return true;
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
@@ -128,15 +129,7 @@ public class Reader {
         fileReadShortBuffer.mark();
         curReadFrame = 0;
         dataReadStream.close();
-    }
-
-    /**
-     * Завершение работы и удаление распакованных файлов.
-     */
-    public void close() {
-        if (zipManager != null) {
-            zipManager.close();
-        }
+        zipManager.close();
     }
 
     // Help methods

@@ -23,7 +23,7 @@ import androidx.preference.PreferenceManager;
 /**
  * Класс для записи данных и создания файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.0
+ * @version 0.2.1
  */
 public class Writer {
     Context context;
@@ -61,7 +61,7 @@ public class Writer {
 
     // Set methods
     /** Задаёт новый постфикс в имени всех последующих файлов архивов.
-     * Имя архива будет представлять собой следующий формат: ДАТА ВРЕМЯ ПОСТФИКС.zip
+     * Имя архива будет представлять собой следующий формат: <дата> <время>_<постфикс>.zip
      * @param postfix - постфикс в имени файла
      */
     public void setDataWriteFilenamePostfix (String postfix) {
@@ -82,15 +82,15 @@ public class Writer {
      *   информации для правильной интерпретации данных в будущем
      *   - Файл данных (.data) (пустой) -- файл, куда будут записываться двоичный код данных,
      *   переданных радаром.
-     *   ---------- ^ работает
-     *   - Файл статуса устройства (.csv) (пустой) -- данные с датчиков устройства и прочая
+     *   ---------- ^ сделано
+     *   - Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
      *   информация, которая меняется в процессе сканирования.
      *   - Папка дополнительной информации (тоже будет архивирована).
      */
     public void createNewWriteFile() {
         if (!needSaveData)
             return;
-        String name = new Timestamp(System.currentTimeMillis()).toString() +
+        String name = new Timestamp(System.currentTimeMillis()).toString() + "_" +
                 dataWriteFilenamePostfix;
         folderWrite = Helpers.createUniqueFile(defaultDirectory.getAbsolutePath() +
                 "/" + name);
@@ -151,7 +151,7 @@ public class Writer {
     /** Записывает массив двоичных данных в файл .data. */
     public void writeDataToFile(short[] data) {
         if(folderWrite != null && dataWriteStream != null && needSaveData) {
-            ByteBuffer byteBuffer = ByteBuffer.allocate(2*data.length);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
             byteBuffer.asShortBuffer().put(data);
             try {
                 dataWriteStream.write(byteBuffer.array());
@@ -164,15 +164,15 @@ public class Writer {
     }
 
     /** Закрывает файл данных для записи и создаёт архив со всеми файлами.
-     * Имя архива будет представлять собой следующий формат: ДАТА ВРЕМЯ ПОСТФИКС.zip */
+     * Имя архива будет представлять собой следующий формат: <дата> <время>_<постфикс>.zip */
     public void closeWriteFile() {
         try {
             dataWriteStream.close();
             zipFile = ZipManager.archiveFolder(folderWrite);
+            Helpers.removeTree(folderWrite);
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
             e.printStackTrace();
         }
     }
-
 }
