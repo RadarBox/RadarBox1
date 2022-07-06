@@ -5,14 +5,9 @@
     <string name="str_exit">ВЫХОД</string>
     <string name="str_yes">Да</string>
     <string name="str_no">Нет</string>
-    <string-array name="select_freq_chart">
-        <item>Raw data</item>
-        <item>SNR</item>
-        <item>Time</item>
-    </string-array>
-    <string-array name="select_freq_chart_value">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-    </string-array>
+    <string name="str_ok">OK</string>
+    <string name="str_close">Закрыть</string>
+    <string name="str_exit_msg">Вы уверены, что хотите выйти из приложения?</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

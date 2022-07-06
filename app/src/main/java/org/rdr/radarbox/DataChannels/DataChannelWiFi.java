@@ -38,6 +38,12 @@ import java.net.SocketTimeoutException;
 import java.nio.channels.IllegalBlockingModeException;
 import java.util.List;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultCaller;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.ActivityResultRegistry;
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.LiveData;
@@ -395,6 +401,8 @@ public class DataChannelWiFi extends DataChannel {
         return true;
     }
 
+    /** Метод открывает диалог, отправляющий пользователя в настройки Wi-Fi
+     * для включения его в системе */
     private void displayWiFiDialog() {
 //        context.startActivity(new Intent(WifiManager.ACTION_PICK_WIFI_NETWORK)
 //                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
