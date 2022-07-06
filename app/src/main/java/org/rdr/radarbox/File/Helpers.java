@@ -20,6 +20,7 @@ public class Helpers {
         map.put("config", "config.xml");
         map.put("data", "radar_data.data");
         map.put("status", "status.csv");
+        map.put("description", "description.txt");
         map.put("additional_folder", "additional_unzipped");
         map.put("additional_zip", "additional.zip");
         return map;

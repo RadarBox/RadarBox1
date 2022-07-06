@@ -300,7 +300,7 @@ public class DataThreadService {
                 if(frameCounter==0)
                     RadarBox.fileWriter.createNewWriteFile();
                 else
-                    RadarBox.fileWriter.writeDataToFile(RadarBox.freqSignals.getRawFreqFrame());
+                    RadarBox.fileWriter.writeToDataFile(RadarBox.freqSignals.getRawFreqFrame());
             }
 
             try {
@@ -309,13 +309,13 @@ public class DataThreadService {
             catch (BrokenBarrierException bbe) {
                 RadarBox.logger.add(this,"barrier is broken "+bbe.getLocalizedMessage());
                 if(RadarBox.fileWriter.isNeedSaveData()) {
-                    RadarBox.fileWriter.endWritingToFile();
+                    RadarBox.fileWriter.endWritingToFile(true);
                 }
             }
             catch (InterruptedException ie) {
                 RadarBox.logger.add(this,"thread interrupted "+ie.getLocalizedMessage());
                 if(RadarBox.fileWriter.isNeedSaveData()) {
-                    RadarBox.fileWriter.endWritingToFile();
+                    RadarBox.fileWriter.endWritingToFile(true);
                 }
             }
         }

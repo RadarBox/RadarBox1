@@ -225,7 +225,7 @@ public class ZipManager {
 /**
  * Класс исключения, выбрасываемого, если файл не является zip-архивом.
  */
-class NoAZipFileException extends Exception {
+class NoAZipFileException extends IOException {
     NoAZipFileException() {}
     NoAZipFileException(String message) {
         super(message);

@@ -1,9 +1,13 @@
 package org.rdr.radarbox.File;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 
 import android.util.Xml;
+
+import org.rdr.radarbox.R;
 import org.xmlpull.v1.XmlSerializer;
 
 import org.rdr.radarbox.RadarBox;
@@ -11,6 +15,7 @@ import org.rdr.radarbox.Device.DeviceConfiguration;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.nio.ByteBuffer;
 
 import java.io.IOException;
@@ -18,12 +23,13 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
+import androidx.appcompat.widget.AppCompatEditText;
 import androidx.preference.PreferenceManager;
 
 /**
  * Класс для записи данных и создания файла-архива.
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.2
+ * @version 0.3.2
  */
 public class Writer {
     Context context;
@@ -59,6 +65,10 @@ public class Writer {
      */
     public boolean isNeedSaveData() {return needSaveData;}
 
+    public boolean isWritingToFile() {
+        return dataWriteStream != null && folderWrite != null;
+    }
+
     // Set methods
     /** Задаёт новый постфикс в имени всех последующих файлов архивов.
      * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
@@ -76,7 +86,7 @@ public class Writer {
         needSaveData = value;
     }
 
-    // Main methods
+    // <Main methods>
     /** Создание папки с файлами для дальнейшей архивации:
      *   <br />- Файл конфигурации (.xml) -- описание текущих настроек радара и всей необходимой
      *   информации для правильной интерпретации данных в будущем
@@ -90,6 +100,8 @@ public class Writer {
     public void createNewWriteFile() {
         if (!needSaveData)
             return;
+        endWritingToFile();
+
         folderWrite = Helpers.createUniqueFile(defaultDirectory.getAbsolutePath() +
                 "/" + createFileName());
         folderWrite.mkdir();
@@ -98,6 +110,7 @@ public class Writer {
             createConfigFile();
             createDataFile();
             createStatusFile();
+            createDescriptionFile();
             createAdditionalFolder();
         } catch (IOException e) {
             RadarBox.logger.add(this, "ERROR: CreateNewWriteFile error: " +
@@ -107,12 +120,7 @@ public class Writer {
         }
     }
 
-    private String createFileName() {
-        String name = new Timestamp(System.currentTimeMillis()).toString();
-        name = name.replace(' ', '_').replace('.', ':');
-        return name + "_" + dataWriteFilenamePostfix;
-    }
-
+    // Configuration
     private void createConfigFile() throws IOException {
         if(RadarBox.device == null)
             throw new IOException("No device");
@@ -142,19 +150,16 @@ public class Writer {
         fileWriteStream.close();
     }
 
+    // Data
     private void createDataFile() throws IOException {
         File dataFile = new File(folderWrite.getAbsolutePath() + "/" +
                 Helpers.fileNamesMap.get("data"));
         dataWriteStream = new FileOutputStream(dataFile);
     }
 
-    private void createStatusFile() throws IOException {}
-
-    private void createAdditionalFolder() throws IOException {}
-
     /** Записывает массив двоичных данных в файл .data. */
-    public void writeDataToFile(short[] data) {
-        if(folderWrite != null && dataWriteStream != null && needSaveData) {
+    public void writeToDataFile(short[] data) {
+        if (isWritingToFile() && needSaveData) {
             ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
             byteBuffer.asShortBuffer().put(data);
             try {
@@ -168,22 +173,104 @@ public class Writer {
         }
     }
 
+    // Status
+    private void createStatusFile() throws IOException {}
+
+    // Description
+    private void createDescriptionFile() throws IOException {
+        File descriptionFile = new File(folderWrite.getAbsolutePath() + "/" +
+                Helpers.fileNamesMap.get("description"));
+        if (!descriptionFile.createNewFile()) {
+            throw new IOException("Error on creation description file");
+        }
+        FileWriter writer = new FileWriter(descriptionFile.getAbsolutePath(), false);
+        writer.write("");
+        writer.flush();
+    }
+
+    public void writeToDescriptionFile(String description) {
+        if (isWritingToFile()) {
+            try {
+                FileWriter writer = new FileWriter(Helpers.fileNamesMap.get("description"),
+                        true);
+                writer.write(description);
+                writer.flush();
+            } catch (IOException e) {
+                RadarBox.logger.add(this, e.toString());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Additional files
+    private void createAdditionalFolder() throws IOException {
+        File additionalFolder = new File(folderWrite.getAbsolutePath() + "/" +
+                Helpers.fileNamesMap.get("additional"));
+        if (!additionalFolder.mkdir()) {
+            throw new IOException("Error on creation additional directory");
+        }
+    }
+
+    // Saving
     /** Закрывает файл данных для записи и создаёт архив со всеми файлами.
      * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip */
     public void endWritingToFile() {
-        if (dataWriteStream == null || folderWrite == null) {
-            RadarBox.logger.add(this,
-                    "WARNING: end of writing file when file is not being written");
-            return;
+        endWritingToFile(false);
+    }
+
+    public void endWritingToFile(boolean necessaryToSave) {
+        if (isWritingToFile()) {
+            try {
+                dataWriteStream.close();
+                if (necessaryToSave) {
+                    saveFile();
+                } else {
+                    createSavingDialog();
+                }
+            } catch (IOException e) {
+                RadarBox.logger.add(e.toString());
+                e.printStackTrace();
+            }
         }
-        try {
-            dataWriteStream.close();
-            zipFile = ZipManager.archiveFolder(folderWrite);
-            Helpers.removeTree(folderWrite);
-            RadarBox.logger.add(this, "INFO: End of creation file " + zipFile.getName());
-        } catch (IOException e) {
-            RadarBox.logger.add(e.toString());
-            e.printStackTrace();
-        }
+    }
+
+    private void createSavingDialog() {
+        final AppCompatEditText textEditor = new AppCompatEditText(context);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.file_writer_header);
+        builder.setMessage(folderWrite.getName() + ".zip\nОписание к файлу:");
+        builder.setView(textEditor);
+        builder.setPositiveButton("Сохранить", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                try {
+                    writeToDescriptionFile(textEditor.getText().toString());
+                    saveFile();
+                } catch (IOException e) {
+                    RadarBox.logger.add(this, e.toString());
+                    e.printStackTrace();
+                }
+            }
+        });
+        builder.setNegativeButton("Отмена", (dialog, which) -> { });
+        builder.create();
+        builder.show();
+    }
+
+    private void saveFile() throws IOException {
+        zipFile = ZipManager.archiveFolder(folderWrite);
+        Helpers.removeTree(folderWrite);
+        RadarBox.logger.add(this, "INFO: Creation file " + zipFile.getName() +
+                " is successful");
+    }
+    // </ Main methods>
+
+    // Help methods
+    private String createFileName() {
+        String name = new Timestamp(System.currentTimeMillis()).toString();
+        name = name.replace(' ', '_').replace('.',
+                '-').replace(':', '-');
+        return name + "_" + dataWriteFilenamePostfix;
     }
 }

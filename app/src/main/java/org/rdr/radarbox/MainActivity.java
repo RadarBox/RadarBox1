@@ -188,8 +188,6 @@ public class MainActivity extends AppCompatActivity {
                     if (fileToSend != null) {
                         Sender.createDialogToSendFile(this,
                                 RadarBox.fileWriter.getFileWrite());
-                    } else {
-                        RadarBox.logger.add("Error in Writer: file to send is null");
                     }
                 }
             }
