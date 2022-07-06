@@ -309,13 +309,13 @@ public class DataThreadService {
             catch (BrokenBarrierException bbe) {
                 RadarBox.logger.add(this,"barrier is broken "+bbe.getLocalizedMessage());
                 if(RadarBox.fileWriter.isNeedSaveData()) {
-                    RadarBox.fileWriter.closeWriteFile();
+                    RadarBox.fileWriter.endWritingToFile();
                 }
             }
             catch (InterruptedException ie) {
                 RadarBox.logger.add(this,"thread interrupted "+ie.getLocalizedMessage());
                 if(RadarBox.fileWriter.isNeedSaveData()) {
-                    RadarBox.fileWriter.closeWriteFile();
+                    RadarBox.fileWriter.endWritingToFile();
                 }
             }
         }

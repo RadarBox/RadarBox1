@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MediatorLiveData;
+import androidx.preference.PreferenceManager;
 
 import android.Manifest;
 import android.app.Activity;
@@ -28,6 +29,7 @@ import org.rdr.radarbox.File.Sender;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
 import java.util.Objects;
+import java.io.File;
 
 /** Главная активность приложения для отображения элементов управления и графиков сигналов
  */
@@ -73,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveCurrentSource(),value -> {
             if(value.equals(DataThreadService.DataSource.NO_SOURCE))
                 liveDataMerger.setValue(0);
+            else
+                liveDataMerger.setValue(2);
                 });
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveDataThreadState(),value ->{
             if(value.equals(DataThreadService.DataThreadState.STARTED))
@@ -174,9 +178,21 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             RadarBox.dataThreadService.stop();
-            if(RadarBox.fileWriter.isNeedSaveData())
-                Sender.createDialogToSendFile(this,
-                    RadarBox.fileWriter.getFileWrite());
+            // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
+            if (RadarBox.fileWriter.isNeedSaveData()) {
+                // Сохранение файла
+                RadarBox.fileWriter.endWritingToFile();
+                if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
+                        "need_send", false)) {
+                    File fileToSend = RadarBox.fileWriter.getFileWrite();
+                    if (fileToSend != null) {
+                        Sender.createDialogToSendFile(this,
+                                RadarBox.fileWriter.getFileWrite());
+                    } else {
+                        RadarBox.logger.add("Error in Writer: file to send is null");
+                    }
+                }
+            }
         }
     }
 

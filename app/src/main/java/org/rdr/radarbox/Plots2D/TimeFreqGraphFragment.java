@@ -60,7 +60,6 @@ public class TimeFreqGraphFragment extends Fragment {
         freqGraphView.setyMax(pref.getFloat("FreqGraphView"+"yMax",3000));
         freqGraphView.setyMin(pref.getFloat("FreqGraphView"+"yMin",-3000));
         listSnr = new ArrayList<SNR>();
-        resetSNR();
         resetAllFreqLines();
         // обновление графика происходит при получении нового кадра, номер кадра передаётся в качестве аргумента
         RadarBox.dataThreadService.getLiveFrameCounter().observe(getViewLifecycleOwner(),this::update);
@@ -169,8 +168,10 @@ public class TimeFreqGraphFragment extends Fragment {
         flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
         if (flag==SELECT_RAW)
             resetFreqLines();
-        else if (flag==SELECT_SNR)
+        else if (flag==SELECT_SNR) {
             resetSNRLines();
+            resetSNR();
+        }
     }
 
     private void resetFreqLines() {
