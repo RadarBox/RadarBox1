@@ -7,17 +7,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MediatorLiveData;
+import androidx.preference.PreferenceManager;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -28,6 +26,7 @@ import org.rdr.radarbox.File.Sender;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
 import java.util.Objects;
+import java.io.File;
 
 /** Главная активность приложения для отображения элементов управления и графиков сигналов
  */
@@ -67,13 +66,82 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        setStartStopButtonAnimation();
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        setWifiButtonAnimation();
+    }
+
+    /** Настройка анимации клавиши Wi-Fi
+     * Если в текущем выбранном устройстве нет интерфейса Wi-Fi,
+     * может использоваться для других нужд.
+     */
+    private void setWifiButtonAnimation() {
+        if(RadarBox.device==null) {// в списке устройств в RadarBox.java не выбрано устройство
+            // TODO добавить значок, означающий отсутствие выбранного устройства
+            return;
+        }
+        ImageButton btnWifi = findViewById(R.id.btn_wifi);
+        RadarBox.device.communication.channelSet.stream().filter(
+                        dataChannel -> dataChannel.getName().equals("WiFi"))
+                .forEach(dataChannelWiFi -> {
+                    dataChannelWiFi.getLiveState().observe(this,wifiState -> {
+                        if(wifiState.equals(DataChannel.ChannelState.CONNECTING)) {
+                            btnWifi.setImageResource(R.drawable.wifi_animation);
+                            ((AnimationDrawable) btnWifi.getDrawable()).start();
+                        }
+                        else if(wifiState.equals(DataChannel.ChannelState.DISCONNECTED))
+                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_bad_24);
+                        else if(wifiState.equals(DataChannel.ChannelState.SHUTDOWN))
+                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_off_24);
+                        else {
+                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_full_24);
+                            ((DataChannelWiFi)dataChannelWiFi).getLiveWiFiSignalLevel().observe(this,
+                                    signalLevel -> {
+                                        switch (signalLevel) {
+                                            case 0:
+                                                btnWifi.setImageResource(R.drawable.baseline_network_wifi_null_24);
+                                                break;
+                                            case 1:
+                                                btnWifi.setImageResource(R.drawable.baseline_network_wifi_1_bar_24);
+                                                break;
+                                            case 2:
+                                                btnWifi.setImageResource(R.drawable.baseline_network_wifi_2_bar_24);
+                                                break;
+                                            case 3:
+                                                btnWifi.setImageResource(R.drawable.baseline_network_wifi_3_bar_24);
+                                                break;
+                                            case 4:
+                                                btnWifi.setImageResource(R.drawable.baseline_network_wifi_full_24);
+                                                break;
+                                        }
+                                    });
+                        }
+                    });
+                    // при длинном нажатии происходит отключение от устройства по Wi-Fi
+                    btnWifi.setOnLongClickListener(v -> {
+                        if(dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTED) ||
+                                dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTING))
+                            return dataChannelWiFi.disconnect();
+                        else return false;
+                    });
+                });
+    }
+
+    /** Настройка анимации клавиши Play-Pause
+     */
+    public void setStartStopButtonAnimation(){
         ImageButton btnStartStop = findViewById(R.id.btn_start);
         MediatorLiveData<Integer> liveDataMerger = new MediatorLiveData<>();
-        RadarBox.device.communication.getSelectedChannel().getName();
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveCurrentSource(),value -> {
             if(value.equals(DataThreadService.DataSource.NO_SOURCE))
                 liveDataMerger.setValue(0);
-                });
+            else
+                liveDataMerger.setValue(2);
+        });
         liveDataMerger.addSource(RadarBox.dataThreadService.getLiveDataThreadState(),value ->{
             if(value.equals(DataThreadService.DataThreadState.STARTED))
                 liveDataMerger.setValue(1);
@@ -90,52 +158,6 @@ public class MainActivity extends AppCompatActivity {
             else btnStartStop.setImageDrawable(AppCompatResources
                         .getDrawable(this,R.drawable.baseline_play_arrow_24));
         });
-
-        ImageButton btnWifi = findViewById(R.id.btn_wifi);
-        RadarBox.device.communication.channelSet.stream().filter(
-                dataChannel -> dataChannel.getName().equals("WiFi"))
-                .forEach(dataChannelWiFi -> {
-                    dataChannelWiFi.getLiveState().observe(this,wifiState -> {
-                        if(wifiState.equals(DataChannel.ChannelState.CONNECTING)) {
-                            btnWifi.setImageResource(R.drawable.wifi_animation);
-                            ((AnimationDrawable) btnWifi.getDrawable()).start();
-                        }
-                        else if(wifiState.equals(DataChannel.ChannelState.DISCONNECTED))
-                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_bad_24);
-                        else if(wifiState.equals(DataChannel.ChannelState.SHUTDOWN))
-                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_off_24);
-                        else {
-                            btnWifi.setImageResource(R.drawable.baseline_network_wifi_full_24);
-                            ((DataChannelWiFi)dataChannelWiFi).getLiveWiFiSignalLevel().observe(this,
-                            signalLevel -> {
-                                switch (signalLevel) {
-                                    case 0:
-                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_null_24);
-                                        break;
-                                    case 1:
-                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_1_bar_24);
-                                        break;
-                                    case 2:
-                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_2_bar_24);
-                                        break;
-                                    case 3:
-                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_3_bar_24);
-                                        break;
-                                    case 4:
-                                        btnWifi.setImageResource(R.drawable.baseline_network_wifi_full_24);
-                                        break;
-                                }
-                            });
-                        }
-                    });
-                    // при длинном нажатии происходит отключение от устройства по Wi-Fi
-                    btnWifi.setOnLongClickListener(v -> {
-                        if(dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTED) ||
-                                dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTING))
-                            return dataChannelWiFi.disconnect();
-                        else return false;
-                    });
-                });
     }
 
     public void onClickSettings(View view) {
@@ -174,9 +196,21 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             RadarBox.dataThreadService.stop();
-            if(RadarBox.fileWriter.isNeedSaveData())
-                Sender.createDialogToSendFile(this,
-                    RadarBox.fileWriter.getFileWrite());
+            // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
+            if (RadarBox.fileWriter.isNeedSaveData()) {
+                // Сохранение файла
+                RadarBox.fileWriter.endWritingToFile();
+                if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
+                        "need_send", false)) {
+                    File fileToSend = RadarBox.fileWriter.getFileWrite();
+                    if (fileToSend != null) {
+                        Sender.createDialogToSendFile(this,
+                                RadarBox.fileWriter.getFileWrite());
+                    } else {
+                        RadarBox.logger.add("Error in Writer: file to send is null");
+                    }
+                }
+            }
         }
     }
 

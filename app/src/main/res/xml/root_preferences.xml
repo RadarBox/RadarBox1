@@ -26,8 +26,8 @@
             app:useSimpleSummaryProvider="true" />
         <Preference
             app:dependency="need_read"
-            app:key="read_file_header"
-            app:title="@string/read_file_header_title"/>
+            app:key="read_file_config"
+            app:title="@string/read_file_config_title"/>
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/file_writer_header">
         <EditTextPreference
@@ -39,6 +39,12 @@
             app:defaultValue="false"
             app:key="need_save"
             app:title="@string/need_write_file_title" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/file_sender_header">
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="need_send"
+            app:title="@string/need_send_file_title" />
     </PreferenceCategory>
 
 
