@@ -4,8 +4,10 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import androidx.preference.PreferenceManager;
 
 import android.util.Xml;
+import android.widget.EditText;
 
 import org.rdr.radarbox.R;
 import org.xmlpull.v1.XmlSerializer;
@@ -14,8 +16,8 @@ import org.rdr.radarbox.RadarBox;
 import org.rdr.radarbox.Device.DeviceConfiguration;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 
 import java.io.IOException;
@@ -23,17 +25,14 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
-import androidx.appcompat.widget.AppCompatEditText;
-import androidx.preference.PreferenceManager;
-
 /**
- * Класс для записи данных и создания файла-архива.
+ * Класс для записи данных и создания AoRD-файла (архива данных радара).
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.3.2
+ * @version 0.3.1
  */
 public class Writer {
     Context context;
-    private File zipFile = null;
+    private File aordFile = null;
     private File folderWrite = null;
     private File defaultDirectory;
     private FileOutputStream dataWriteStream = null;
@@ -44,7 +43,7 @@ public class Writer {
     // Initialize methods
     public Writer(Context context_) {
         context = context_;
-        defaultDirectory = context.getExternalFilesDir(Helpers.defaultUserFilesFolderPath);
+        defaultDirectory = context.getExternalFilesDir(Helpers.AoRD_FILES_DEFAULT_FOLDER_PATH);
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         dataWriteFilenamePostfix = pref.getString("file_writer_filename","");
         // Устанавливать пункт "Сохранять данные" в false при запуске программы
@@ -58,7 +57,7 @@ public class Writer {
      * Возвращает последний записанный архив (файл {@link File}).
      * @return null, если архивы ещё не были созданы.
      */
-    public File getFileWrite() {return zipFile;}
+    public File getFileWrite() {return aordFile;}
 
     /**
      * @return true, если данные должны записываться, false в противном случае.
@@ -122,20 +121,22 @@ public class Writer {
 
     // Configuration
     private void createConfigFile() throws IOException {
+        createConfigFile(RadarBox.device.configuration);
+    }
+    private void createConfigFile(DeviceConfiguration configuration) throws IOException {
         if(RadarBox.device == null)
             throw new IOException("No device");
         XmlSerializer serializer = Xml.newSerializer();
         File configFile = new File(folderWrite.getAbsolutePath() + "/" +
-                Helpers.fileNamesMap.get("config"));
+                Helpers.CONFIG_FILE_NAME);
         FileOutputStream fileWriteStream = new FileOutputStream(configFile);
         serializer.setOutput(fileWriteStream,"UTF-8");
         serializer.startDocument(null,Boolean.TRUE);
         serializer.setFeature(
                 "http://xmlpull.org/v1/doc/features.html#indent-output", true);
         serializer.startTag(null,"config");
-        DeviceConfiguration.writeDeviceConfiguration(serializer,RadarBox.device.configuration);
-        ArrayList<DeviceConfiguration.Parameter> parameters
-                = RadarBox.device.configuration.getParameters();
+        DeviceConfiguration.writeDeviceConfiguration(serializer, configuration);
+        ArrayList<DeviceConfiguration.Parameter> parameters = configuration.getParameters();
         for (DeviceConfiguration.Parameter param: parameters) {
             if(param.getValue().getClass().equals(Boolean.class))
                 DeviceConfiguration.writeBooleanParameter(serializer,
@@ -153,7 +154,7 @@ public class Writer {
     // Data
     private void createDataFile() throws IOException {
         File dataFile = new File(folderWrite.getAbsolutePath() + "/" +
-                Helpers.fileNamesMap.get("data"));
+                Helpers.DATA_FILE_NAME);
         dataWriteStream = new FileOutputStream(dataFile);
     }
 
@@ -179,22 +180,19 @@ public class Writer {
     // Description
     private void createDescriptionFile() throws IOException {
         File descriptionFile = new File(folderWrite.getAbsolutePath() + "/" +
-                Helpers.fileNamesMap.get("description"));
+                Helpers.DESC_FILE_NAME);
         if (!descriptionFile.createNewFile()) {
             throw new IOException("Error on creation description file");
         }
-        FileWriter writer = new FileWriter(descriptionFile.getAbsolutePath(), false);
-        writer.write("");
-        writer.flush();
     }
 
     public void writeToDescriptionFile(String description) {
         if (isWritingToFile()) {
             try {
-                FileWriter writer = new FileWriter(Helpers.fileNamesMap.get("description"),
-                        true);
-                writer.write(description);
-                writer.flush();
+                File descFile = new File(folderWrite.getAbsolutePath() + "/" +
+                        Helpers.DESC_FILE_NAME);
+                Helpers.writeToTextFile(descFile, description, true);
+                System.out.println("Description written: " + description);
             } catch (IOException e) {
                 RadarBox.logger.add(this, e.toString());
                 e.printStackTrace();
@@ -205,7 +203,7 @@ public class Writer {
     // Additional files
     private void createAdditionalFolder() throws IOException {
         File additionalFolder = new File(folderWrite.getAbsolutePath() + "/" +
-                Helpers.fileNamesMap.get("additional"));
+                Helpers.ADDITIONAL_FOLDER_NAME);
         if (!additionalFolder.mkdir()) {
             throw new IOException("Error on creation additional directory");
         }
@@ -215,17 +213,16 @@ public class Writer {
     /** Закрывает файл данных для записи и создаёт архив со всеми файлами.
      * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip */
     public void endWritingToFile() {
-        endWritingToFile(false);
+        endWritingToFile(null, false);
     }
-
-    public void endWritingToFile(boolean necessaryToSave) {
+    public void endWritingToFile(Context contextForDialog, boolean sendFile) {
         if (isWritingToFile()) {
             try {
                 dataWriteStream.close();
-                if (necessaryToSave) {
+                if (contextForDialog == null) {
                     saveFile();
                 } else {
-                    createSavingDialog();
+                    createSavingDialog(contextForDialog, sendFile);
                 }
             } catch (IOException e) {
                 RadarBox.logger.add(e.toString());
@@ -234,34 +231,48 @@ public class Writer {
         }
     }
 
-    private void createSavingDialog() {
-        final AppCompatEditText textEditor = new AppCompatEditText(context);
+    private void createSavingDialog(Context contextForDialog, boolean sendFile) {
+        final EditText textEditor = new EditText(contextForDialog);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(R.string.file_writer_header);
-        builder.setMessage(folderWrite.getName() + ".zip\nОписание к файлу:");
+        AlertDialog.Builder builder = new AlertDialog.Builder(contextForDialog);
+        builder.setTitle(context.getString(R.string.file_writer_header));
+        builder.setMessage(folderWrite.getName() + ".zip\n\n" +
+                context.getString(R.string.description_for_file_to_send));
         builder.setView(textEditor);
-        builder.setPositiveButton("Сохранить", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(context.getString(R.string.str_save), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 try {
                     writeToDescriptionFile(textEditor.getText().toString());
                     saveFile();
+                    if (sendFile && aordFile != null) {
+                        Sender.createDialogToSendFile(contextForDialog, aordFile);
+                    }
                 } catch (IOException e) {
                     RadarBox.logger.add(this, e.toString());
                     e.printStackTrace();
                 }
             }
         });
-        builder.setNegativeButton("Отмена", (dialog, which) -> { });
+        builder.setNegativeButton(context.getString(R.string.str_close), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                try {
+                    terminateWriting();
+                } catch (IOException e) {
+                    RadarBox.logger.add(this, e.toString());
+                    e.printStackTrace();
+                }
+            }
+        });
         builder.create();
         builder.show();
     }
 
     private void saveFile() throws IOException {
-        zipFile = ZipManager.archiveFolder(folderWrite);
+        aordFile = ZipManager.archiveFolder(folderWrite);
         Helpers.removeTree(folderWrite);
-        RadarBox.logger.add(this, "INFO: Creation file " + zipFile.getName() +
+        RadarBox.logger.add(this, "INFO: Creation file " + aordFile.getName() +
                 " is successful");
     }
     // </ Main methods>
@@ -272,5 +283,16 @@ public class Writer {
         name = name.replace(' ', '_').replace('.',
                 '-').replace(':', '-');
         return name + "_" + dataWriteFilenamePostfix;
+    }
+
+    public void terminateWriting() throws IOException {
+        if (dataWriteStream != null) {
+            dataWriteStream.close();
+            dataWriteStream = null;
+        }
+        if (folderWrite != null) {
+            Helpers.removeTreeIfExists(folderWrite);
+            folderWrite = null;
+        }
     }
 }

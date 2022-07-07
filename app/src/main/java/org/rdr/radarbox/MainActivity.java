@@ -181,15 +181,9 @@ public class MainActivity extends AppCompatActivity {
             // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
             if (RadarBox.fileWriter.isNeedSaveData()) {
                 // Сохранение файла
-                RadarBox.fileWriter.endWritingToFile();
-                if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
-                        "need_send", false)) {
-                    File fileToSend = RadarBox.fileWriter.getFileWrite();
-                    if (fileToSend != null) {
-                        Sender.createDialogToSendFile(this,
-                                RadarBox.fileWriter.getFileWrite());
-                    }
-                }
+                boolean sendFile = PreferenceManager.getDefaultSharedPreferences(
+                        this).getBoolean("need_send", false);
+                RadarBox.fileWriter.endWritingToFile(this, sendFile);
             }
         }
     }

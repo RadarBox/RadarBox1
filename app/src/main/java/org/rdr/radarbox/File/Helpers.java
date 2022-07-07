@@ -3,29 +3,47 @@ package org.rdr.radarbox.File;
 import android.os.Environment;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.nio.file.NotDirectoryException;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Scanner;
 
 /**
  * Класс-хранилище констант и функций для работы пакета File.
  */
 public class Helpers {
     public static boolean autoRunReader = false;
-    static final String defaultUserFilesFolderPath = Environment.DIRECTORY_DOCUMENTS;
-    static final Map<String,String> fileNamesMap = makeFileNamesMap();
+    public static final String AoRD_FILES_DEFAULT_FOLDER_PATH = Environment.DIRECTORY_DOCUMENTS;
+    public static final String CONFIG_FILE_NAME = "config.xml";
+    public static final String DATA_FILE_NAME = "radar_data.data";
+    public static final String STATUS_FILE_NAME = "status.csv";
+    public static final String DESC_FILE_NAME = "description.txt";
+    public static final String ADDITIONAL_FOLDER_NAME = "additional";
+    public static final String ADDITIONAL_ARCH_NAME = ADDITIONAL_FOLDER_NAME + ".zip";
 
-    private static Map<String,String> makeFileNamesMap() {
-        Map<String,String> map = new HashMap<String,String>();
-        map.put("config", "config.xml");
-        map.put("data", "radar_data.data");
-        map.put("status", "status.csv");
-        map.put("description", "description.txt");
-        map.put("additional_folder", "additional_unzipped");
-        map.put("additional_zip", "additional.zip");
-        return map;
+    public static void checkAoRDFileFolder(File aordFileUnzipFolder)
+            throws NotDirectoryException, WrongFileFormatException {
+        if (!aordFileUnzipFolder.isDirectory()) {
+            throw new NotDirectoryException("Файл " + aordFileUnzipFolder.getAbsolutePath() +
+                    " не является директорией");
+        }
+        for (String fileName : new String[] {CONFIG_FILE_NAME, DATA_FILE_NAME,// STATUS_FILE_NAME,
+                DESC_FILE_NAME, ADDITIONAL_FOLDER_NAME}) {
+            if (!new File(aordFileUnzipFolder.getAbsolutePath() + "/" +
+                    fileName).exists()) {
+                throw new WrongFileFormatException(
+                        "Некорректный формат AoRD-файла: не хватает файла (папки) " + fileName);
+            }
+        }
     }
-
     /**
      * Создание файла с уникальным именем.
      * @param start_name - изначальный путь.
@@ -64,6 +82,65 @@ public class Helpers {
         return new String[] {name, ext};
     }
 
+    public static void checkFileExistence(File file) throws FileNotFoundException {
+        if (!file.exists()) {
+            throw new FileNotFoundException("No such file or directory: " +
+                    file.getAbsolutePath());
+        }
+    }
+
+    public static String readTextFile(File file) throws IOException {
+        FileReader fileReader = new FileReader(file);
+        Scanner reader = new Scanner(fileReader);
+        String result = "";
+        while (reader.hasNextLine()) {
+            result += reader.nextLine() + "\n";
+        }
+        reader.close();
+        fileReader.close();
+        if (result.length() >= 1) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
+    public static void writeToTextFile(File file, String text, boolean append) throws IOException {
+        FileWriter writer = new FileWriter(file, append);
+        writer.write(text);
+        writer.flush();
+    }
+
+    public static boolean copyFile(File source, File destination, boolean deleteDestIfExists)
+            throws FileNotFoundException {
+        checkFileExistence(source);
+        if (destination.exists()) {
+            if (deleteDestIfExists) {
+                destination.delete();
+            } else {
+                destination = createUniqueFile(destination.getAbsolutePath());
+            }
+        }
+        try {
+            FileInputStream fileInputStream = null;
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileInputStream = new FileInputStream(source);
+                fileOutputStream = new FileOutputStream(destination);
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = fileInputStream.read(buffer)) > 0) {
+                    fileOutputStream.write(buffer, 0, length);
+                }
+            } finally {
+                try {fileInputStream.close();} catch (NullPointerException ignored) {}
+                try {fileOutputStream.close();} catch (NullPointerException ignored) {}
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Удаление папки со всем её содержимым (при её наличии).
      * @param folder - папка.
@@ -84,10 +161,7 @@ public class Helpers {
      * @throws FileNotFoundException - если директория не найдена.
      */
     public static void removeTree(File folder) throws FileNotFoundException {
-        if (!folder.exists()) {
-            throw new FileNotFoundException("No such file or directory: " +
-                    folder.getAbsolutePath());
-        }
+        checkFileExistence(folder);
         File[] contents = folder.listFiles();
         if (contents == null){
             return;
@@ -100,5 +174,15 @@ public class Helpers {
             }
         }
         folder.delete();
+    }
+}
+
+/**
+ * Класс исключения, означающего неверный формат файла.
+ */
+class WrongFileFormatException extends IOException {
+    WrongFileFormatException() {}
+    WrongFileFormatException(String message) {
+        super(message);
     }
 }

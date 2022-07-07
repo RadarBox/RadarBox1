@@ -2,7 +2,6 @@ package org.rdr.radarbox.File;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.fonts.SystemFonts;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.RadarBox;
@@ -27,27 +26,29 @@ import java.nio.channels.FileChannel;
 import androidx.preference.PreferenceManager;
 
 /**
- * Класс для чтения данных из файла-архива.
+ * Класс для чтения данных из AoRD-файла (архива данных радара).
  * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 0.2.3
+ * @version 0.3.0
  */
 public class Reader {
     private Context context;
-    private File fileRead = null;
+    private File aordFile = null;
     private ZipManager zipManager = null;
     private final File defaultDirectory;
-    private DeviceConfiguration virtualDeviceConfiguration = null;
-
+    // Data variables
     private MappedByteBuffer fileReadBuffer;
     private ShortBuffer fileReadShortBuffer;
-
     private int fileReadFrameCount;
     private int curReadFrame;
+    // Configuration variables
+    private DeviceConfiguration virtualDeviceConfiguration = null;
+    // Description variables
+    private String description = null;
 
     // Initialize methods
     public Reader(Context context_) {
         context = context_;
-        defaultDirectory = context.getExternalFilesDir(Helpers.defaultUserFilesFolderPath);
+        defaultDirectory = context.getExternalFilesDir(Helpers.AoRD_FILES_DEFAULT_FOLDER_PATH);
         if (Helpers.autoRunReader) {
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
             String dataReadFilename = pref.getString("file_reader_filename","");
@@ -62,93 +63,12 @@ public class Reader {
     /** Текущий открытый архив с файлом для чтения радиолокационных данных.
      * @return null, если открытого архива не существует.
      */
-    public final File getFileRead() {return fileRead;}
+    public final File getFileRead() {return aordFile;}
 
     /** Возвращает конфигурацию устройства, считанную из файла, либо null.
      * @return null, если файл с конфигурацией не открыт.
      */
     public DeviceConfiguration getVirtualDeviceConfiguration() {return virtualDeviceConfiguration;}
-
-    // Main methods
-    /** Распаковка файла с заданным имененем и открытие его содержимого.
-     * @param name - имя файла, включая расширение .zip
-     * @return true, если файлы успешно открыты
-     * и двоичные данные в data-файле преобразованы для дальнешего считывания.
-     */
-    public boolean setFileRead(String name) {
-        fileRead = new File(defaultDirectory.getPath() + "/" + name);
-        try {
-            if (zipManager == null) {
-                zipManager = new ZipManager(fileRead);
-            } else {
-                zipManager.setZipFile(fileRead);
-            }
-        } catch (NoAZipFileException | FileNotFoundException e) {
-            RadarBox.logger.add(e.toString());
-            e.printStackTrace();
-            return false;
-        }
-        try {
-            readFile();
-            RadarBox.logger.add(this,"INFO: File " + name + " has been read");
-            return true;
-        } catch (IOException e) {
-            RadarBox.logger.add(e.toString());
-            fileRead = null;
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    /** Создание виртуальной конфигурации устройства, из которой можно
-     * узнать параметры устройства, с которого были записаны данные;
-     * Считывание данных из data-файла.
-     * @throws IOException
-     */
-    private void readFile() throws IOException {
-        zipManager.unzipFile();
-        File folder = zipManager.getUnzipFolder();
-
-        FileInputStream configReadStream = new FileInputStream(folder.getAbsolutePath() +
-                "/" + Helpers.fileNamesMap.get("config"));
-        virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
-                "virtual", configReadStream);
-        configReadStream.close();
-
-        File dataFile = new File(folder.getPath() + "/" +
-                Helpers.fileNamesMap.get("data"));
-        FileInputStream dataReadStream = new FileInputStream(dataFile);
-        fileReadBuffer = dataReadStream.getChannel().map(
-                FileChannel.MapMode.READ_ONLY,0, dataFile.length());
-        fileReadBuffer.mark(); //отметка, с которой можно начать читать данные типа short
-
-        // создание буфера типа short для удобного считывания данных
-        fileReadShortBuffer = fileReadBuffer.order(ByteOrder.BIG_ENDIAN).asShortBuffer();
-
-        // установка отметки в нулевую позицию для возможности в будущем перечитывать данные
-        fileReadShortBuffer.mark();
-        curReadFrame = 0;
-        dataReadStream.close();
-        zipManager.close();
-    }
-
-    // Help methods
-    /** Получение списка всех файлов в директории с расширением .zip
-     * @return перечень файлов с расширением .zip, пустой список во всех остальных случаях
-     */
-    public String[] getFilesList() {
-        String[] listOfFiles = defaultDirectory.list((d, s) -> s.toLowerCase().endsWith(".zip"));
-        if (listOfFiles == null)
-            listOfFiles = new String[]{};
-        return listOfFiles;
-    }
-
-    public int getFileReadFrameCount() {
-        if (fileReadFrameCount > 0)
-            return fileReadFrameCount;
-        else
-            return -1;
-    }
 
     public void getNextFrame(short[] dest) {
         try {
@@ -173,8 +93,111 @@ public class Reader {
         }
     }
 
-    // Classes
-    // Help classes
+    public int getFileReadFrameCount() {
+        if (fileReadFrameCount > 0)
+            return fileReadFrameCount;
+        else
+            return -1;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    // Set methods
+    /** Распаковка файла с заданным имененем и открытие его содержимого.
+     * @param name - имя файла, включая расширение .zip
+     * @return true, если файлы успешно открыты
+     * и двоичные данные в data-файле преобразованы для дальнешего считывания.
+     */
+    public boolean setFileRead(String name) {
+        aordFile = new File(defaultDirectory.getPath() + "/" + name);
+        try {
+            if (zipManager == null) {
+                zipManager = new ZipManager(aordFile);
+            } else {
+                zipManager.setZipFile(aordFile);
+            }
+        } catch (WrongFileFormatException | FileNotFoundException e) {
+            RadarBox.logger.add(e.toString());
+            e.printStackTrace();
+            return false;
+        }
+        try {
+            readFile();
+            RadarBox.logger.add(this,"INFO: File " + name + " has been read");
+            return true;
+        } catch (IOException e) {
+            RadarBox.logger.add(e.toString());
+            aordFile = null;
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // <Main methods>
+    /** Создание виртуальной конфигурации устройства, из которой можно
+     * узнать параметры устройства, с которого были записаны данные;
+     * Считывание данных из data-файла.
+     * @throws IOException
+     */
+    private void readFile() throws IOException {
+        zipManager.unzipFile();
+        File folder = zipManager.getUnzipFolder();
+        Helpers.checkAoRDFileFolder(folder);
+
+        readConfigFile(folder);
+        readDataFile(folder);
+        readDescriptionFile(folder);
+
+        zipManager.close();
+    }
+
+    // Configuration
+    private void readConfigFile(File folder) throws IOException {
+        FileInputStream configReadStream = new FileInputStream(folder.getAbsolutePath() +
+                "/" + Helpers.CONFIG_FILE_NAME);
+        virtualDeviceConfiguration = new VirtualDeviceConfiguration(context,
+                "virtual", configReadStream);
+        configReadStream.close();
+    }
+
+    // Data
+    private void readDataFile(File folder) throws IOException {
+        File dataFile = new File(folder.getPath() + "/" +
+                Helpers.DATA_FILE_NAME);
+        FileInputStream dataReadStream = new FileInputStream(dataFile);
+        fileReadBuffer = dataReadStream.getChannel().map(
+                FileChannel.MapMode.READ_ONLY,0, dataFile.length());
+        fileReadBuffer.mark(); //отметка, с которой можно начать читать данные типа short
+
+        // создание буфера типа short для удобного считывания данных
+        fileReadShortBuffer = fileReadBuffer.order(ByteOrder.BIG_ENDIAN).asShortBuffer();
+
+        // установка отметки в нулевую позицию для возможности в будущем перечитывать данные
+        fileReadShortBuffer.mark();
+        curReadFrame = 0;
+        dataReadStream.close();
+    }
+
+    //Description
+    private void readDescriptionFile(File folder) throws IOException {
+        File descFile = new File(folder.getAbsolutePath() + "/" + Helpers.DESC_FILE_NAME);
+        description = Helpers.readTextFile(descFile);
+    }
+    // </ Main methods>
+
+    // Help methods & classes
+    /** Получение списка всех файлов в директории с расширением .zip
+     * @return перечень файлов с расширением .zip, пустой список во всех остальных случаях
+     */
+    public String[] getFilesList() {
+        String[] listOfFiles = defaultDirectory.list((d, s) -> s.toLowerCase().endsWith(".zip"));
+        if (listOfFiles == null)
+            listOfFiles = new String[]{};
+        return listOfFiles;
+    }
+
     /** Класс-наследник {@link #DeviceConfiguration} для считывания конфигурации устройства
      * из конфигурационного файла */
     class VirtualDeviceConfiguration extends DeviceConfiguration {
@@ -182,7 +205,7 @@ public class Reader {
         public VirtualDeviceConfiguration(Context context, String devicePrefix, InputStream configFileStream) {
             super(context, devicePrefix);
 
-            if(fileRead != null) {
+            if(aordFile != null) {
                 try {
                     parseConfigurationHeader(configFileStream);
                 } catch (XmlPullParserException | IOException e) {

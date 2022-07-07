@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import androidx.core.content.FileProvider;
 import androidx.appcompat.widget.AppCompatEditText;
 
+import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 import org.rdr.radarbox.BuildConfig;
 
@@ -17,27 +18,38 @@ import java.io.File;
 /**
  * Класс для отправки архивов с данными.
  * @author Сапронов Данил Игоревич
- * @version 1.0.0
+ * @version 1.1.0
  */
 public class Sender {
     private static String lastExtraText = "";
-    public static void createDialogToSendFile(Context context, File file){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+    public static void createDialogToSendFile(Context context, File file) {
+        Reader reader = new Reader(context);
+        reader.setFileRead(file.getName());
+
         if ((lastExtraText == null || lastExtraText.equals("")) && RadarBox.device!=null)
             lastExtraText = "#" + RadarBox.device.getDevicePrefix() + "\n";
         final AppCompatEditText editExtra = new AppCompatEditText(context);
         editExtra.setText(lastExtraText);
-        builder.setTitle("Отправить записанные файлы?");
-        builder.setMessage(file.getName() + "\nОписание к файлу:")
-                .setView(editExtra)
-                .setPositiveButton("Отправить", new DialogInterface.OnClickListener() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(context.getString(R.string.file_sender_header));
+        builder.setMessage(file.getName() + "\n" + context.getString(
+                R.string.description_for_file_to_send) + "\n\n" + reader.getDescription() +
+                "\n\n" + context.getString(R.string.str_message) + ":");
+        builder.setView(editExtra);
+        builder.setPositiveButton(context.getString(R.string.str_send),
+                new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        sendFileToOtherApplication(context, file, editExtra.getText().toString());
                         lastExtraText = editExtra.getText().toString();
+                        sendFileToOtherApplication(context, file, editExtra.getText().toString());
                         RadarBox.logger.add(this,"File " + file.getName()+" have sent");
                     }
-                }).setNegativeButton("Закрыть", (dialog, which) -> { }).create().show();
+                });
+        builder.setNegativeButton(context.getString(R.string.str_close), (dialog, which) -> { });
+        builder.create();
+        builder.show();
     }
 
     public static void sendFileToOtherApplication(Context context, File file, String extraText) {
@@ -52,6 +64,5 @@ public class Sender {
                         BuildConfig.APPLICATION_ID + ".file_provider", file));
         sendFileIntent.setType("application/pdf");
         context.startActivity(sendFileIntent);
-
     }
 }
