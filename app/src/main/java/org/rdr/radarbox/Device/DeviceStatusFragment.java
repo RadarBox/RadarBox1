@@ -162,7 +162,6 @@ public class DeviceStatusFragment extends Fragment {
         for (Object statusEntry:RadarBox.device.status.getStatusList()) {
             if(statusEntry.getClass().getSuperclass().equals(DeviceStatus.SimpleStatusEntry.class)) {
                 DeviceStatus.SimpleStatusEntry simple = (DeviceStatus.SimpleStatusEntry) statusEntry;
-
                 if(statusEntry.getClass().equals(DeviceStatus.IntegerStatusEntry.class)) {
                     ((TextView)(this.requireView().findViewById(id_status_counter)))
                             .setText(Integer.toString(((DeviceStatus.IntegerStatusEntry) simple).getValue()));
