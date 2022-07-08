@@ -2,6 +2,7 @@ package org.rdr.radarbox.File;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.RadarBox;
@@ -76,7 +77,7 @@ public class Reader {
             curReadFrame++;
         }
         catch (BufferUnderflowException e) {
-            RadarBox.logger.add(this,e.toString() + "\n\tCouldn't read " + curReadFrame
+            Log.i(this.toString(),e.toString() + "\n\tCouldn't read " + curReadFrame
                     + "-th frame. \n\tFileBuffer position: " + fileReadBuffer.position()
                     + "\n\tReading elements count: " + dest.length + "(int16)"
                     + "\n\tElements remaining in buffer: " + fileReadShortBuffer.remaining()
