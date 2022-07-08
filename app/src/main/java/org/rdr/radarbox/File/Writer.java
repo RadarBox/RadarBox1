@@ -64,6 +64,10 @@ public class Writer {
      */
     public boolean isNeedSaveData() {return needSaveData;}
 
+    /**
+     * Проверка записывания data-файла.
+     * @return true, если AoRD-файл записывается, false в противном случае.
+     */
     public boolean isWritingToFile() {
         return dataWriteStream != null && folderWrite != null;
     }
@@ -88,9 +92,10 @@ public class Writer {
     // <Main methods>
     /** Создание папки с файлами для дальнейшей архивации:
      *   <br />- Файл конфигурации (.xml) -- описание текущих настроек радара и всей необходимой
-     *   информации для правильной интерпретации данных в будущем
-     *   <br />- Файл данных (.data) (пустой) -- файл, куда будут записываться двоичный код данных,
+     *   информации для правильной интерпретации данных в будущем.
+     *   <br />- Файл данных (.data) -- файл, куда будут записываться двоичный код данных,
      *   переданных радаром.
+     *   <br />- Файл описания (.txt) -- краткое текстовое описание эксперимента.
      *   <br />---------- ^ сделано
      *   <br />- Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
      *   информация, которая меняется в процессе сканирования.
@@ -186,6 +191,10 @@ public class Writer {
         }
     }
 
+    /**
+     * <b>Добавление</b> строки в файл описания.
+     * @param description - строка для записи.
+     */
     public void writeToDescriptionFile(String description) {
         if (isWritingToFile()) {
             try {
@@ -215,6 +224,12 @@ public class Writer {
     public void endWritingToFile() {
         endWritingToFile(null, false);
     }
+    /** Закрывает файл данных для записи и создаёт диалоговое окно, в котором пользователь
+     * выбирает, сохранять ли файл, и добавляет текстовое описание.
+     * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
+     * @param contextForDialog - текущая активность.
+     * @param sendFile - вызывать ли Sender после сохранения.
+     */
     public void endWritingToFile(Context contextForDialog, boolean sendFile) {
         if (isWritingToFile()) {
             try {
@@ -254,7 +269,8 @@ public class Writer {
                 }
             }
         });
-        builder.setNegativeButton(context.getString(R.string.str_close), new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(context.getString(R.string.str_close),
+                new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 try {
@@ -285,6 +301,10 @@ public class Writer {
         return name + "_" + dataWriteFilenamePostfix;
     }
 
+    /**
+     * Экстренное завершение записи и удаление записанных данных.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     */
     public void terminateWriting() throws IOException {
         if (dataWriteStream != null) {
             dataWriteStream.close();

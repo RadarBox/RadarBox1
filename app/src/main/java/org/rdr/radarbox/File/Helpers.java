@@ -29,6 +29,12 @@ public class Helpers {
     public static final String ADDITIONAL_FOLDER_NAME = "additional";
     public static final String ADDITIONAL_ARCH_NAME = ADDITIONAL_FOLDER_NAME + ".zip";
 
+    /**
+     * Проверка папки, в которую распакован AoRD-файл, на корректность содержимого.
+     * @param aordFileUnzipFolder - объект {@link File} директории.
+     * @throws NotDirectoryException - если передана не директория.
+     * @throws WrongFileFormatException - если в формате AoRD допущена ошибка.
+     */
     public static void checkAoRDFileFolder(File aordFileUnzipFolder)
             throws NotDirectoryException, WrongFileFormatException {
         if (!aordFileUnzipFolder.isDirectory()) {
@@ -82,6 +88,11 @@ public class Helpers {
         return new String[] {name, ext};
     }
 
+    /**
+     * Проверка файла на существование.
+     * @param file - файл.
+     * @throws FileNotFoundException - если файла не существует.
+     */
     public static void checkFileExistence(File file) throws FileNotFoundException {
         if (!file.exists()) {
             throw new FileNotFoundException("No such file or directory: " +
@@ -89,6 +100,12 @@ public class Helpers {
         }
     }
 
+    /**
+     * Чтение текстового файла.
+     * @param file - текстовый файл.
+     * @return содержимое файла в одну строку.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     */
     public static String readTextFile(File file) throws IOException {
         FileReader fileReader = new FileReader(file);
         Scanner reader = new Scanner(fileReader);
@@ -104,21 +121,30 @@ public class Helpers {
         return result;
     }
 
-    public static void writeToTextFile(File file, String text, boolean append) throws IOException {
+    /**
+     * Запись в текстовый файл.
+     * @param file - текстовый файл.
+     * @param text - строка, которую нужно записать.
+     * @param append - если true, строка добавляется в конец файла, если false,
+     *               то содержимое перезаписывается.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     */
+    public static void writeToTextFile(File file, String text, boolean append)
+            throws IOException {
         FileWriter writer = new FileWriter(file, append);
         writer.write(text);
         writer.flush();
     }
 
-    public static boolean copyFile(File source, File destination, boolean deleteDestIfExists)
-            throws FileNotFoundException {
-        checkFileExistence(source);
-        if (destination.exists()) {
-            if (deleteDestIfExists) {
-                destination.delete();
-            } else {
-                destination = createUniqueFile(destination.getAbsolutePath());
-            }
+    /**
+     * Копирование файла.
+     * @param source - файл, который нужно скопировать.
+     * @param destination - файл, куда нужно скопировать.
+     * @return true, если операция удалась, false в противном случае.
+     */
+    public static boolean copyFile(File source, File destination) {
+        if (destination.exists() || !source.exists()) {
+            return false;
         }
         try {
             FileInputStream fileInputStream = null;

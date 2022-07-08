@@ -23,6 +23,11 @@ import java.io.File;
 public class Sender {
     private static String lastExtraText = "";
 
+    /**
+     * Создание диалога для отправки файла с функцией добавления сообщения.
+     * @param context - текущая активность.
+     * @param file - файл, который нужно отправить.
+     */
     public static void createDialogToSendFile(Context context, File file) {
         Reader reader = new Reader(context);
         reader.setFileRead(file.getName());
@@ -52,6 +57,12 @@ public class Sender {
         builder.show();
     }
 
+    /**
+     * Отправка файла по сети (с помощью приложения, которое выберет пользователь).
+     * @param context - текущая активность.
+     * @param file - файл, который нужно отправить.
+     * @param extraText - сообщение к файлу.
+     */
     public static void sendFileToOtherApplication(Context context, File file, String extraText) {
         Intent sendFileIntent = new Intent();
         sendFileIntent.setAction(Intent.ACTION_SEND);

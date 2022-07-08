@@ -210,7 +210,8 @@ public class ZipManager {
     private static void addEntryToZip(ZipOutputStream zipOutputStream, File file)
             throws IOException {
         ZipEntry entry = new ZipEntry(file.getName());
-        zipOutputStream.putNextEntry(entry);byte[] data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
+        zipOutputStream.putNextEntry(entry);
+        byte[] data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
         zipOutputStream.write(data, 0, data.length);
         zipOutputStream.closeEntry();
     }

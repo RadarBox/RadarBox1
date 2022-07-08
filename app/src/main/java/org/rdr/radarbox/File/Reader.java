@@ -100,6 +100,10 @@ public class Reader {
             return -1;
     }
 
+    /**
+     * Возвращает текстовое описание AoRD-файла.
+     * @return null, если файл не открыт.
+     */
     public String getDescription() {
         return description;
     }
@@ -202,7 +206,8 @@ public class Reader {
      * из конфигурационного файла */
     class VirtualDeviceConfiguration extends DeviceConfiguration {
 
-        public VirtualDeviceConfiguration(Context context, String devicePrefix, InputStream configFileStream) {
+        public VirtualDeviceConfiguration(Context context, String devicePrefix,
+                                          InputStream configFileStream) {
             super(context, devicePrefix);
 
             if(aordFile != null) {
