@@ -22,7 +22,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Универсальный класс для работы с zip-архивами.
  * @author Шишмарев Ростислав Иванович
- * @version v1.0.0
+ * @version v1.0.1
  */
 public class ZipManager {
     private File mainZipFile = null;
@@ -33,20 +33,11 @@ public class ZipManager {
      * Конструктор, принимающий объект {@link File}.
      * @param zipFile - объект {@link File} zip-архива.
      * @throws FileNotFoundException - если файл не найден;
-     * @throws NoAZipFileException - если передан не zip-файл.
+     * @throws WrongFileFormatException - если передан не zip-файл.
      */
-    public ZipManager(File zipFile) throws FileNotFoundException, NoAZipFileException {
+    public ZipManager(File zipFile) throws FileNotFoundException, WrongFileFormatException {
         checkFile(zipFile);
         mainZipFile = zipFile;
-    }
-
-    private void checkFile(File file) throws FileNotFoundException, NoAZipFileException {
-        if (!file.exists()) {
-            throw new FileNotFoundException("No such file or directory: " + file.getAbsolutePath());
-        }
-        if (!file.getName().endsWith(".zip") || !file.isFile()) {
-            throw new NoAZipFileException("File " + file.getName() + " is not a zip-archive");
-        }
     }
 
     // Get methods
@@ -69,9 +60,9 @@ public class ZipManager {
      * Смена файла, с которым работает ZipManager.
      * @param zipFile - новый zip-архив.
      * @throws FileNotFoundException - если файл не найден;
-     * @throws NoAZipFileException - если передан не zip-файл.
+     * @throws WrongFileFormatException - если передан не zip-файл.
      */
-    public void setZipFile(File zipFile) throws FileNotFoundException, NoAZipFileException {
+    public void setZipFile(File zipFile) throws FileNotFoundException, WrongFileFormatException {
         checkFile(zipFile);
         mainZipFile = zipFile;
         mainUnzippedFolder = null;
@@ -101,8 +92,10 @@ public class ZipManager {
     private void unzipFileRecursive(File zipFile) throws IOException {
         String folderName = getUnzippedFolderName(zipFile);
         String parentPath = zipFile.getParent();
-        File unzippedFolder = new File(parentPath + "/" + folderName);
-        unzippedFolder.mkdir();
+        File unzippedFolder = Helpers.createUniqueFile(parentPath + "/" + folderName);
+        if (!unzippedFolder.mkdir()) {
+            throw new IOException("Error on creation directory for unzip");
+        };
 
         ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
         BufferedInputStream in = new BufferedInputStream(zipInputStream);
@@ -195,13 +188,15 @@ public class ZipManager {
         ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
 
         LinkedList<File> filesToArchive = new LinkedList<File>();
-        for (String fileName : listOfFiles) {
-            File file = new File(folder.getAbsolutePath() + "/" + fileName);
-            if (file.isDirectory()) {
-                filesToArchive.add(archiveFolderRecursive(file));
-                continue;
+        if (listOfFiles != null) {
+            for (String fileName : listOfFiles) {
+                File file = new File(folder.getAbsolutePath() + "/" + fileName);
+                if (file.isDirectory()) {
+                    filesToArchive.add(archiveFolderRecursive(file));
+                    continue;
+                }
+                addEntryToZip(zipOutputStream, file);
             }
-            addEntryToZip(zipOutputStream, file);
         }
         for (File file : filesToArchive) {
             addEntryToZip(zipOutputStream, file);
@@ -220,14 +215,12 @@ public class ZipManager {
         zipOutputStream.write(data, 0, data.length);
         zipOutputStream.closeEntry();
     }
-}
 
-/**
- * Класс исключения, выбрасываемого, если файл не является zip-архивом.
- */
-class NoAZipFileException extends Exception {
-    NoAZipFileException() {}
-    NoAZipFileException(String message) {
-        super(message);
+    // Help methods
+    private void checkFile(File file) throws FileNotFoundException, WrongFileFormatException {
+        Helpers.checkFileExistence(file);
+        if (!file.getName().endsWith(".zip") || !file.isFile()) {
+            throw new WrongFileFormatException("File " + file.getName() + " is not a zip-archive");
+        }
     }
 }

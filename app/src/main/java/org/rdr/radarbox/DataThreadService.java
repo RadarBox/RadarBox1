@@ -300,7 +300,7 @@ public class DataThreadService {
                 if(frameCounter==0)
                     RadarBox.fileWriter.createNewWriteFile();
                 else
-                    RadarBox.fileWriter.writeDataToFile(RadarBox.freqSignals.getRawFreqFrame());
+                    RadarBox.fileWriter.writeToDataFile(RadarBox.freqSignals.getRawFreqFrame());
             }
 
             try {
