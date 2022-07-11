@@ -2,8 +2,8 @@ package org.rdr.radarbox.RDR4_20;
 
 import android.content.Context;
 
-import org.rdr.radarbox.DataChannels.DataChannelUSB;
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
+import org.rdr.radarbox.Device.DataChannels.DataChannelUSB;
+import org.rdr.radarbox.Device.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
 import org.rdr.radarbox.Device.DeviceCommunication;
 

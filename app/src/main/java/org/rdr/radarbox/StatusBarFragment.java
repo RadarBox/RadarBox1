@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
 
 import androidx.fragment.app.Fragment;
@@ -43,6 +42,13 @@ public class StatusBarFragment extends Fragment {
                 if (dataSource.equals(DataThreadService.DataSource.DEVICE)) {
                     ((TextView) view.findViewById(R.id.status_left_message))
                             .append(" " + RadarBox.device.configuration.getDeviceName());
+                    RadarBox.dataThreadService.getLiveStatusCounter().observe(getViewLifecycleOwner(),statusCounter -> {
+                        int currentCharge = RadarBox.device.status.getIntStatusValue("Uacc");
+                        ((TextView) view.findViewById(R.id.status_left_message))
+                                .setText(dataSource + " "
+                                        +RadarBox.device.configuration.getDeviceName() + " "
+                                        +currentCharge+"%");
+                    });
                 } else if (dataSource.equals(DataThreadService.DataSource.FILE)) {
                     ((TextView) view.findViewById(R.id.status_left_message))
                             .append(" " + RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());

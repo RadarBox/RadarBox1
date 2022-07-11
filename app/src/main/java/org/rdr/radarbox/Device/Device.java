@@ -26,17 +26,17 @@ public abstract class Device {
         return true;
     }
     /** Отправить на устройство заданную конфигурацию */
-    public boolean setConfiguration() {
+    public synchronized boolean setConfiguration() {
         return false;
     }
     /** Получить статус устройства */
-    public boolean getStatus() {
+    public synchronized boolean getStatus() {
         return false;
     }
     /** Получить новый кадр данных. В этом месте можно вызывать функцию
      * {@link DeviceRawDataAdapter#reshuffleRawData(short[], DeviceRawDataAdapter.DimensionOrder, int, int, int, boolean)}
      * , чтобы приводить данные к единому виду*/
-    public boolean getNewFrame(short[] dest) {
+    public synchronized boolean getNewFrame(short[] dest) {
         return false;
     }
 }

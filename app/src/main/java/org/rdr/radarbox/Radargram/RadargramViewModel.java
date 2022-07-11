@@ -14,7 +14,7 @@ public class RadargramViewModel extends ViewModel {
     // TODO добавить такую же обработку для временных данных типа double
 
     // под каждый канал создаётся свой двумерный массив,
-    // который будет хранить последние [freqBufferSize]x[freqCount] частоных отсчётов
+    // который будет хранить последние [freqBufferSize]x[freqCount] частотных отсчётов
     private int freqBufferSize = 100, freqCount = 0;
     private ArrayList<short[]> freqBufferList = null;
     public RadargramViewModel () {
@@ -33,7 +33,7 @@ public class RadargramViewModel extends ViewModel {
 
     /** метод обновляет частотные буфферы данных в списке freqBufferList */
     private void resetFreqBuffers() {
-        //если размер не изменился, то только задать первый кадр максимальным
+        //если размер не изменился, только задать первый кадр максимальным
         if(freqCount==RadarBox.freqSignals.getFN() &&
                 RadarBox.freqSignals.getChN()!=freqBufferList.size()) {
             freqBufferList.forEach(shortBuffer -> {

@@ -20,13 +20,11 @@ import android.view.View;
 import android.widget.ImageButton;
 
 import org.rdr.radarbox.DSP.SettingsDSP;
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
+import org.rdr.radarbox.Device.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
-import org.rdr.radarbox.File.Sender;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
 import java.util.Objects;
-import java.io.File;
 
 /** Главная активность приложения для отображения элементов управления и графиков сигналов
  */

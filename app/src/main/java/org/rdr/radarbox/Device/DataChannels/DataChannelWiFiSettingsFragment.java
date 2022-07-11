@@ -1,4 +1,4 @@
-package org.rdr.radarbox.DataChannels;
+package org.rdr.radarbox.Device.DataChannels;
 
 import android.os.Bundle;
 import android.text.InputFilter;
