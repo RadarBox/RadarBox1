@@ -1,21 +1,9 @@
 package org.rdr.radarbox.File;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Environment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-
-import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.Timestamp;
 
 public class AoRDFolderManager {

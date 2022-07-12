@@ -50,6 +50,7 @@ public class Helpers {
             }
         }
     }
+
     /**
      * Создание файла с уникальным именем.
      * @param start_name - изначальный путь.
@@ -94,49 +95,10 @@ public class Helpers {
      * @throws FileNotFoundException - если файла не существует.
      */
     public static void checkFileExistence(File file) throws FileNotFoundException {
-        if (file == null) {
-            return;
-        }
         if (!file.exists()) {
             throw new FileNotFoundException("No such file or directory: " +
                     file.getAbsolutePath());
         }
-    }
-
-    /**
-     * Чтение текстового файла.
-     * @param file - текстовый файл.
-     * @return содержимое файла в одну строку.
-     * @throws IOException - при ошибке системы ввода/вывода.
-     */
-    public static String readTextFile(File file) throws IOException {
-        FileReader fileReader = new FileReader(file);
-        Scanner reader = new Scanner(fileReader);
-        String result = "";
-        while (reader.hasNextLine()) {
-            result += reader.nextLine() + "\n";
-        }
-        reader.close();
-        fileReader.close();
-        if (result.length() >= 1) {
-            result = result.substring(0, result.length() - 1);
-        }
-        return result;
-    }
-
-    /**
-     * Запись в текстовый файл.
-     * @param file - текстовый файл.
-     * @param text - строка, которую нужно записать.
-     * @param append - если true, строка добавляется в конец файла, если false,
-     *               то содержимое перезаписывается.
-     * @throws IOException - при ошибке системы ввода/вывода.
-     */
-    public static void writeToTextFile(File file, String text, boolean append)
-            throws IOException {
-        FileWriter writer = new FileWriter(file, append);
-        writer.write(text);
-        writer.flush();
     }
 
     /**
@@ -203,6 +165,42 @@ public class Helpers {
             }
         }
         folder.delete();
+    }
+
+    /**
+     * Чтение текстового файла.
+     * @param file - текстовый файл.
+     * @return содержимое файла в одну строку.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     */
+    public static String readTextFile(File file) throws IOException {
+        FileReader fileReader = new FileReader(file);
+        Scanner reader = new Scanner(fileReader);
+        String result = "";
+        while (reader.hasNextLine()) {
+            result += reader.nextLine() + "\n";
+        }
+        reader.close();
+        fileReader.close();
+        if (result.length() >= 1) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
+    /**
+     * Запись в текстовый файл.
+     * @param file - текстовый файл.
+     * @param text - строка, которую нужно записать.
+     * @param append - если true, строка добавляется в конец файла, если false,
+     *               то содержимое перезаписывается.
+     * @throws IOException - при ошибке системы ввода/вывода.
+     */
+    public static void writeToTextFile(File file, String text, boolean append)
+            throws IOException {
+        FileWriter writer = new FileWriter(file, append);
+        writer.write(text);
+        writer.flush();
     }
 }
 
