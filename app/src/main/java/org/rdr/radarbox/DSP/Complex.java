@@ -1,5 +1,7 @@
 package org.rdr.radarbox.DSP;
 
+import androidx.annotation.NonNull;
+
 /** Класс комплексных чисел.
  * Пример использования:
  * Создание двух комплексных чисел и запись их перемножение с сохранением результата в 1-е число:
@@ -22,14 +24,26 @@ public class Complex {
         this.im = imag;
     }
 
+    /** Возвращает строковое представление комплексного числа
+     * @return - строковое представление
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        if (im == 0) return re + "";
+        if (re == 0) return im + "i";
+        if (im <  0) return re + " - " + (-im) + "i";
+        return re + " + " + im + "i";
+    }
+
     /** Возвращает модуль текущего комплексного числа
      * @return модуль текущего комплексного числа
      */
     public double abs() {
-        return Math.sqrt(this.re * this.re + this.im * this.im);
+        return Math.hypot(re, im);
     }
 
-    /** Возвращает аргумент текущего комплексного числа
+    /** Возвращает аргумент текущего комплексного числа в диапазоне -pi...+pi
      * @return аргумент текущего комплексного числа
      */
     public double arg() {
@@ -104,6 +118,16 @@ public class Complex {
     public Complex times(Complex a, Complex b) {
         this.re = a.re *b.re -a.im *b.im;
         this.im = a.re *b.im +a.im *b.re;
+        return this;
+    }
+
+    /** Произведение комплексного числа на скаляр.
+     * @param alpha скаляр
+     * @return текущее комплексное число
+     */
+    public Complex scale(double alpha) {
+        this.re=this.re*alpha;
+        this.im=this.im*alpha;
         return this;
     }
 

@@ -95,7 +95,6 @@ public class DataThreadService {
      * средний временной интервал между сканированиями или средний период сканирования.
      * В норме он не должен превышать {@link #period}
      * Можно отслеживать пиковые задержки.
-     * @return мгновенный интервал в миллисекунда
      * @return время в [мс] */
     public long getFullScanningTime() {return fullScanningTime;}
 
@@ -157,7 +156,8 @@ public class DataThreadService {
             }
             taskList.clear();
             liveDataThreadState.postValue(DataThreadState.STOPPED);
-            startGettingStatusAtFixedRate();
+            if(Objects.equals(liveCurrentSource.getValue(), DataSource.DEVICE))
+                startGettingStatusAtFixedRate();
         }
     }
 
@@ -207,9 +207,7 @@ public class DataThreadService {
                             ((DeviceConfiguration.IntegerParameter)parameter).getLiveValue()
                                     .observeForever(value->period=value));
                     // если мы переключились с устройства на файл, то останавливаем получение статуса
-                    if(Objects.equals(liveCurrentSource.getValue(), DataSource.DEVICE)) {
-                        stopGettingStatusAtFixedRate();
-                    }
+                    stopGettingStatusAtFixedRate();
                     liveCurrentSource.postValue(DataSource.FILE);
                     return true;
                 }

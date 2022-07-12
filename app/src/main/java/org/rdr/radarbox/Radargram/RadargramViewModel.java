@@ -35,7 +35,7 @@ public class RadargramViewModel extends ViewModel {
     private void resetFreqBuffers() {
         //если размер не изменился, только задать первый кадр максимальным
         if(freqCount==RadarBox.freqSignals.getFN() &&
-                RadarBox.freqSignals.getChN()!=freqBufferList.size()) {
+                RadarBox.freqSignals.getChN()==freqBufferList.size()) {
             freqBufferList.forEach(shortBuffer -> {
                 for (int i = 0; i < freqCount; i++) shortBuffer[i] = Short.MAX_VALUE;
             });
