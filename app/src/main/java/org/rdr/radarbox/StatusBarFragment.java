@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
 
 import androidx.fragment.app.Fragment;
@@ -34,7 +33,8 @@ public class StatusBarFragment extends Fragment {
             else if(RadarBox.dataThreadService.getLiveCurrentSource().getValue()
                     .equals(DataThreadService.DataSource.FILE)) {
                 ((TextView)view.findViewById(R.id.status_left_message))
-                        .append(" "+RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
+                        .append(" " + RadarBox.fileRead.config.getVirtual().getDeviceName());
+                        // .append(" "+RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
             }
         }
         RadarBox.dataThreadService.getLiveCurrentSource().observe(getViewLifecycleOwner(),dataSource -> {
@@ -45,7 +45,8 @@ public class StatusBarFragment extends Fragment {
                             .append(" " + RadarBox.device.configuration.getDeviceName());
                 } else if (dataSource.equals(DataThreadService.DataSource.FILE)) {
                     ((TextView) view.findViewById(R.id.status_left_message))
-                            .append(" " + RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
+                            .append(" " + RadarBox.fileRead.config.getVirtual().getDeviceName());
+                            // .append(" " + RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
                 }
             }
         });

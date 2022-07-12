@@ -3,7 +3,6 @@ package org.rdr.radarbox.Device;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.method.DigitsKeyListener;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,17 +13,12 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
 import java.util.ArrayList;
-import java.util.Set;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.widget.NestedScrollView;
-import androidx.core.widget.TextViewCompat;
 import androidx.fragment.app.Fragment;
 
 public class DeviceConfigurationFragment extends Fragment {
@@ -44,8 +38,10 @@ public class DeviceConfigurationFragment extends Fragment {
         if(getArguments()!=null) {
             if(getArguments().getString("DeviceConfiguration").equals("Real"))
                 deviceConfiguration = RadarBox.device.configuration;
-            else if(getArguments().getString("DeviceConfiguration").equals("Virtual"))
-                deviceConfiguration = RadarBox.fileReader.getVirtualDeviceConfiguration();
+            else if(getArguments().getString("DeviceConfiguration").equals("Virtual")) {
+                // deviceConfiguration = RadarBox.fileReader.getVirtualDeviceConfiguration();
+                deviceConfiguration = RadarBox.fileRead.config.getVirtual();
+            }
         }
         else {
             deviceConfiguration = RadarBox.device.configuration;

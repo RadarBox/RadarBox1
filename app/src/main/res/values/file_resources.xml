@@ -10,4 +10,7 @@
     <string name="file_sender_header">Отправка файлов по сети</string>
     <string name="need_send_file_title">Отправлять файл после записи</string>
     <string name="description_for_file_to_send">Описание к файлу:</string>
+    <string name="additional_files">Дополнительные файлы:</string>
+    <string name="elements_deletion">Удаление элементов</string>
+    <string name="add_file">Добавить файл</string>
 </resources>

@@ -2,7 +2,7 @@ package org.rdr.radarbox;
 
 import org.rdr.radarbox.Device.DataChannel;
 import org.rdr.radarbox.Device.DeviceConfiguration;
-import org.rdr.radarbox.File.Sender;
+import org.rdr.radarbox.File.AoRDFolderManager;
 
 import java.util.ArrayList;
 import java.util.concurrent.BrokenBarrierException;
@@ -15,9 +15,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import static org.rdr.radarbox.RadarBox.dataThreadService;
 import static org.rdr.radarbox.RadarBox.device;
-import static org.rdr.radarbox.RadarBox.getInstance;
 import static org.rdr.radarbox.RadarBox.logger;
 
 /** Класс для распараллеливания операций сбора, обработки и сохранения данных.
@@ -140,10 +138,10 @@ public class DataThreadService {
     }
 
     public void stop() {
-        logger.add(this,"Timer stopped. DataSource: "+liveCurrentSource.getValue()+
-                "\tPeriod: "+period);
+        logger.add(this,"Timer stopped. DataSource: " + liveCurrentSource.getValue() +
+                "\tPeriod: " + period);
         if(!taskList.isEmpty()) {
-            for (ScheduledFuture<?> task:taskList) {
+            for (ScheduledFuture<?> task : taskList) {
                 task.cancel(true);
             }
             taskList.clear();
@@ -181,18 +179,28 @@ public class DataThreadService {
      */
     public boolean setDataSource(DataSource dataSource) {
 
-        if(dataSource.equals(DataSource.FILE)) {
-            if(RadarBox.fileReader.getFileRead()==null)
+        if (dataSource.equals(DataSource.FILE)) {
+            // if(RadarBox.fileReader.getFileRead()==null)
+            if (RadarBox.fileRead == null)
                 return false;
-            if(RadarBox.fileReader.getFileRead().exists() &&
-                    RadarBox.fileReader.getVirtualDeviceConfiguration()!=null) {
+            /* if(RadarBox.fileReader.getFileRead().exists() &&
+                    RadarBox.fileReader.getVirtualDeviceConfiguration()!=null) { */
+            if (RadarBox.fileRead.config.getVirtual() != null) {
 
-                RadarBox.freqSignals.updateSignalParameters(
-                        RadarBox.fileReader.getVirtualDeviceConfiguration());
-                period = RadarBox.fileReader.getVirtualDeviceConfiguration()
-                            .getIntParameterValue("Trep");
-                if(period!=-1) {
-                    RadarBox.fileReader.getVirtualDeviceConfiguration().getParameters().stream().filter(
+                /* RadarBox.freqSignals.updateSignalParameters(
+                        RadarBox.fileReader.getVirtualDeviceConfiguration()); */
+                RadarBox.freqSignals.updateSignalParameters(RadarBox.fileRead.config.getVirtual());
+                /* period = RadarBox.fileReader.getVirtualDeviceConfiguration()
+                            .getIntParameterValue("Trep"); */
+                period = RadarBox.fileRead.config.getVirtual().getIntParameterValue(
+                        "Trep");
+                if (period != -1) {
+                    /* RadarBox.fileReader.getVirtualDeviceConfiguration().getParameters().stream().filter(
+                            parameter -> parameter.getID().equals("Trep")
+                    ).findAny().ifPresent(parameter ->
+                            ((DeviceConfiguration.IntegerParameter)parameter).getLiveValue()
+                                    .observeForever(value->period=value)); */
+                    RadarBox.fileRead.config.getVirtual().getParameters().stream().filter(
                             parameter -> parameter.getID().equals("Trep")
                     ).findAny().ifPresent(parameter ->
                             ((DeviceConfiguration.IntegerParameter)parameter).getLiveValue()
@@ -222,12 +230,12 @@ public class DataThreadService {
                     RadarBox.device.configuration.getParameters().stream().filter(
                     parameter -> parameter.getID().equals("Trep")
             ).findAny().orElse(null);
-            if(param!=null) ((DeviceConfiguration.IntegerParameter) param)
+            if(param != null) ((DeviceConfiguration.IntegerParameter) param)
                     .getLiveValue().observeForever(value-> {
                         period = value;
                     });
             else {
-                period=0;
+                period = 0;
                 logger.add("DataThreadService","No Trep parameter in parameter list");
                 return false;
             }
@@ -248,7 +256,8 @@ public class DataThreadService {
         @Override
         public void run() {
             if(liveCurrentSource.getValue().equals(DataSource.FILE)) {
-                RadarBox.fileReader.getNextFrame(RadarBox.freqSignals.getRawFreqFrame());
+                RadarBox.fileRead.data.getNextFrame(RadarBox.freqSignals.getRawFreqFrame());
+                // RadarBox.fileReader.getNextFrame(RadarBox.freqSignals.getRawFreqFrame());
             }
             else if(liveCurrentSource.getValue().equals(DataSource.DEVICE)) {
                 if(frameCounter==0) {
@@ -264,10 +273,10 @@ public class DataThreadService {
                 barrier.await();
             }
             catch (BrokenBarrierException bbe) {
-                RadarBox.logger.add(this,"barrier is broken "+bbe.getLocalizedMessage());
+                RadarBox.logger.add(this,"barrier is broken " + bbe.getLocalizedMessage());
             }
             catch (InterruptedException ie) {
-                RadarBox.logger.add(this,"thread interrupted "+ie.getLocalizedMessage());
+                RadarBox.logger.add(this,"thread interrupted " + ie.getLocalizedMessage());
             }
         }
     }
@@ -296,26 +305,46 @@ public class DataThreadService {
     class DataSaving implements Runnable {
         @Override
         public void run() {
-            if(RadarBox.fileWriter.isNeedSaveData()) {
-                if(frameCounter==0)
-                    RadarBox.fileWriter.createNewWriteFile();
-                else
-                    RadarBox.fileWriter.writeToDataFile(RadarBox.freqSignals.getRawFreqFrame());
+            // if(RadarBox.fileWriter.isNeedSaveData()) {
+            if (AoRDFolderManager.needSaveData) {
+                if (frameCounter == 0) {
+                    // RadarBox.fileWriter.createNewWriteFile();
+                    if (RadarBox.fileWrite != null) {
+                        RadarBox.fileWrite.close();
+                    }
+                    RadarBox.fileWrite = AoRDFolderManager.createNewAoRDFile();
+                    if (RadarBox.fileWrite == null) {
+                        RadarBox.logger.add("File to write is null");
+                    }
+                    RadarBox.fileWrite.data.startWriting();
+                }
+                else  {
+                    // RadarBox.fileWriter.writeToDataFile(RadarBox.freqSignals.getRawFreqFrame());
+                    RadarBox.fileWrite.data.write(RadarBox.freqSignals.getRawFreqFrame());
+                }
             }
 
             try {
                 barrier.await();
             }
             catch (BrokenBarrierException bbe) {
-                RadarBox.logger.add(this,"barrier is broken "+bbe.getLocalizedMessage());
-                if(RadarBox.fileWriter.isNeedSaveData()) {
+                RadarBox.logger.add(this,"barrier is broken " + bbe.getLocalizedMessage());
+                /* if(RadarBox.fileWriter.isNeedSaveData()) {
                     RadarBox.fileWriter.endWritingToFile();
+                } */
+                if (AoRDFolderManager.needSaveData) {
+                    RadarBox.fileWrite.data.endWriting();
+                    RadarBox.fileWrite.commit();
                 }
             }
             catch (InterruptedException ie) {
-                RadarBox.logger.add(this,"thread interrupted "+ie.getLocalizedMessage());
-                if(RadarBox.fileWriter.isNeedSaveData()) {
+                RadarBox.logger.add(this,"thread interrupted " + ie.getLocalizedMessage());
+                /* if(RadarBox.fileWriter.isNeedSaveData()) {
                     RadarBox.fileWriter.endWritingToFile();
+                } */
+                if (AoRDFolderManager.needSaveData) {
+                    RadarBox.fileWrite.data.endWriting();
+                    RadarBox.fileWrite.commit();
                 }
             }
         }

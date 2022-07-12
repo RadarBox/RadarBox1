@@ -94,6 +94,9 @@ public class Helpers {
      * @throws FileNotFoundException - если файла не существует.
      */
     public static void checkFileExistence(File file) throws FileNotFoundException {
+        if (file == null) {
+            return;
+        }
         if (!file.exists()) {
             throw new FileNotFoundException("No such file or directory: " +
                     file.getAbsolutePath());

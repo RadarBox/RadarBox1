@@ -25,6 +25,8 @@ import android.widget.ImageButton;
 import org.rdr.radarbox.DSP.SettingsDSP;
 import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
+import org.rdr.radarbox.File.AoRDFileSaver;
+import org.rdr.radarbox.File.AoRDFolderManager;
 import org.rdr.radarbox.File.Sender;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
@@ -179,11 +181,18 @@ public class MainActivity extends AppCompatActivity {
         else {
             RadarBox.dataThreadService.stop();
             // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
-            if (RadarBox.fileWriter.isNeedSaveData()) {
+            // if (RadarBox.fileWriter.isNeedSaveData()) {
+            if (AoRDFolderManager.needSaveData) {
                 // Сохранение файла
                 boolean sendFile = PreferenceManager.getDefaultSharedPreferences(
                         this).getBoolean("need_send", false);
-                RadarBox.fileWriter.endWritingToFile(this, sendFile);
+                // RadarBox.fileWriter.endWritingToFile(this, sendFile);
+                if (RadarBox.fileWrite == null) {
+                    RadarBox.logger.add("ERROR: file to write is null");
+                    return;
+                }
+                AoRDFileSaver saver = new AoRDFileSaver(RadarBox.fileWrite);
+                saver.createSavingDialog(this, sendFile);
             }
         }
     }

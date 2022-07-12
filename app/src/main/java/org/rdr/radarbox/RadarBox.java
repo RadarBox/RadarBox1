@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import org.rdr.radarbox.DSP.FreqSignals;
 import org.rdr.radarbox.Device.Device;
+import org.rdr.radarbox.File.AoRDFile;
 import org.rdr.radarbox.File.Reader;
 import org.rdr.radarbox.File.Writer;
 
@@ -43,6 +44,7 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
         return radarBox;
     }
     public static Activity getCurrentActivity() {return currentActivity;}
+    public static Context getAppContext() {return appContext;}
 
     private String[] devicePrefixList;
     public String[] getDevicePrefixList() {
@@ -50,6 +52,8 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
     }
     public static Logger logger;
     public static Device device;
+    public static AoRDFile fileRead;
+    public static AoRDFile fileWrite;
     public static Reader fileReader;
     public static Writer fileWriter;
     public static FreqSignals freqSignals;

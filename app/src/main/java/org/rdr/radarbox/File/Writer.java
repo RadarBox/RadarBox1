@@ -1,5 +1,6 @@
 package org.rdr.radarbox.File;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -7,7 +8,13 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 import android.util.Xml;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import org.rdr.radarbox.R;
 import org.xmlpull.v1.XmlSerializer;
@@ -24,6 +31,7 @@ import java.io.IOException;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Класс для записи данных и создания AoRD-файла (архива данных радара).
@@ -72,6 +80,12 @@ public class Writer {
         return dataWriteStream != null && folderWrite != null;
     }
 
+    private String[] getAdditionalFilesList() {
+        File folder = new File(folderWrite.getAbsolutePath() + "/" +
+                Helpers.ADDITIONAL_FOLDER_NAME);
+        return folder.list();
+    }
+
     // Set methods
     /** Задаёт новый постфикс в имени всех последующих файлов архивов.
      * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
@@ -104,7 +118,12 @@ public class Writer {
     public void createNewWriteFile() {
         if (!needSaveData)
             return;
-        endWritingToFile();
+        try {
+            terminateWriting();
+        } catch (IOException e) {
+            RadarBox.logger.add(this, e.getLocalizedMessage());
+            e.printStackTrace();
+        }
 
         folderWrite = Helpers.createUniqueFile(defaultDirectory.getAbsolutePath() +
                 "/" + createFileName());
@@ -135,8 +154,8 @@ public class Writer {
         File configFile = new File(folderWrite.getAbsolutePath() + "/" +
                 Helpers.CONFIG_FILE_NAME);
         FileOutputStream fileWriteStream = new FileOutputStream(configFile);
-        serializer.setOutput(fileWriteStream,"UTF-8");
-        serializer.startDocument(null,Boolean.TRUE);
+        serializer.setOutput(fileWriteStream, "UTF-8");
+        serializer.startDocument(null, Boolean.TRUE);
         serializer.setFeature(
                 "http://xmlpull.org/v1/doc/features.html#indent-output", true);
         serializer.startTag(null,"config");
@@ -186,7 +205,9 @@ public class Writer {
     private void createDescriptionFile() throws IOException {
         File descriptionFile = new File(folderWrite.getAbsolutePath() + "/" +
                 Helpers.DESC_FILE_NAME);
+        RadarBox.logger.add(this, "Creation of desc is successful");
         if (!descriptionFile.createNewFile()) {
+            RadarBox.logger.add(this, "Error on creation desc file!");
             throw new IOException("Error on creation description file");
         }
     }
@@ -218,6 +239,15 @@ public class Writer {
         }
     }
 
+    private boolean addFileToAdditional(File file) {
+        if (file.isFile()) {
+            File dest = Helpers.createUniqueFile(folderWrite.getAbsolutePath() + "/" +
+                    Helpers.ADDITIONAL_FOLDER_NAME + "/" + file.getName());
+            return Helpers.copyFile(file, dest);
+        }
+        return false;
+    }
+
     // Saving
     /** Закрывает файл данных для записи и создаёт архив со всеми файлами.
      * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip */
@@ -227,17 +257,18 @@ public class Writer {
     /** Закрывает файл данных для записи и создаёт диалоговое окно, в котором пользователь
      * выбирает, сохранять ли файл, и добавляет текстовое описание.
      * Имя архива будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
-     * @param contextForDialog - текущая активность.
+     * @param activityForDialog - текущая активность.
      * @param sendFile - вызывать ли Sender после сохранения.
      */
-    public void endWritingToFile(Context contextForDialog, boolean sendFile) {
+    public void endWritingToFile(Activity activityForDialog, boolean sendFile) {
         if (isWritingToFile()) {
             try {
                 dataWriteStream.close();
-                if (contextForDialog == null) {
+                dataWriteStream = null;
+                if (activityForDialog == null) {
                     saveFile();
                 } else {
-                    createSavingDialog(contextForDialog, sendFile);
+                    createSavingDialog(activityForDialog, sendFile);
                 }
             } catch (IOException e) {
                 RadarBox.logger.add(e.toString());
@@ -246,22 +277,41 @@ public class Writer {
         }
     }
 
-    private void createSavingDialog(Context contextForDialog, boolean sendFile) {
-        final EditText textEditor = new EditText(contextForDialog);
+    private void createSavingDialog(Activity activityForDialog, boolean sendFile) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activityForDialog);
+        final LayoutInflater inflater = activityForDialog.getLayoutInflater();
+        final View mainDialogView = inflater.inflate(R.layout.aord_file_saving_dialog, null);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(contextForDialog);
         builder.setTitle(context.getString(R.string.file_writer_header));
-        builder.setMessage(folderWrite.getName() + ".zip\n\n" +
-                context.getString(R.string.description_for_file_to_send));
-        builder.setView(textEditor);
-        builder.setPositiveButton(context.getString(R.string.str_save), new DialogInterface.OnClickListener() {
+        builder.setMessage(folderWrite.getName() + ".zip");
+        builder.setView(R.layout.aord_file_saving_dialog);
+
+        ListView filesListView = mainDialogView.findViewById(R.id.list_of_additional_files);
+        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(activityForDialog,
+                android.R.layout.simple_list_item_1, getAdditionalFilesList());
+        filesListView.setAdapter(listAdapter);
+
+        Button addFilesButton = (Button)mainDialogView.findViewById(R.id.add_aord_item_button);
+        addFilesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                createAddFileDialog(activityForDialog);
+            }
+        });
+
+        builder.setPositiveButton(context.getString(R.string.str_save),
+                new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 try {
+                    EditText textEditor = mainDialogView.findViewById(
+                            R.id.aord_description_edit);
                     writeToDescriptionFile(textEditor.getText().toString());
+                    RadarBox.logger.add(this, "Written to desc file: " +
+                            textEditor.getText().toString());
                     saveFile();
                     if (sendFile && aordFile != null) {
-                        Sender.createDialogToSendFile(contextForDialog, aordFile);
+                        Sender.createDialogToSendFile(activityForDialog, aordFile);
                     }
                 } catch (IOException e) {
                     RadarBox.logger.add(this, e.toString());
@@ -285,9 +335,30 @@ public class Writer {
         builder.show();
     }
 
+    private void createAddFileDialog(Activity activityForDialog) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activityForDialog);
+        final LayoutInflater inflater = activityForDialog.getLayoutInflater();
+        final View mainDialogView = inflater.inflate(R.layout.choose_file_dialog, null);
+
+        builder.setTitle(context.getString(R.string.file_writer_header));
+        builder.setMessage(folderWrite.getName() + ".zip\n\n" +
+                context.getString(R.string.description_for_file_to_send));
+        builder.setView(R.layout.choose_file_dialog);
+
+        builder.setPositiveButton(context.getString(R.string.str_save),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+        builder.setNegativeButton(context.getString(R.string.str_close), (dialog, which) -> { });
+        builder.create();
+        builder.show();
+    }
+
     private void saveFile() throws IOException {
         aordFile = ZipManager.archiveFolder(folderWrite);
-        Helpers.removeTree(folderWrite);
+        terminateWriting();
         RadarBox.logger.add(this, "INFO: Creation file " + aordFile.getName() +
                 " is successful");
     }
