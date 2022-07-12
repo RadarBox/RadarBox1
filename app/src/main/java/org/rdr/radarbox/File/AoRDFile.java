@@ -1,7 +1,6 @@
 package org.rdr.radarbox.File;
 
 import android.content.Context;
-import android.os.Environment;
 import android.util.Xml;
 
 import androidx.annotation.NonNull;
@@ -172,7 +171,6 @@ public class AoRDFile extends File {
                 throw new IOException("Can`t create folder " + Const.ADDITIONAL_FOLDER_NAME);
             }
             try {
-                RadarBox.logger.add("Begin");
                 File zipFile = ZipManager.archiveFolder(folderWrite);
                 AoRDFile result = new AoRDFile(zipFile, folderWrite);
                 if (result.isEnabled()) {
@@ -188,7 +186,6 @@ public class AoRDFile extends File {
                     e.getLocalizedMessage());
             e.printStackTrace();
         }
-        RadarBox.logger.add("Null returned");
         return null;
     }
 
@@ -341,6 +338,7 @@ public class AoRDFile extends File {
             }
             try {
                 dataWriteStream.close();
+                readSelf();
             } catch (IOException e) {
                 RadarBox.logger.add(e.toString());
                 e.printStackTrace();
@@ -510,6 +508,7 @@ public class AoRDFile extends File {
                 FileWriter writer = new FileWriter(selfFile, false);
                 writer.write(text);
                 writer.flush();
+                description = text;
                 RadarBox.logger.add(this, "Description written: " + description);
             } catch (IOException e) {
                 RadarBox.logger.add(this, e.toString());

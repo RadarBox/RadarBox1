@@ -2,10 +2,14 @@ package org.rdr.radarbox.File;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,55 +34,59 @@ public class AoRDFileSaver {
     }
 
     public void createSavingDialog(Activity activityForDialog, boolean sendFile) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activityForDialog);
-        final LayoutInflater inflater = activityForDialog.getLayoutInflater();
-        final View mainDialogView = inflater.inflate(R.layout.aord_file_saving_dialog, null);
+        final Dialog dialog = new Dialog(activityForDialog);
+        Window window = dialog.getWindow();
+        window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.setContentView(R.layout.aord_file_saving_dialog);
 
-        builder.setTitle(aordContext.getString(R.string.file_writer_header));
-        builder.setMessage(aordFile.getName());
-        builder.setView(R.layout.aord_file_saving_dialog);
+        final EditText textEditor = (EditText)dialog.findViewById(R.id.aord_description_edit);
 
-        final EditText textEditor = (EditText) mainDialogView.findViewById(R.id.aord_description_edit);
+        updateFilesList(activityForDialog, dialog);
 
-        ListView filesListView = mainDialogView.findViewById(R.id.list_of_additional_files);
-        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(activityForDialog,
-                android.R.layout.simple_list_item_1, aordFile.additional.getNamesList());
-        filesListView.setAdapter(listAdapter);
-
-        Button addFilesButton = (Button)mainDialogView.findViewById(R.id.add_aord_item_button);
-        addFilesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
+        Button ok = (Button)dialog.findViewById(R.id.save_aord_file_button);
+        ok.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                createAddFileDialog(activityForDialog);
+                aordFile.description.write(textEditor.getText().toString());
+                RadarBox.logger.add(this, "Written to desc file: " +
+                        textEditor.getEditableText().toString());
+                aordFile.commit();
+                if (sendFile && aordFile != null) {
+                    Sender.createDialogToSendFile(activityForDialog, aordFile);
+                }
+                dialog.dismiss();
             }
         });
 
-        builder.setPositiveButton(aordContext.getString(R.string.str_save),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        aordFile.description.write(textEditor.getText().toString());
-                        RadarBox.logger.add(this, "Written to desc file: " +
-                                textEditor.getText().toString());
-                        aordFile.commit();
-                        if (sendFile && aordFile != null) {
-                            Sender.createDialogToSendFile(activityForDialog, aordFile);
-                        }
-                    }
-                });
-        builder.setNegativeButton(aordContext.getString(R.string.str_close),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        aordFile.close();
-                        if (!aordFile.delete()) {
-                            RadarBox.logger.add("ERROR: Can`t delete file " +
-                                    aordFile.getAbsolutePath());
-                        }
-                    }
-                });
-        builder.create();
-        builder.show();
+        Button cancel = (Button)dialog.findViewById(R.id.cancel_saving_aord_file_button);
+        cancel.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                aordFile.close();
+                if (!aordFile.delete()) {
+                    RadarBox.logger.add("ERROR: Can`t delete file " +
+                            aordFile.getAbsolutePath());
+                }
+            }
+        });
+        dialog.show();
+    }
+
+    private void updateFilesList(Activity activityForDialog, Dialog dialog) {
+        ListView filesListView = dialog.findViewById(R.id.list_of_additional_files);
+        String[] namesList = aordFile.additional.getNamesList();
+        if (namesList.length == 0) {
+            namesList = new String[] {"Ничего нет"};
+        }
+        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(activityForDialog,
+                android.R.layout.simple_list_item_1, namesList);
+        filesListView.setAdapter(listAdapter);
     }
 
     private void createAddFileDialog(Activity activityForDialog) {
