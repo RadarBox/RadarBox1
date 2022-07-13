@@ -28,7 +28,6 @@ public class FreqSignals extends PreferenceFragmentCompat {
     private short[] rawFreqFrameReshuffled;
     private int[] frequenciesMHz;
     private int[][] rxtxOrder;
-
     public FreqSignals() {
 
     }

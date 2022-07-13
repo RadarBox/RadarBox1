@@ -2,10 +2,7 @@ package org.rdr.radarbox.DSP;
 
 /**
  *  Класс {@code FFT} предоставляет методы для вычисления БПФ, обратного БПФ, линейной и
- *  кольцевой свёртки двух комплексных массивов.
- *  FFT (Fast-Fourier Transform), inverse FFT, linear convolution,
- *  and circular convolution of a complex array.
- *  <p>
+ *  кольцевой свёртки двух комплексных массивов. Основа взята с сайта Принстонского университета.
  *  It is a bare-bones implementation that runs in <em>n</em> log <em>n</em> time,
  *  where <em>n</em> is the length of the complex array. For simplicity,
  *  <em>n</em> must be a power of 2.
@@ -24,13 +21,15 @@ package org.rdr.radarbox.DSP;
  *
  *  @author Robert Sedgewick
  *  @author Kevin Wayne
- * @author Danil Sapronov
+ *  @author Danil Sapronov
  */
 public class FFT {
 
     private static final Complex ZERO = new Complex(0, 0);
 
-    // Do not instantiate.
+    /**
+     * Do not instantiate.
+     */
     private FFT() {
     }
 
@@ -72,7 +71,7 @@ public class FFT {
         Complex[] y = new Complex[n];
         for (int k = 0; k < n / 2; k++) {
             double kth = -2 * k * Math.PI / n;
-            Complex wk = new Complex(Math.cos(kth), Math.sin(kth));
+            Complex wk = new Complex((float)Math.cos(kth), (float)Math.sin(kth));
             wk.times(r[k]);
             y[k].plus(q[k], wk);
             y[k + n / 2].minus(q[k], wk);
@@ -108,7 +107,7 @@ public class FFT {
 
         // divide by n
         for (int i = 0; i < n; i++) {
-            y[i].scale(1.0 / n);
+            y[i].scale((float) (1.0 / n));
         }
 
         return y;
