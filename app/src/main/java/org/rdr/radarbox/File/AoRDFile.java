@@ -27,8 +27,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.ShortBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.NotDirectoryException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class AoRDFile extends File {
@@ -37,11 +37,11 @@ public class AoRDFile extends File {
     private File unzipFolder = null;
     private ZipManager zipManager = null;
 
-    public DataFile data = null;
-    public ConfigurationFile config = null;
-    public StatusFile status = null;
-    public DescriptionFile description = null;
-    public AdditionalFolder additional = null;
+    public DataFileManager data = null;
+    public ConfigurationFileManager config = null;
+    public StatusFileManager status = null;
+    public DescriptionFileManager description = null;
+    public AdditionalFolderManager additional = null;
 
     private boolean enabled = true;
 
@@ -143,13 +143,26 @@ public class AoRDFile extends File {
         }
     }
 
+    // Get methods
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public Context getContext() {
+        return aordFileContext;
+    }
+
+    public File getUnzipFolder() {
+        return unzipFolder;
+    }
+
     // Main methods
     private void read() throws IOException {
-        data = new DataFile();
-        config = new ConfigurationFile();
-        status = new StatusFile();
-        description = new DescriptionFile();
-        additional = new AdditionalFolder();
+        data = new DataFileManager();
+        config = new ConfigurationFileManager();
+        status = new StatusFileManager();
+        description = new DescriptionFileManager();
+        additional = new AdditionalFolderManager();
     }
 
     public static AoRDFile createNewAoRDFile(String path) {
@@ -210,28 +223,20 @@ public class AoRDFile extends File {
 
     public void close() {
         Helpers.removeTreeIfExists(unzipFolder);
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public Context getContext() {
-        return aordFileContext;
-    }
-
-    public File getUnzipFolder() {
-        return unzipFolder;
+        enabled = false;
     }
 
     // Classes for inner files
-    protected class BaseInnerFile {
+    protected class BaseInnerFileManager {
         protected File selfFile = null;
 
-        protected BaseInnerFile(String name, boolean required) throws IOException {
+        protected BaseInnerFileManager(String name, boolean required) throws IOException {
             selfFile = new File(unzipFolder.getAbsolutePath() + "/" + name);
             if (!required && !selfFile.exists()) {
-                selfFile = null;
+                if ((selfFile.isFile() && !selfFile.createNewFile()) ||
+                        (selfFile.isDirectory() && !selfFile.mkdir())) {
+                    throw new IOException("Can`t create file " + selfFile.getAbsolutePath());
+                }
             } else if (required && !selfFile.exists()) {
                 throw new FileNotFoundException("Required file in " +
                         AoRDFile.this.getAbsolutePath() + " not found");
@@ -257,13 +262,13 @@ public class AoRDFile extends File {
         }
     }
 
-    public class DataFile extends BaseInnerFile {
+    public class DataFileManager extends BaseInnerFileManager {
         private MappedByteBuffer fileReadBuffer;
         private ShortBuffer fileReadShortBuffer;
         private int curReadFrame;
         private FileOutputStream dataWriteStream = null;
 
-        DataFile() throws IOException {
+        DataFileManager() throws IOException {
             super(Const.DATA_FILE_NAME, true);
             readSelf();
         }
@@ -347,10 +352,10 @@ public class AoRDFile extends File {
         }
     }
 
-    public class ConfigurationFile extends BaseInnerFile {
+    public class ConfigurationFileManager extends BaseInnerFileManager {
         private VirtualDeviceConfiguration virtualDeviceConfiguration = null;
 
-        ConfigurationFile() throws IOException {
+        ConfigurationFileManager() throws IOException {
             super(Const.CONFIG_FILE_NAME, true);
             readSelf();
         }
@@ -452,16 +457,16 @@ public class AoRDFile extends File {
         }
     }
 
-    public class StatusFile extends BaseInnerFile {
-        StatusFile() throws IOException {
+    public class StatusFileManager extends BaseInnerFileManager {
+        StatusFileManager() throws IOException {
             super(Const.STATUS_FILE_NAME, false);
         }
     }
 
-    public class DescriptionFile extends BaseInnerFile {
+    public class DescriptionFileManager extends BaseInnerFileManager {
         private String description = "";
 
-        DescriptionFile() throws IOException {
+        DescriptionFileManager() throws IOException {
             super(Const.DESC_FILE_NAME, false);
             readSelf();
         }
@@ -471,9 +476,6 @@ public class AoRDFile extends File {
          * @throws IOException - при ошибке системы ввода/вывода.
          */
         protected void readSelf() throws IOException {
-            if (selfFile == null) {
-                return;
-            }
             FileReader fileReader = new FileReader(selfFile);
             Scanner reader = new Scanner(fileReader);
             String result = "";
@@ -501,9 +503,6 @@ public class AoRDFile extends File {
          * @param text - строка, которую нужно записать.
          */
         public void write(String text) {
-            if (selfFile == null) {
-                return;
-            }
             try {
                 FileWriter writer = new FileWriter(selfFile, false);
                 writer.write(text);
@@ -517,23 +516,38 @@ public class AoRDFile extends File {
         }
     }
 
-    public class AdditionalFolder extends BaseInnerFile {
-        AdditionalFolder() throws IOException {
+    public class AdditionalFolderManager extends BaseInnerFileManager {
+        AdditionalFolderManager() throws IOException {
             super(Const.ADDITIONAL_FOLDER_NAME, false);
         }
 
         public String[] getNamesList() {
-            if (selfFile == null) {
-                return new String[] {};
-            }
             return selfFile.list();
         }
 
         public File[] getFilesList() {
-            if (selfFile == null) {
-                return new File[] {};
-            }
             return selfFile.listFiles();
+        }
+
+        public void addFile(File newFile) {
+            RadarBox.logger.add(this, "Adding file " + newFile.getAbsolutePath() + newFile.exists());
+            if (!Helpers.copyFile(newFile, Helpers.createUniqueFile(
+                    selfFile.getAbsolutePath() + "/" + newFile.getName()))) {
+                RadarBox.logger.add(this, "Can`t add file " + newFile.getAbsolutePath() +
+                        " to additional folder of AoRD-file " + selfFile.getAbsolutePath());
+            }
+        }
+
+        public void deleteFile(String name) {
+            if (Arrays.asList(getNamesList()).contains(name)) {
+                File fileToDelete = new File(getAbsolutePath() + "/" + name);
+                if (!fileToDelete.delete()) {
+                    RadarBox.logger.add(this, "Can`t delete file " +
+                            fileToDelete.getAbsolutePath() +
+                            " from additional folder of AoRD-file " +
+                            AoRDFile.this.getAbsolutePath());
+                }
+            }
         }
     }
 

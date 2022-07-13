@@ -1,6 +1,11 @@
 package org.rdr.radarbox.File;
 
-import android.os.Environment;
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.provider.Settings;
+
+import org.rdr.radarbox.RadarBox;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,43 +16,24 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import java.nio.file.NotDirectoryException;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Scanner;
 
 /**
  * Класс-хранилище констант и функций для работы пакета File.
  */
 public class Helpers {
-    public static boolean autoRunReader = false;
-    public static final String AoRD_FILES_DEFAULT_FOLDER_PATH = Environment.DIRECTORY_DOCUMENTS;
-    public static final String CONFIG_FILE_NAME = "config.xml";
-    public static final String DATA_FILE_NAME = "radar_data.data";
-    public static final String STATUS_FILE_NAME = "status.csv";
-    public static final String DESC_FILE_NAME = "description.txt";
-    public static final String ADDITIONAL_FOLDER_NAME = "additional";
-    public static final String ADDITIONAL_ARCH_NAME = ADDITIONAL_FOLDER_NAME + ".zip";
+    public static final int PERMISSION_STORAGE = 101;
 
-    /**
-     * Проверка папки, в которую распакован AoRD-файл, на корректность содержимого.
-     * @param aordFileUnzipFolder - объект {@link File} директории.
-     * @throws NotDirectoryException - если передана не директория.
-     * @throws WrongFileFormatException - если в формате AoRD допущена ошибка.
-     */
-    public static void checkAoRDFileFolder(File aordFileUnzipFolder)
-            throws NotDirectoryException, WrongFileFormatException {
-        if (!aordFileUnzipFolder.isDirectory()) {
-            throw new NotDirectoryException("Файл " + aordFileUnzipFolder.getAbsolutePath() +
-                    " не является директорией");
-        }
-        for (String fileName : new String[] {CONFIG_FILE_NAME, DATA_FILE_NAME,// STATUS_FILE_NAME,
-                DESC_FILE_NAME, ADDITIONAL_FOLDER_NAME}) {
-            if (!new File(aordFileUnzipFolder.getAbsolutePath() + "/" +
-                    fileName).exists()) {
-                throw new WrongFileFormatException(
-                        "Некорректный формат AoRD-файла: не хватает файла (папки) " + fileName);
-            }
+    public static void requestPermissions(Activity activity, int requestCode) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+            intent.addCategory("android.intent.category.DEFAULT");
+            intent.setData(Uri.parse(String.format("package:%s", activity.getPackageName())));
+            activity.startActivityForResult(intent, requestCode);
+        } catch (Exception e) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+            activity.startActivityForResult(intent, requestCode);
         }
     }
 
@@ -127,6 +113,8 @@ public class Helpers {
                 try {fileOutputStream.close();} catch (NullPointerException ignored) {}
             }
         } catch (IOException e) {
+            RadarBox.logger.add(e.toString());
+            e.printStackTrace();
             return false;
         }
         return true;

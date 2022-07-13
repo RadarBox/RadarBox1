@@ -13,4 +13,5 @@
     <string name="additional_files">Дополнительные файлы:</string>
     <string name="elements_deletion">Удаление элементов</string>
     <string name="add_file">Добавить файл</string>
+    <string name="choose_file">Выбрать файл</string>
 </resources>

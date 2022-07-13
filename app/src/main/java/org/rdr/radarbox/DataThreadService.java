@@ -180,26 +180,13 @@ public class DataThreadService {
     public boolean setDataSource(DataSource dataSource) {
 
         if (dataSource.equals(DataSource.FILE)) {
-            // if(RadarBox.fileReader.getFileRead()==null)
             if (RadarBox.fileRead == null)
                 return false;
-            /* if(RadarBox.fileReader.getFileRead().exists() &&
-                    RadarBox.fileReader.getVirtualDeviceConfiguration()!=null) { */
             if (RadarBox.fileRead.config.getVirtual() != null) {
-
-                /* RadarBox.freqSignals.updateSignalParameters(
-                        RadarBox.fileReader.getVirtualDeviceConfiguration()); */
                 RadarBox.freqSignals.updateSignalParameters(RadarBox.fileRead.config.getVirtual());
-                /* period = RadarBox.fileReader.getVirtualDeviceConfiguration()
-                            .getIntParameterValue("Trep"); */
                 period = RadarBox.fileRead.config.getVirtual().getIntParameterValue(
                         "Trep");
                 if (period != -1) {
-                    /* RadarBox.fileReader.getVirtualDeviceConfiguration().getParameters().stream().filter(
-                            parameter -> parameter.getID().equals("Trep")
-                    ).findAny().ifPresent(parameter ->
-                            ((DeviceConfiguration.IntegerParameter)parameter).getLiveValue()
-                                    .observeForever(value->period=value)); */
                     RadarBox.fileRead.config.getVirtual().getParameters().stream().filter(
                             parameter -> parameter.getID().equals("Trep")
                     ).findAny().ifPresent(parameter ->
@@ -257,12 +244,12 @@ public class DataThreadService {
         public void run() {
             if(liveCurrentSource.getValue().equals(DataSource.FILE)) {
                 RadarBox.fileRead.data.getNextFrame(RadarBox.freqSignals.getRawFreqFrame());
-                // RadarBox.fileReader.getNextFrame(RadarBox.freqSignals.getRawFreqFrame());
             }
             else if(liveCurrentSource.getValue().equals(DataSource.DEVICE)) {
                 if(frameCounter==0) {
                     if(!device.setConfiguration()) {
-                        logger.add(this,"Device.setConfiguration() returned false on start. Data timer stopped.");
+                        logger.add(this,"Device.setConfiguration() returned " +
+                                "false on start. Data timer stopped.");
                         RadarBox.dataThreadService.stop();
                     }
                 }
@@ -305,10 +292,8 @@ public class DataThreadService {
     class DataSaving implements Runnable {
         @Override
         public void run() {
-            // if(RadarBox.fileWriter.isNeedSaveData()) {
             if (AoRDFolderManager.needSaveData) {
                 if (frameCounter == 0) {
-                    // RadarBox.fileWriter.createNewWriteFile();
                     if (RadarBox.fileWrite != null) {
                         RadarBox.fileWrite.close();
                     }
@@ -319,7 +304,6 @@ public class DataThreadService {
                     RadarBox.fileWrite.data.startWriting();
                 }
                 else  {
-                    // RadarBox.fileWriter.writeToDataFile(RadarBox.freqSignals.getRawFreqFrame());
                     RadarBox.fileWrite.data.write(RadarBox.freqSignals.getRawFreqFrame());
                 }
             }
@@ -329,9 +313,6 @@ public class DataThreadService {
             }
             catch (BrokenBarrierException bbe) {
                 RadarBox.logger.add(this,"barrier is broken " + bbe.getLocalizedMessage());
-                /* if(RadarBox.fileWriter.isNeedSaveData()) {
-                    RadarBox.fileWriter.endWritingToFile();
-                } */
                 if (AoRDFolderManager.needSaveData) {
                     RadarBox.fileWrite.data.endWriting();
                     RadarBox.fileWrite.commit();
@@ -339,9 +320,6 @@ public class DataThreadService {
             }
             catch (InterruptedException ie) {
                 RadarBox.logger.add(this,"thread interrupted " + ie.getLocalizedMessage());
-                /* if(RadarBox.fileWriter.isNeedSaveData()) {
-                    RadarBox.fileWriter.endWritingToFile();
-                } */
                 if (AoRDFolderManager.needSaveData) {
                     RadarBox.fileWrite.data.endWriting();
                     RadarBox.fileWrite.commit();

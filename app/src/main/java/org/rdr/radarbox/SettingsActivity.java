@@ -23,7 +23,7 @@ import android.widget.TextView;
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.Device.DeviceConfigurationFragment;
 import org.rdr.radarbox.File.AoRDFolderManager;
-import org.rdr.radarbox.File.Sender;
+import org.rdr.radarbox.File.AoRD_DialogManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,6 +81,33 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    private static class OnLongClickFileOpener implements View.OnLongClickListener {
+        private Context parentObject;
+        private String filePath;
+
+        public OnLongClickFileOpener(Context parent, String path) {
+            parentObject = parent;
+            filePath = path;
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            File file = new File(filePath);
+
+            Uri uri = FileProvider.getUriForFile(parentObject,
+                    "org.rdr.radarbox.file_provider", file);
+            String mime = parentObject.getContentResolver().getType(uri);
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, mime);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chosenIntent = Intent.createChooser(intent, "Открыть файл в...");
+            parentObject.startActivity(chosenIntent);
+            return false;
+        }
+    }
+
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
         @Override
@@ -111,33 +138,20 @@ public class SettingsActivity extends AppCompatActivity {
             // имя файла для чтения данных
             final ListPreference readFileName = findPreference("file_reader_filename");
             assert readFileName != null;
-            // readFileName.setEntryValues(RadarBox.fileReader.getFilesList());
             readFileName.setEntryValues(AoRDFolderManager.getFilesList());
             readFileName.setEntries(readFileName.getEntryValues());
             readFileName.setOnPreferenceChangeListener((preference, newValue) -> {
-                /* if(!RadarBox.fileReader.setFileRead(newValue.toString())) {
-                    RadarBox.logger.add(this,"FileReader.setFileRead("+newValue+") is FALSE");
-                    return false;
-                } */
                 RadarBox.fileRead = AoRDFolderManager.getFileByName(newValue.toString());
                 if (!RadarBox.fileRead.isEnabled()) {
                     RadarBox.fileRead = null;
                     RadarBox.logger.add(this,"AoRDFile" + newValue + " isn`t enabled");
                     return false;
                 }
-                // if(RadarBox.fileReader.getVirtualDeviceConfiguration()==null) {
                 if (RadarBox.fileRead.config.getVirtual() == null) {
                     RadarBox.logger.add(this,
                             "FileReader.getVirtualDeviceConfiguration() is NULL");
                     return false;
                 }
-                /* if(!RadarBox.freqSignals.updateSignalParameters(
-                            RadarBox.fileReader.getVirtualDeviceConfiguration())) {
-                    RadarBox.logger.add(this,"FreqSignals.updateSignalParameters("+
-                            RadarBox.fileReader.getVirtualDeviceConfiguration().getDevicePrefix()+
-                            ") is FALSE");
-                    return false;
-                } */
                 if(!RadarBox.freqSignals.updateSignalParameters(
                         RadarBox.fileRead.config.getVirtual())) {
                     RadarBox.logger.add(this, "FreqSignals.updateSignalParameters(" +
@@ -145,7 +159,6 @@ public class SettingsActivity extends AppCompatActivity {
                             ") is FALSE");
                     return false;
                 }
-                // int period = RadarBox.fileReader.getVirtualDeviceConfiguration()
                 int period = RadarBox.fileRead.config.getVirtual()
                         .getIntParameterValue("Trep");
                 if (period == -1) {
@@ -161,8 +174,7 @@ public class SettingsActivity extends AppCompatActivity {
                 // Если выбрано "Отправлять файлы", то вызвать диалог, отправляющий файл
                 if (PreferenceManager.getDefaultSharedPreferences(
                                 this.requireContext()).getBoolean("need_send",false))
-                    Sender.createDialogToSendFile(this.requireContext(),
-                    //        RadarBox.fileReader.getFileRead());
+                    AoRD_DialogManager.createDialogToSendFile(this.requireContext(),
                             RadarBox.fileRead);
 
                 return true;
@@ -173,7 +185,6 @@ public class SettingsActivity extends AppCompatActivity {
             needSave.setOnPreferenceChangeListener(((preference, newValue) -> {
                 if(!RadarBox.dataThreadService.getLiveCurrentSource()
                         .getValue().equals(DataThreadService.DataSource.NO_SOURCE)) // TODO заменить на DEVICE и убрать ! после тестов
-                    // RadarBox.fileWriter.setNeedSaveData(Boolean.parseBoolean(newValue.toString()));
                     AoRDFolderManager.needSaveData = Boolean.parseBoolean(newValue.toString());
                 return true;
             }));
@@ -183,7 +194,8 @@ public class SettingsActivity extends AppCompatActivity {
                     needSave.setEnabled(true);
                 }
                 else {
-                    needSave.getOnPreferenceChangeListener().onPreferenceChange(needSave, Boolean.FALSE);
+                    needSave.getOnPreferenceChangeListener().onPreferenceChange(needSave,
+                            Boolean.FALSE);
                     needSave.setChecked(false);
                     needSave.setEnabled(false);
                 }
@@ -202,24 +214,17 @@ public class SettingsActivity extends AppCompatActivity {
                         RadarBox.logger.add(this, "No files for reading in data directory");
                         return false;
                     }
-                    // если в данный момент в списке файлов не выбран не один из них, то установить первый
+                    // если в данный момент в списке файлов не выбран не один из них,
+                    // то установить первый
                     if (!Arrays.asList(readFileName.getEntries()).contains(readFileName.getValue()))
                         readFileName.setValue(readFileName.getEntries()[0].toString());
-                    // если в RadarBox.fileReader сейчас не открыт никакой файл ЛИБО
-                    // если выбранный файл из списка не соответствует открытому файлу в RadarBox.fileReader
-                    /* if(RadarBox.fileReader.getFileRead()==null ||
-                            !RadarBox.fileReader.getFileRead().getName().equals(readFileName.getValue())) {
-                        RadarBox.logger.add(this, "File "+readFileName.getValue()+" was not opened. Opening it...");
-                    } */
+                    // если в RadarBox.fileRead сейчас не находится никакой файл ЛИБО
+                    // если выбранный файл из списка не соответствует файлу RadarBox.fileRead
                     if (RadarBox.fileRead == null ||
                             !RadarBox.fileRead.getName().equals(readFileName.getValue())) {
                         RadarBox.logger.add(this, "File " + readFileName.getValue() +
                                 " was not opened. Opening it...");
                         // попытаться установить открыть файл для чтения
-                        /* if(!RadarBox.fileReader.setFileRead(readFileName.getValue())) {
-                            RadarBox.logger.add(this, "ERROR on opening File "+readFileName.getValue());
-                            return false;
-                        } */
                         RadarBox.fileRead = AoRDFolderManager.getFileByName(readFileName.getValue());
                         if (!RadarBox.fileRead.isEnabled()) {
                             RadarBox.fileRead = null;
@@ -235,8 +240,10 @@ public class SettingsActivity extends AppCompatActivity {
                 }
                 else {
                     // перестать читать из файла
-                    if(!RadarBox.dataThreadService.setDataSource(DataThreadService.DataSource.DEVICE))
-                        RadarBox.dataThreadService.setDataSource(DataThreadService.DataSource.NO_SOURCE);
+                    if(!RadarBox.dataThreadService.setDataSource(
+                            DataThreadService.DataSource.DEVICE))
+                        RadarBox.dataThreadService.setDataSource(
+                                DataThreadService.DataSource.NO_SOURCE);
                     return true;
                 }
             }));
@@ -247,7 +254,6 @@ public class SettingsActivity extends AppCompatActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     if(!readFileName.getSummary().toString().isEmpty() &&
-                    // RadarBox.fileReader.getVirtualDeviceConfiguration()!=null) {
                     RadarBox.fileRead.config.getVirtual() != null) {
                         DeviceConfigurationFragment fragment = new DeviceConfigurationFragment();
                         Bundle args = new Bundle();
@@ -264,13 +270,13 @@ public class SettingsActivity extends AppCompatActivity {
                 }
             });
             // ввод постфикса для имени файла при записи
-            final EditTextPreference writeFileNamePrefix = findPreference("file_writer_filename");
+            final EditTextPreference writeFileNamePrefix = findPreference(
+                    "file_writer_filename");
             assert writeFileNamePrefix != null;
             writeFileNamePrefix.setOnBindEditTextListener(editText -> {
                 editText.setSingleLine(true);
             });
             writeFileNamePrefix.setOnPreferenceChangeListener((preference, newValue) -> {
-                // RadarBox.fileWriter.setDataWriteFilenamePostfix(newValue.toString());
                 AoRDFolderManager.setFileNamePostfix(newValue.toString());
                 return true;
             });
@@ -284,38 +290,12 @@ public class SettingsActivity extends AppCompatActivity {
                             needSend.setEnabled(true);
                         }
                         else {
-                            needSend.getOnPreferenceChangeListener().onPreferenceChange(needSend, Boolean.FALSE);
+                            needSend.getOnPreferenceChangeListener().onPreferenceChange(needSend,
+                                    Boolean.FALSE);
                             needSend.setChecked(false);
                             needSend.setEnabled(false);
                         }
                     });
         }
-    }
-}
-
-class OnLongClickFileOpener implements View.OnLongClickListener {
-    private Context parentObject;
-    private String filePath;
-
-    public OnLongClickFileOpener(Context parent, String path) {
-        parentObject = parent;
-        filePath = path;
-    }
-
-    @Override
-    public boolean onLongClick(View view) {
-        File file = new File(filePath);
-
-        Uri uri = FileProvider.getUriForFile(parentObject,
-                "org.rdr.radarbox.file_provider", file);
-        String mime = parentObject.getContentResolver().getType(uri);
-
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setDataAndType(uri, mime);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        Intent chosenIntent = Intent.createChooser(intent, "Открыть файл в...");
-        parentObject.startActivity(chosenIntent);
-        return false;
     }
 }

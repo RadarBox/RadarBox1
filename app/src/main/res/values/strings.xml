@@ -11,6 +11,7 @@
     <string name="str_save">Сохранить</string>
     <string name="str_add">Добавить</string>
     <string name="str_delete">Удалить</string>
+    <string name="str_choose">Выбрать</string>
     <string name="str_message">Сообщение</string>
     <string name="str_description">Описание</string>
     <string name="str_exit_msg">Вы уверены, что хотите выйти из приложения?</string>

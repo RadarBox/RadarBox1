@@ -10,28 +10,23 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.preference.PreferenceManager;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.ImageButton;
 
 import org.rdr.radarbox.DSP.SettingsDSP;
 import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
-import org.rdr.radarbox.File.AoRDFileSaver;
 import org.rdr.radarbox.File.AoRDFolderManager;
-import org.rdr.radarbox.File.Sender;
+import org.rdr.radarbox.File.AoRD_DialogManager;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
 import java.util.Objects;
-import java.io.File;
 
 /** Главная активность приложения для отображения элементов управления и графиков сигналов
  */
@@ -191,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
                     RadarBox.logger.add("ERROR: file to write is null");
                     return;
                 }
-                AoRDFileSaver saver = new AoRDFileSaver(RadarBox.fileWrite);
+                AoRD_DialogManager saver = new AoRD_DialogManager(RadarBox.fileWrite);
                 saver.createSavingDialog(this, sendFile);
             }
         }
