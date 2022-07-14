@@ -1,6 +1,9 @@
 package org.rdr.radarbox.File;
 
 import android.os.Environment;
+
+import androidx.preference.PreferenceManager;
+
 import org.rdr.radarbox.RadarBox;
 
 import java.io.File;
@@ -9,7 +12,8 @@ import java.sql.Timestamp;
 public class AoRDFolderManager {
     private static final File defaultDirectory =
             RadarBox.getAppContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-    private static String fileNamePostfix = "";
+    private static String fileNamePostfix = PreferenceManager.getDefaultSharedPreferences(
+            RadarBox.getAppContext()).getString("file_writer_filename", "");;
     public static boolean needSaveData = false;
 
     public static AoRDFile getFileByName(String fileName) {

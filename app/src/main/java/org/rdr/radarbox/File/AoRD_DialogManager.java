@@ -1,38 +1,35 @@
 package org.rdr.radarbox.File;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.AlertDialog;
+
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface;
 import android.os.Environment;
-import android.view.MenuItem;
+import androidx.core.content.FileProvider;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import androidx.appcompat.widget.AppCompatEditText;
-import androidx.core.content.FileProvider;
 
-import com.google.android.material.navigation.NavigationBarView;
-
-import org.rdr.radarbox.BuildConfig;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
+import org.rdr.radarbox.BuildConfig;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 public class AoRD_DialogManager {
     private AoRDFile aordFile;
@@ -64,6 +61,14 @@ public class AoRD_DialogManager {
         addFileButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 createAddFileDialog(activityForDialog, dialog);
+            }
+        });
+
+        Button delFileButton = dialog.findViewById(R.id.delete_aord_item_button);
+        delFileButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createDeleteFileDialog(activityForDialog, dialog);
             }
         });
 
@@ -132,7 +137,6 @@ public class AoRD_DialogManager {
             @Override
             public void onClick(View v) {
                 String path = pathEdit.getText().toString();
-                RadarBox.logger.add("Current path (from up): " + path);
                 if (path.equals("")) {
                     return;
                 }
@@ -140,7 +144,6 @@ public class AoRD_DialogManager {
                 List<String> splitList = Arrays.asList(splitArray);
                 path = String.join("/", splitList.subList(0, splitArray.length - 1));
                 pathEdit.setText(path);
-                RadarBox.logger.add(this, "New path: " + path);
                 updateSpinner(activityForDialog);
             }
         });
@@ -152,7 +155,6 @@ public class AoRD_DialogManager {
                     String newPath = chooser.getSelectedItem().toString();
                     if (!newPath.equals("")) {
                         pathEdit.setText(pathEdit.getText().toString() + "/" + newPath);
-                        RadarBox.logger.add("SELECTED " + chooser.getSelectedItem().toString());
                         updateSpinner(activityForDialog);
                     }
                 }
@@ -174,6 +176,8 @@ public class AoRD_DialogManager {
                 } else {
                     aordFile.additional.addFile(fileToAdd);
                     updateFilesList(activityForDialog, parentDialog);
+                    RadarBox.logger.add(AoRD_DialogManager.this, "End of adding file " +
+                            fileToAdd.getAbsolutePath());
                     dialog.dismiss();
                 }
             }
@@ -189,8 +193,6 @@ public class AoRD_DialogManager {
     }
 
     private String getCurrentPath() {
-        RadarBox.logger.add("Main dir: " + mainDir);
-        RadarBox.logger.add("Path: " + pathEdit.getText().toString());
         String result = mainDir + "/" + pathEdit.getText().toString();
         if (result.endsWith("/")) {
             result = result.substring(0, result.length() - 1);
@@ -218,6 +220,35 @@ public class AoRD_DialogManager {
                 android.R.layout.simple_spinner_item, getCurrentFolderList());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         chooser.setAdapter(adapter);
+    }
+
+    private void createDeleteFileDialog(Activity activityForDialog, Dialog parentDialog) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activityForDialog);
+        builder.setTitle(activityForDialog.getString(R.string.elements_deletion));
+
+        Spinner delFileChooser = new Spinner(activityForDialog);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(activityForDialog,
+                android.R.layout.simple_spinner_item, aordFile.additional.getNamesList());
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        delFileChooser.setAdapter(adapter);
+        builder.setView(delFileChooser);
+
+        builder.setPositiveButton(activityForDialog.getString(R.string.str_delete),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String name = delFileChooser.getSelectedItem().toString();
+                        aordFile.additional.deleteFile(name);
+                        updateFilesList(activityForDialog, parentDialog);
+                        RadarBox.logger.add(AoRD_DialogManager.this,
+                                "End of deleting file " + aordFile.additional.getFilePath() +
+                                        "/" + name);
+                    }
+                });
+        builder.setNegativeButton(activityForDialog.getString(R.string.str_close),
+                (dialog, which) -> { });
+        builder.create();
+        builder.show();
     }
 
     /**

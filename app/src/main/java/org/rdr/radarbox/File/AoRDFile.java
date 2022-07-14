@@ -1,35 +1,39 @@
 package org.rdr.radarbox.File;
 
 import android.content.Context;
-import android.util.Xml;
 
-import androidx.annotation.NonNull;
-
-import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.RadarBox;
+import org.rdr.radarbox.Device.DeviceConfiguration;
+
+import android.util.Xml;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.ByteOrder;
-import java.nio.InvalidMarkException;
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+
+import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.nio.file.NotDirectoryException;
-import java.util.ArrayList;
+import java.nio.InvalidMarkException;
+import java.nio.BufferUnderflowException;
+
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
 
 public class AoRDFile extends File {
     private Context aordFileContext = RadarBox.getAppContext();
@@ -41,7 +45,7 @@ public class AoRDFile extends File {
     public ConfigurationFileManager config = null;
     public StatusFileManager status = null;
     public DescriptionFileManager description = null;
-    public AdditionalFolderManager additional = null;
+    public AdditionalFileManager additional = null;
 
     private boolean enabled = true;
 
@@ -61,7 +65,7 @@ public class AoRDFile extends File {
         } catch (IOException e) {
             RadarBox.logger.add(this, "ERROR: " + e.getLocalizedMessage());
             e.printStackTrace();
-            enabled = false;
+            close();
         }
     }
 
@@ -79,7 +83,7 @@ public class AoRDFile extends File {
         } catch (IOException e) {
             RadarBox.logger.add(this, "ERROR: " + e.getLocalizedMessage());
             e.printStackTrace();
-            enabled = false;
+            close();
         }
     }
 
@@ -99,7 +103,7 @@ public class AoRDFile extends File {
         } catch (IOException e) {
             RadarBox.logger.add(this, "ERROR: " + e.getLocalizedMessage());
             e.printStackTrace();
-            enabled = false;
+            close();
         }
     }
 
@@ -118,7 +122,7 @@ public class AoRDFile extends File {
         } catch (IOException e) {
             RadarBox.logger.add(this, "ERROR: " + e.getLocalizedMessage());
             e.printStackTrace();
-            enabled = false;
+            close();
         }
     }
 
@@ -162,7 +166,7 @@ public class AoRDFile extends File {
         config = new ConfigurationFileManager();
         status = new StatusFileManager();
         description = new DescriptionFileManager();
-        additional = new AdditionalFolderManager();
+        additional = new AdditionalFileManager();
     }
 
     public static AoRDFile createNewAoRDFile(String path) {
@@ -205,20 +209,23 @@ public class AoRDFile extends File {
     public void commit() {
         data.endWriting();
         if (!delete()) {
-            RadarBox.logger.add("Can`t commit file " + getAbsolutePath());
+            RadarBox.logger.add(this, "Can`t commit file " + getAbsolutePath());
             return;
         }
         try {
+            additional.prepareToCommit();
             File newSelf = ZipManager.archiveFolder(unzipFolder);
             if (!newSelf.getAbsolutePath().equals(getAbsolutePath())) {
-                enabled = false;
-                throw new IOException("Error on commit file: incorrect archive name.");
+                close();
+                throw new IOException("Error on commit file: incorrect archive name");
             }
+            additional.commit();
         } catch (IOException e) {
-            RadarBox.logger.add(e.toString());
+            RadarBox.logger.add(this, e.toString());
             e.printStackTrace();
+            close();
         }
-        RadarBox.logger.add("Commit on file " + getName() + " is successful");
+        RadarBox.logger.add(this, "Commit on file " + getName() + " is successful");
     }
 
     public void close() {
@@ -233,8 +240,7 @@ public class AoRDFile extends File {
         protected BaseInnerFileManager(String name, boolean required) throws IOException {
             selfFile = new File(unzipFolder.getAbsolutePath() + "/" + name);
             if (!required && !selfFile.exists()) {
-                if ((selfFile.isFile() && !selfFile.createNewFile()) ||
-                        (selfFile.isDirectory() && !selfFile.mkdir())) {
+                if (!selfFile.createNewFile()) {
                     throw new IOException("Can`t create file " + selfFile.getAbsolutePath());
                 }
             } else if (required && !selfFile.exists()) {
@@ -306,7 +312,7 @@ public class AoRDFile extends File {
                 } catch (InvalidMarkException e2) {
                     RadarBox.logger.add(this,e2.getLocalizedMessage() +
                             "\n\tCouldn't reload file");
-                    //RadarBox.mainDataThread.extraStop();
+                    // RadarBox.mainDataThread.extraStop();
                 }
             }
         }
@@ -315,7 +321,7 @@ public class AoRDFile extends File {
             try {
                 dataWriteStream = new FileOutputStream(selfFile);
             } catch (IOException e) {
-                RadarBox.logger.add(e.toString());
+                RadarBox.logger.add(this, e.toString());
                 e.printStackTrace();
                 endWriting();
             }
@@ -330,7 +336,7 @@ public class AoRDFile extends File {
                     dataWriteStream.write(byteBuffer.array());
                     dataWriteStream.flush();
                 } catch (IOException e) {
-                    RadarBox.logger.add(e.toString());
+                    RadarBox.logger.add(this, e.toString());
                     e.printStackTrace();
                     endWriting();
                 }
@@ -345,8 +351,9 @@ public class AoRDFile extends File {
                 dataWriteStream.close();
                 readSelf();
             } catch (IOException e) {
-                RadarBox.logger.add(e.toString());
+                RadarBox.logger.add(this, e.toString());
                 e.printStackTrace();
+                close();
             }
             dataWriteStream = null;
         }
@@ -410,8 +417,9 @@ public class AoRDFile extends File {
                 fileWriteStream.close();
                 readSelf();
             } catch (IOException e) {
-                RadarBox.logger.add(e.toString());
+                RadarBox.logger.add(this, e.toString());
                 e.printStackTrace();
+                close();
             }
         }
 
@@ -516,37 +524,64 @@ public class AoRDFile extends File {
         }
     }
 
-    public class AdditionalFolderManager extends BaseInnerFileManager {
-        AdditionalFolderManager() throws IOException {
-            super(Const.ADDITIONAL_FOLDER_NAME, false);
+    public class AdditionalFileManager extends BaseInnerFileManager {
+        private File selfFolder = null;
+        
+        AdditionalFileManager() throws IOException {
+            super(Const.ADDITIONAL_ARCH_NAME, false);
+            selfFolder = new File(unzipFolder.getAbsolutePath() + "/" +
+                    Const.ADDITIONAL_FOLDER_NAME);
+            if (!selfFolder.exists() && !selfFolder.mkdir()) {
+                throw new IOException("Can`t create dir " + selfFolder.getAbsolutePath());
+            }
         }
 
         public String[] getNamesList() {
-            return selfFile.list();
+            return selfFolder.list();
         }
 
         public File[] getFilesList() {
-            return selfFile.listFiles();
+            return selfFolder.listFiles();
         }
 
         public void addFile(File newFile) {
-            RadarBox.logger.add(this, "Adding file " + newFile.getAbsolutePath() + newFile.exists());
+            RadarBox.logger.add(this, "Adding file " + newFile.getAbsolutePath() +
+                    newFile.exists());
             if (!Helpers.copyFile(newFile, Helpers.createUniqueFile(
-                    selfFile.getAbsolutePath() + "/" + newFile.getName()))) {
+                    selfFolder.getAbsolutePath() + "/" + newFile.getName()))) {
                 RadarBox.logger.add(this, "Can`t add file " + newFile.getAbsolutePath() +
-                        " to additional folder of AoRD-file " + selfFile.getAbsolutePath());
+                        " to additional folder of AoRD-file " + selfFolder.getAbsolutePath());
             }
         }
 
         public void deleteFile(String name) {
             if (Arrays.asList(getNamesList()).contains(name)) {
-                File fileToDelete = new File(getAbsolutePath() + "/" + name);
+                File fileToDelete = new File(selfFolder.getAbsolutePath() + "/" + name);
                 if (!fileToDelete.delete()) {
                     RadarBox.logger.add(this, "Can`t delete file " +
                             fileToDelete.getAbsolutePath() +
                             " from additional folder of AoRD-file " +
                             AoRDFile.this.getAbsolutePath());
                 }
+            }
+        }
+        
+        protected void prepareToCommit() throws IOException {
+            if (selfFile.exists()) {
+                if (!selfFile.delete()) {
+                    throw new IOException("Can`t delete file " + selfFile.getAbsolutePath());
+                }
+            }
+        }
+        
+        public void commit() {
+            try {
+                prepareToCommit();
+                selfFile = ZipManager.archiveFolder(selfFolder);
+            } catch (IOException e) {
+                RadarBox.logger.add(this, e.toString());
+                e.printStackTrace();
+                close();
             }
         }
     }

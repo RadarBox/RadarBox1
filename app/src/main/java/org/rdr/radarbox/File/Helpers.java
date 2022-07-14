@@ -8,13 +8,14 @@ import android.provider.Settings;
 import org.rdr.radarbox.RadarBox;
 
 import java.io.File;
+
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 
 import java.util.Scanner;
 
@@ -44,7 +45,7 @@ public class Helpers {
      */
     public static File createUniqueFile(String start_name) {
         File file = new File(start_name);
-        Integer i = 2;
+        Integer i = 1;
         String[] nameAndExt = splitFIleName(start_name);
         String name = nameAndExt[0];
         String ext = nameAndExt[1];

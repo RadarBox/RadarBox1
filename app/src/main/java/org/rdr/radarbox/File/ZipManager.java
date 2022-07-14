@@ -78,6 +78,7 @@ public class ZipManager {
      * @throws IOException - при ошибке системы ввода/вывода.
      */
     public void unzipFile() throws IOException {
+        // Не используется Helpers.createUniqueFile, чтобы папка для разархивации удалялась
         mainUnzippedFolder = new File(mainZipFile.getParent() + "/" +
                 getUnzippedFolderName(mainZipFile));
         Helpers.removeTreeIfExists(mainUnzippedFolder);
@@ -113,7 +114,7 @@ public class ZipManager {
 
             FileOutputStream fileOutputStream = new FileOutputStream(entryFile.getAbsolutePath());
             BufferedOutputStream out = new BufferedOutputStream(fileOutputStream);
-            byte b[] = new byte[1024];
+            byte[] b = new byte[1024];
             int n;
             while ((n = in.read(b,0,1024)) >= 0) {
                 out.write(b, 0, n);
