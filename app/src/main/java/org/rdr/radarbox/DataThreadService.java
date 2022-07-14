@@ -2,7 +2,7 @@ package org.rdr.radarbox;
 
 import org.rdr.radarbox.Device.DataChannel;
 import org.rdr.radarbox.Device.DeviceConfiguration;
-import org.rdr.radarbox.File.AoRDFolderManager;
+import org.rdr.radarbox.File.AoRDSettingsManager;
 
 import java.util.ArrayList;
 import java.util.concurrent.BrokenBarrierException;
@@ -292,12 +292,13 @@ public class DataThreadService {
     class DataSaving implements Runnable {
         @Override
         public void run() {
-            if (AoRDFolderManager.needSaveData) {
+            if (AoRDSettingsManager.needSaveData) {
                 if (frameCounter == 0) {
                     if (RadarBox.fileWrite != null) {
                         RadarBox.fileWrite.close();
                     }
-                    RadarBox.fileWrite = AoRDFolderManager.createNewAoRDFile();
+                    RadarBox.setAoRDFile(RadarBox.fileWrite,
+                            AoRDSettingsManager.createNewAoRDFile());
                     if (RadarBox.fileWrite == null) {
                         RadarBox.logger.add("File to write is null");
                     }
@@ -313,14 +314,14 @@ public class DataThreadService {
             }
             catch (BrokenBarrierException bbe) {
                 RadarBox.logger.add(this,"barrier is broken " + bbe.getLocalizedMessage());
-                if (AoRDFolderManager.needSaveData) {
+                if (AoRDSettingsManager.needSaveData) {
                     RadarBox.fileWrite.data.endWriting();
                     RadarBox.fileWrite.commit();
                 }
             }
             catch (InterruptedException ie) {
                 RadarBox.logger.add(this,"thread interrupted " + ie.getLocalizedMessage());
-                if (AoRDFolderManager.needSaveData) {
+                if (AoRDSettingsManager.needSaveData) {
                     RadarBox.fileWrite.data.endWriting();
                     RadarBox.fileWrite.commit();
                 }

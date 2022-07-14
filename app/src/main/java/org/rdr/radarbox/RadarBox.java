@@ -8,6 +8,7 @@ import android.os.Bundle;
 import org.rdr.radarbox.DSP.FreqSignals;
 import org.rdr.radarbox.Device.Device;
 import org.rdr.radarbox.File.AoRDFile;
+import org.rdr.radarbox.File.AoRDSettingsManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -31,7 +32,7 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
     public void onCreate() {
         appContext=getApplicationContext();
         super.onCreate();
-        if(radarBox==null) {
+        if (radarBox==null) {
             radarBox = new RadarBox();
             radarBox.initializeSharedObjects(appContext);
         }
@@ -55,11 +56,40 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
     public static FreqSignals freqSignals;
     public static DataThreadService dataThreadService;
 
+    /**
+     * Задаёт AoRD-файлу в {@link RadarBox} новое значение.
+     * @param attribute - один из атрибутов: {@link RadarBox#fileRead} или {@link RadarBox#fileWrite}.
+     * @param newFile - новое значение атрибута (в том числе null).
+     */
+    public static void setAoRDFile(AoRDFile attribute, AoRDFile newFile) {
+        if (attribute == fileRead) {
+            if (fileRead != null) {
+                fileRead.close();
+            }
+            fileRead = newFile;
+        } else if (attribute == fileWrite) {
+            if (fileWrite != null) {
+                fileWrite.close();
+            }
+            fileWrite = newFile;
+        }
+    }
+
     private void initializeSharedObjects(@NonNull Context appContext) {
         logger = new Logger(appContext);
         setDeviceArrayListOnStart();
         freqSignals = new FreqSignals();
         dataThreadService = new DataThreadService();
+
+        // Обязательное закрытие AoRD-файлов
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                fileRead.close();
+                fileWrite.close();
+                // На случай прошлых обрушений приложения
+                AoRDSettingsManager.cleanDefaultDir();
+            }
+        });
     }
 
     private void setDeviceArrayListOnStart() {

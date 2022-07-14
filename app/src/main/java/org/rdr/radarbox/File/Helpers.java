@@ -25,6 +25,11 @@ import java.util.Scanner;
 public class Helpers {
     public static final int PERMISSION_STORAGE = 101;
 
+    /**
+     * Создание запроса к пользователю на разрешение.
+     * @param activity - текущая активность.
+     * @param requestCode - код разрешения.
+     */
     public static void requestPermissions(Activity activity, int requestCode) {
         try {
             Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
@@ -124,12 +129,12 @@ public class Helpers {
     /**
      * Удаление папки со всем её содержимым (при её наличии).
      * @param folder - папка.
-     * @return true, если директория существовала, false в противном случае.
+     * @return true при удачном удалении, false в противном случае.
      */
     public static boolean removeTreeIfExists(File folder) {
         try {
             removeTree(folder);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             return false;
         }
         return true;
@@ -139,8 +144,9 @@ public class Helpers {
      * Удаление папки со всем её содержимым.
      * @param folder - папка.
      * @throws FileNotFoundException - если директория не найдена.
+     * @throws IOException - при неудачном удалении файла/папки.
      */
-    public static void removeTree(File folder) throws FileNotFoundException {
+    public static void removeTree(File folder) throws IOException {
         checkFileExistence(folder);
         File[] contents = folder.listFiles();
         if (contents == null){
@@ -148,12 +154,16 @@ public class Helpers {
         }
         for (File file : contents) {
             if (file.isFile()) {
-                file.delete();
+                if (!file.delete()) {
+                    throw new IOException("Can`t delete file " + file.getAbsolutePath());
+                };
             } else {
                 removeTree(file);
             }
         }
-        folder.delete();
+        if (!folder.delete()) {
+            throw new IOException("Can`t delete folder " + folder.getAbsolutePath());
+        }
     }
 
     /**

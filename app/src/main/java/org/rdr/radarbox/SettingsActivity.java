@@ -22,7 +22,7 @@ import android.widget.TextView;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.Device.DeviceConfigurationFragment;
-import org.rdr.radarbox.File.AoRDFolderManager;
+import org.rdr.radarbox.File.AoRDSettingsManager;
 import org.rdr.radarbox.File.AoRD_DialogManager;
 
 import java.io.File;
@@ -138,12 +138,12 @@ public class SettingsActivity extends AppCompatActivity {
             // имя файла для чтения данных
             final ListPreference readFileName = findPreference("file_reader_filename");
             assert readFileName != null;
-            readFileName.setEntryValues(AoRDFolderManager.getFilesList());
+            readFileName.setEntryValues(AoRDSettingsManager.getFilesList());
             readFileName.setEntries(readFileName.getEntryValues());
             readFileName.setOnPreferenceChangeListener((preference, newValue) -> {
-                RadarBox.fileRead = AoRDFolderManager.getFileByName(newValue.toString());
-                if (!RadarBox.fileRead.isEnabled()) {
-                    RadarBox.fileRead = null;
+                RadarBox.setAoRDFile(RadarBox.fileRead,
+                        AoRDSettingsManager.getFileByName(newValue.toString()));
+                if (RadarBox.fileRead == null) {
                     RadarBox.logger.add(this,"AoRDFile" + newValue + " isn`t enabled");
                     return false;
                 }
@@ -185,7 +185,7 @@ public class SettingsActivity extends AppCompatActivity {
             needSave.setOnPreferenceChangeListener(((preference, newValue) -> {
                 if(!RadarBox.dataThreadService.getLiveCurrentSource()
                         .getValue().equals(DataThreadService.DataSource.NO_SOURCE)) // TODO заменить на DEVICE и убрать ! после тестов
-                    AoRDFolderManager.needSaveData = Boolean.parseBoolean(newValue.toString());
+                    AoRDSettingsManager.needSaveData = Boolean.parseBoolean(newValue.toString());
                 return true;
             }));
             RadarBox.dataThreadService.getLiveCurrentSource().observe(this,
@@ -225,9 +225,9 @@ public class SettingsActivity extends AppCompatActivity {
                         RadarBox.logger.add(this, "File " + readFileName.getValue() +
                                 " was not opened. Opening it...");
                         // попытаться установить открыть файл для чтения
-                        RadarBox.fileRead = AoRDFolderManager.getFileByName(readFileName.getValue());
-                        if (!RadarBox.fileRead.isEnabled()) {
-                            RadarBox.fileRead = null;
+                        RadarBox.setAoRDFile(RadarBox.fileRead,
+                                AoRDSettingsManager.getFileByName(readFileName.getValue()));
+                        if (RadarBox.fileRead == null) {
                             RadarBox.logger.add(this, "ERROR on opening File " +
                                     readFileName.getValue());
                             return false;
@@ -277,7 +277,7 @@ public class SettingsActivity extends AppCompatActivity {
                 editText.setSingleLine(true);
             });
             writeFileNamePrefix.setOnPreferenceChangeListener((preference, newValue) -> {
-                AoRDFolderManager.setFileNamePostfix(newValue.toString());
+                AoRDSettingsManager.setFileNamePostfix(newValue.toString());
                 return true;
             });
             // Отправка файлов по сети при записи

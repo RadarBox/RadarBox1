@@ -22,7 +22,7 @@ import android.widget.ImageButton;
 import org.rdr.radarbox.DSP.SettingsDSP;
 import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DataChannel;
-import org.rdr.radarbox.File.AoRDFolderManager;
+import org.rdr.radarbox.File.AoRDSettingsManager;
 import org.rdr.radarbox.File.AoRD_DialogManager;
 import org.rdr.radarbox.Plots2D.TimeFreqGraphFragment;
 
@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
             RadarBox.dataThreadService.stop();
             // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
             // if (RadarBox.fileWriter.isNeedSaveData()) {
-            if (AoRDFolderManager.needSaveData) {
+            if (AoRDSettingsManager.needSaveData) {
                 // Сохранение файла
                 boolean sendFile = PreferenceManager.getDefaultSharedPreferences(
                         this).getBoolean("need_send", false);

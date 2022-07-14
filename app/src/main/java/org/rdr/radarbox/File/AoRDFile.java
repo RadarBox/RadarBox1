@@ -209,7 +209,7 @@ public class AoRDFile extends File {
     public void commit() {
         data.endWriting();
         if (!delete()) {
-            RadarBox.logger.add(this, "Can`t commit file " + getAbsolutePath());
+            RadarBox.logger.add(this, "ERROR: Can`t commit file " + getAbsolutePath());
             return;
         }
         try {
@@ -225,7 +225,7 @@ public class AoRDFile extends File {
             e.printStackTrace();
             close();
         }
-        RadarBox.logger.add(this, "Commit on file " + getName() + " is successful");
+        RadarBox.logger.add(this, "INFO: Commit on file " + getName() + " is successful");
     }
 
     public void close() {
@@ -329,7 +329,7 @@ public class AoRDFile extends File {
         }
 
         public void write(short[] data) {
-            if (dataWriteStream != null && AoRDFolderManager.needSaveData) {
+            if (dataWriteStream != null && AoRDSettingsManager.needSaveData) {
                 ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
                 byteBuffer.asShortBuffer().put(data);
                 try {
@@ -375,7 +375,7 @@ public class AoRDFile extends File {
                 configReadStream.close();
             } catch (IllegalStateException e) {
                 RadarBox.logger.add(this,
-                        "Reading null configuration " +
+                        "WARNING: Reading null configuration " +
                                 "(if it`s on creation of AoRD-file, it is normal)");
             }
         }
@@ -435,7 +435,7 @@ public class AoRDFile extends File {
                     parseConfigurationHeader(configFileStream);
                 } catch (XmlPullParserException | IOException e) {
                     RadarBox.logger.add(deviceName + " CONFIG",
-                            "parseConfiguration ERROR: " + e.getLocalizedMessage());
+                            "ERROR on parseConfiguration: " + e.getLocalizedMessage());
                 }
             }
 
@@ -516,7 +516,7 @@ public class AoRDFile extends File {
                 writer.write(text);
                 writer.flush();
                 description = text;
-                RadarBox.logger.add(this, "Description written: " + description);
+                RadarBox.logger.add(this, "DEBUG: Description written: " + description);
             } catch (IOException e) {
                 RadarBox.logger.add(this, e.toString());
                 e.printStackTrace();
@@ -545,12 +545,13 @@ public class AoRDFile extends File {
         }
 
         public void addFile(File newFile) {
-            RadarBox.logger.add(this, "Adding file " + newFile.getAbsolutePath() +
+            RadarBox.logger.add(this, "DEBUG: Adding file " + newFile.getAbsolutePath() +
                     newFile.exists());
             if (!Helpers.copyFile(newFile, Helpers.createUniqueFile(
                     selfFolder.getAbsolutePath() + "/" + newFile.getName()))) {
-                RadarBox.logger.add(this, "Can`t add file " + newFile.getAbsolutePath() +
-                        " to additional folder of AoRD-file " + selfFolder.getAbsolutePath());
+                RadarBox.logger.add(this, "ERROR: Can`t add file " +
+                        newFile.getAbsolutePath() + " to additional folder of AoRD-file " +
+                        selfFolder.getAbsolutePath());
             }
         }
 
@@ -558,7 +559,7 @@ public class AoRDFile extends File {
             if (Arrays.asList(getNamesList()).contains(name)) {
                 File fileToDelete = new File(selfFolder.getAbsolutePath() + "/" + name);
                 if (!fileToDelete.delete()) {
-                    RadarBox.logger.add(this, "Can`t delete file " +
+                    RadarBox.logger.add(this, "ERROR: Can`t delete file " +
                             fileToDelete.getAbsolutePath() +
                             " from additional folder of AoRD-file " +
                             AoRDFile.this.getAbsolutePath());
