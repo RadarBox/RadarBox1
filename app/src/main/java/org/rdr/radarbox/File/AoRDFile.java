@@ -35,6 +35,28 @@ import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Класс-наследник {@link File} для работы с AoRD-файлами (Archive of Radar Data).
+ * Поддерживает чтение, запись, редактирование и создание.<br />
+ * Важно: <b>все методы родителя ({@link File}) относятся к самому AoRD-файлу
+ * (не к папке, в которую он распакован)</b>.
+ * <br /><br />
+ * Подробнее о формате AoRD:
+ * <br /> Сам файл - это zip-архив с конкретным списком файлов внутри:
+ *  <br />- <i>Файл конфигурации</i>* (.xml) -- описание текущих настроек радара и всей необходимой
+ *  информации для правильной интерпретации данных в будущем.
+ *  <br />- <i>Файл данных</i> (.data) -- файл, куда будет записываться двоичный код данных,
+ *  переданных радаром.
+ *  <br />- Файл описания (.txt) -- краткое текстовое описание эксперимента.
+ *  <br />- Папка дополнения -- папка для файлов с различной дополнительной
+ *  информацией (тоже архивируется).
+ *  <br />---------- ^ сделано
+ *  <br />- Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
+ *  информация, которая меняется в процессе сканирования.
+ *  <br />*Курсивом выделены обязательные файлы.
+ * @author Шишмарев Ростислав Иванович; Сапронов Данил Игоревич
+ * @version v0.1.0
+ */
 public class AoRDFile extends File {
     private Context aordFileContext = RadarBox.getAppContext();
 
@@ -148,14 +170,26 @@ public class AoRDFile extends File {
     }
 
     // Get methods
+
+    /**
+     * Определяет, в рабочем ли состоянии AoRD-файл (enabled).
+     * @return true, если в работе с объектом не возникли критические ошибки,
+     * false в противном случае.
+     */
     public boolean isEnabled() {
         return enabled;
     }
 
+    /**
+     * @return контекст AoRD-файла (по умолчанию имеет значение RadarBox.getAppContext()).
+     */
     public Context getContext() {
         return aordFileContext;
     }
 
+    /**
+     * @return объект {@link File} папки, в которую был распакован AoRD-файл.
+     */
     public File getUnzipFolder() {
         return unzipFolder;
     }
@@ -169,7 +203,16 @@ public class AoRDFile extends File {
         additional = new AdditionalFileManager();
     }
 
+    /**
+     * Создание AoRD-файла с записанной конфигурацтей и пустыми остальными файлами.
+     * @param path - путь до создаваемого файла (без ".zip").
+     * @return null, если в процессе создания возникла ошибка
+     * (в том числе если {@link AoRDFile#isEnabled()} == false).
+     */
     public static AoRDFile createNewAoRDFile(String path) {
+        if (path.endsWith(".zip")) {
+            return null;
+        }
         File folderWrite = Helpers.createUniqueFile(path);
         try {
             if (!folderWrite.mkdir()) {
@@ -206,6 +249,9 @@ public class AoRDFile extends File {
         return null;
     }
 
+    /**
+     * Сохранение всех изменений.
+     */
     public void commit() {
         data.endWriting();
         if (!delete()) {
@@ -228,6 +274,12 @@ public class AoRDFile extends File {
         RadarBox.logger.add(this, "INFO: Commit on file " + getName() + " is successful");
     }
 
+    /**
+     * Закрытие файла (без сохранения изменений). Его обязательно нужно вызвать после
+     * окончания работы с объектом.<br />
+     * После вызова этого метода объект использованию не подлежит
+     * ({@link AoRDFile#isEnabled()} == false).
+     */
     public void close() {
         Helpers.removeTreeIfExists(unzipFolder);
         enabled = false;
@@ -329,7 +381,7 @@ public class AoRDFile extends File {
         }
 
         public void write(short[] data) {
-            if (dataWriteStream != null && AoRDSettingsManager.needSaveData) {
+            if (dataWriteStream != null && AoRDSettingsManager.isNeedSaveData()) {
                 ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
                 byteBuffer.asShortBuffer().put(data);
                 try {
@@ -536,6 +588,10 @@ public class AoRDFile extends File {
             }
         }
 
+        public File getFolder() {
+            return selfFolder;
+        }
+
         public String[] getNamesList() {
             return selfFolder.list();
         }
@@ -588,6 +644,9 @@ public class AoRDFile extends File {
     }
 
     // Help classes
+    /**
+     * Класс-хранилище констант для работы {@link AoRDFile}.
+     */
     private static class Const {
         public static final String CONFIG_FILE_NAME = "config.xml";
         public static final String DATA_FILE_NAME = "radar_data.data";

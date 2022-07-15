@@ -31,9 +31,15 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 
+/**
+ * Класс-надстройка над {@link AoRDFile} для сохранения и отправки AoRD-файлов с помощью диалогов.
+ * @author Шишмарев Ростислав Иванович; Сапронов Данил Игоревич
+ * @version v1.0.0
+ */
 public class AoRD_DialogManager {
     private AoRDFile aordFile;
 
+    // Variables for Add file dialog
     private final String mainDir = Environment.getExternalStorageDirectory().getAbsolutePath();
     private EditText pathEdit;
     private Spinner chooser;
@@ -45,6 +51,12 @@ public class AoRD_DialogManager {
         aordFile.data.endWriting();
     }
 
+    // Saving dialog
+    /**
+     * Создание череды диалогов для сохранения (и отправки при необходимости) AoRD-файла.
+     * @param activityForDialog - текущая активность.
+     * @param sendFile - отправлятьт ли файл после сохранения.
+     */
     public void createSavingDialog(Activity activityForDialog, boolean sendFile) {
         final Dialog dialog = new Dialog(activityForDialog);
         Window window = dialog.getWindow();
@@ -105,8 +117,13 @@ public class AoRD_DialogManager {
         dialog.show();
     }
 
-    private void updateFilesList(Activity activityForDialog, Dialog dialog) {
-        ListView filesListView = dialog.findViewById(R.id.list_of_additional_files);
+    /**
+     * Обновление списка дополнительных файлов в Saving dialog.
+     * @param activityForDialog - текущая активность.
+     * @param savingDialog - диалог сохранения.
+     */
+    private void updateFilesList(Activity activityForDialog, Dialog savingDialog) {
+        ListView filesListView = savingDialog.findViewById(R.id.list_of_additional_files);
         String[] namesList = aordFile.additional.getNamesList();
         if (namesList.length == 0) {
             namesList = new String[] {"Ничего нет"};
@@ -117,7 +134,8 @@ public class AoRD_DialogManager {
         filesListView.setSelection(listAdapter.getCount() - 1);
     }
 
-    private void createAddFileDialog(Activity activityForDialog, Dialog parentDialog) {
+    // Add file dialog
+    private void createAddFileDialog(Activity activityForDialog, Dialog savingDialog) {
         if (!Environment.isExternalStorageManager()) {
             Helpers.requestPermissions(activityForDialog, Helpers.PERMISSION_STORAGE);
         }
@@ -175,7 +193,7 @@ public class AoRD_DialogManager {
                     statusBar.setText("Вы не выбрали файл");
                 } else {
                     aordFile.additional.addFile(fileToAdd);
-                    updateFilesList(activityForDialog, parentDialog);
+                    updateFilesList(activityForDialog, savingDialog);
                     RadarBox.logger.add(AoRD_DialogManager.this, "End of adding file " +
                             fileToAdd.getAbsolutePath());
                     dialog.dismiss();
@@ -209,6 +227,9 @@ public class AoRD_DialogManager {
             }
             Arrays.sort(filesArray);
             ArrayList<String> list = new ArrayList<String>(Arrays.asList(filesArray));
+            // Обязательное добавление пустого элемента в начало.
+            // (Android не позполяет различать события выбора элемента в Spinner автоматически и
+            //  пользователем)
             list.add(0, "");
             return list;
         }
@@ -222,7 +243,8 @@ public class AoRD_DialogManager {
         chooser.setAdapter(adapter);
     }
 
-    private void createDeleteFileDialog(Activity activityForDialog, Dialog parentDialog) {
+    // Delete file dialog
+    private void createDeleteFileDialog(Activity activityForDialog, Dialog savingDialog) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activityForDialog);
         builder.setTitle(activityForDialog.getString(R.string.elements_deletion));
 
@@ -239,7 +261,7 @@ public class AoRD_DialogManager {
                     public void onClick(DialogInterface dialog, int which) {
                         String name = delFileChooser.getSelectedItem().toString();
                         aordFile.additional.deleteFile(name);
-                        updateFilesList(activityForDialog, parentDialog);
+                        updateFilesList(activityForDialog, savingDialog);
                         RadarBox.logger.add(AoRD_DialogManager.this,
                                 "End of deleting file " + aordFile.additional.getFilePath() +
                                         "/" + name);

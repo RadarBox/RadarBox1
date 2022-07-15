@@ -21,6 +21,11 @@ public class AoRDSettingsManager {
     private static String fileNamePostfix = PreferenceManager.getDefaultSharedPreferences(
             RadarBox.getAppContext()).getString("file_writer_filename", "");
 
+    /**
+     * Включение/выключение записи сырых данных в файл.
+     * Если true, каждое нажатие на "СТАРТ" будет создавать новый файл и сохрать все данные в него.
+     * <br />Default: false;
+     */
     public static boolean needSaveData = false;
 
     /**
@@ -39,12 +44,16 @@ public class AoRDSettingsManager {
         return null;
     }
 
-    public static File getFolder() {
+    /**
+     * @return объект {@link File} папки для AoRD-файлов приложения.
+     */
+    public static File getDefaultDirectory() {
         return defaultDirectory;
     }
 
-    /** Получение списка всех файлов в директории с расширением .zip
-     * @return перечень файлов с расширением .zip, пустой список во всех остальных случаях
+    /**
+     * Получение списка всех файлов с расширением ".zip" в папке для AoRD-файлов приложения.
+     * @return перечень файлов с расширением .zip, пустой список во всех остальных случаях.
      */
     public static String[] getFilesList() {
         String[] listOfFiles = defaultDirectory.list((d, s) -> s.toLowerCase().endsWith(".zip"));
@@ -53,14 +62,41 @@ public class AoRDSettingsManager {
         return listOfFiles;
     }
 
+    /**
+     * @return постфикс имён сохраняемых файлов.
+     */
     public static String getFileNamePostfix() {
         return fileNamePostfix;
     }
 
+    /**
+     * @return true, если данные должны записываться, false в противном случае.
+     */
+    public static boolean isNeedSaveData() {
+        return needSaveData;
+    }
+
+    /**
+     * Задаёт новый постфикс в имени всех последующих AoRD-файлов.
+     * Имя файла будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
+     * @param postfix - постфикс в имени файла.
+     */
     public static void setFileNamePostfix(String postfix) {
         fileNamePostfix = postfix;
     }
 
+    /** Метод для включения/выключения записи сырых данных в файл.
+     * @param value - если true, каждое нажатие на "СТАРТ" будет создавать новый файл и сохрать все
+     *              данные в него.
+     */
+    public static void setNeedSaveData(boolean value) {
+        needSaveData = value;
+    }
+
+    /**
+     * Создание нового AoRD-файла с именем <дата>_<время>_<постфикс>.zip
+     * @return - либо новый AoRD-файл (всегда enabled), либо null при ошибке в ходе создания.
+     */
     public static AoRDFile createNewAoRDFile() {
         return AoRDFile.createNewAoRDFile(defaultDirectory.getAbsolutePath() + "/" +
                 createFileName());
@@ -73,6 +109,9 @@ public class AoRDSettingsManager {
         return name + "_" + fileNamePostfix;
     }
 
+    /**
+     * Очищает папку для AoRD-файлов от директорий.
+     */
     public static void cleanDefaultDir() {
         for (String name : getFilesList()) {
             File file = new File(defaultDirectory.getAbsolutePath() + "/" + name);
