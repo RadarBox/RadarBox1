@@ -265,8 +265,8 @@ public class AoRD_DialogManager {
                         aordFile.additional.deleteFile(name);
                         updateFilesList(activityForDialog, savingDialog);
                         RadarBox.logger.add(AoRD_DialogManager.this,
-                                "End of deleting file " + aordFile.additional.getFilePath() +
-                                        "/" + name);
+                                "End of deleting file " +
+                                        aordFile.additional.getFolder().getPath() + "/" + name);
                     }
                 });
         builder.setNegativeButton(activityForDialog.getString(R.string.str_close),

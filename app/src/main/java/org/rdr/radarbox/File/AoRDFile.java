@@ -37,7 +37,7 @@ import androidx.annotation.NonNull;
 
 /**
  * Класс-наследник {@link File} для работы с AoRD-файлами (Archive of Radar Data).
- * Поддерживает чтение, запись, редактирование и создание.<br />
+ * Поддерживает чтение, запись и создание.<br />
  * Важно: <b>все методы родителя ({@link File}) относятся к самому AoRD-файлу
  * (не к папке, в которую он распакован)</b>.
  * <br />Ошибки методов класса, помеченных #enable_danger, могут повлиять на работоспособность
@@ -313,13 +313,6 @@ public class AoRDFile extends File {
         public File getFile() {
             return selfFile;
         }
-
-        /**
-         * @return абсолютный путь до управляемого файла.
-         */
-        public String getFilePath() {
-            return selfFile.getAbsolutePath();
-        }
     }
 
     /**
@@ -352,7 +345,7 @@ public class AoRDFile extends File {
         }
 
         /**
-         * Записывает следующий кадр данных в массив.
+         * Считывает следующий кадр данных в массив.
          * @param dest - массив для записи.
          */
         public void getNextFrame(short[] dest) {
@@ -629,9 +622,19 @@ public class AoRDFile extends File {
         }
 
         /**
+         * @return объект {@link File} управляемой папки.
+         */
+        public File getFolder() {
+            return selfFolder;
+        }
+
+        /**
          * @return массив имён файлов в управляемой папке.
          */
         public String[] getNamesList() {
+            if (selfFolder.list() == null) {
+                return new String[] {};
+            }
             return selfFolder.list();
         }
 
@@ -639,6 +642,9 @@ public class AoRDFile extends File {
          * @return массив объектов {@link File} в управляемой папке.
          */
         public File[] getFilesList() {
+            if (selfFolder.listFiles() == null) {
+                return new File[] {};
+            }
             return selfFolder.listFiles();
         }
 
