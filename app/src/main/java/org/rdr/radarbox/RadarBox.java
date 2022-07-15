@@ -58,7 +58,8 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
 
     /**
      * Задаёт AoRD-файлу в {@link RadarBox} новое значение.
-     * @param attribute - один из атрибутов: {@link RadarBox#fileRead} или {@link RadarBox#fileWrite}.
+     * @param attribute - один из атрибутов: {@link RadarBox#fileRead} или
+     * {@link RadarBox#fileWrite}.
      * @param newFile - новое значение атрибута (в том числе null).
      */
     public static void setAoRDFile(AoRDFile attribute, AoRDFile newFile) {
@@ -83,6 +84,7 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
 
         // Обязательное закрытие AoRD-файлов
         Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
             public void run() {
                 fileRead.close();
                 fileWrite.close();

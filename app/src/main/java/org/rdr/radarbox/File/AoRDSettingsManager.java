@@ -28,6 +28,7 @@ public class AoRDSettingsManager {
      */
     public static boolean needSaveData = false;
 
+    // Get methods
     /**
      * Получение AoRD-файла из файловой папки приложения по имени.
      * @param fileName - имя файла.
@@ -76,6 +77,7 @@ public class AoRDSettingsManager {
         return needSaveData;
     }
 
+    // Set methods
     /**
      * Задаёт новый постфикс в имени всех последующих AoRD-файлов.
      * Имя файла будет представлять собой следующий формат: <дата>_<время>_<постфикс>.zip
@@ -93,6 +95,7 @@ public class AoRDSettingsManager {
         needSaveData = value;
     }
 
+    // Functional methods
     /**
      * Создание нового AoRD-файла с именем <дата>_<время>_<постфикс>.zip
      * @return - либо новый AoRD-файл (всегда enabled), либо null при ошибке в ходе создания.

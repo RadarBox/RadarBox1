@@ -64,6 +64,8 @@ public class AoRD_DialogManager {
         dialog.setCancelable(true);
         dialog.setCanceledOnTouchOutside(true);
         dialog.setContentView(R.layout.aord_file_saving_dialog);
+        TextView aordFileNameView = dialog.findViewById(R.id.aord_saving_file_name_textview);
+        aordFileNameView.setText(aordFile.getName());
 
         final EditText textEditor = dialog.findViewById(R.id.aord_description_edit);
 

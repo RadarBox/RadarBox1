@@ -40,6 +40,8 @@ import androidx.annotation.NonNull;
  * Поддерживает чтение, запись, редактирование и создание.<br />
  * Важно: <b>все методы родителя ({@link File}) относятся к самому AoRD-файлу
  * (не к папке, в которую он распакован)</b>.
+ * <br />Ошибки методов класса, помеченных #enable_danger, могут повлиять на работоспособность
+ * ({@link AoRDFile#isEnabled()}) класса (в этот список входят все конструкторы).
  * <br /><br />
  * Подробнее о формате AoRD:
  * <br /> Сам файл - это zip-архив с конкретным списком файлов внутри:
@@ -48,7 +50,7 @@ import androidx.annotation.NonNull;
  *  <br />- <i>Файл данных</i> (.data) -- файл, куда будет записываться двоичный код данных,
  *  переданных радаром.
  *  <br />- Файл описания (.txt) -- краткое текстовое описание эксперимента.
- *  <br />- Папка дополнения -- папка для файлов с различной дополнительной
+ *  <br />- Папка дополнений -- папка для файлов с различной дополнительной
  *  информацией (тоже архивируется).
  *  <br />---------- ^ сделано
  *  <br />- Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
@@ -170,9 +172,8 @@ public class AoRDFile extends File {
     }
 
     // Get methods
-
     /**
-     * Определяет, в рабочем ли состоянии AoRD-файл (enabled).
+     * Определяет, в рабочем ли состоянии (enabled) AoRD-файл.
      * @return true, если в работе с объектом не возникли критические ошибки,
      * false в противном случае.
      */
@@ -251,6 +252,7 @@ public class AoRDFile extends File {
 
     /**
      * Сохранение всех изменений.
+     * <br />#enable_danger
      */
     public void commit() {
         data.endWriting();
@@ -281,11 +283,15 @@ public class AoRDFile extends File {
      * ({@link AoRDFile#isEnabled()} == false).
      */
     public void close() {
+        data.endWriting();
         Helpers.removeTreeIfExists(unzipFolder);
         enabled = false;
     }
 
     // Classes for inner files
+    /**
+     * Базовый класс для классов внутренних файлов AoRD-файла.
+     */
     protected class BaseInnerFileManager {
         protected File selfFile = null;
 
@@ -301,25 +307,24 @@ public class AoRDFile extends File {
             }
         }
 
+        /**
+         * @return объект {@link File} файла, управляемого классом.
+         */
         public File getFile() {
             return selfFile;
         }
 
-        public String getFileName() {
-            return selfFile.getName();
-        }
-
+        /**
+         * @return абсолютный путь до управляемого файла.
+         */
         public String getFilePath() {
             return selfFile.getAbsolutePath();
         }
-
-        public void setFile(File file) throws IOException {
-            if (!selfFile.delete() || !Helpers.copyFile(file, selfFile)) {
-                throw new IOException("Can`t set file " + file.getAbsolutePath());
-            }
-        }
     }
 
+    /**
+     * Класс для управления файлом данных.
+     */
     public class DataFileManager extends BaseInnerFileManager {
         private MappedByteBuffer fileReadBuffer;
         private ShortBuffer fileReadShortBuffer;
@@ -346,6 +351,10 @@ public class AoRDFile extends File {
             dataReadStream.close();
         }
 
+        /**
+         * Записывает следующий кадр данных в массив.
+         * @param dest - массив для записи.
+         */
         public void getNextFrame(short[] dest) {
             try {
                 fileReadShortBuffer.get(dest,0, dest.length);
@@ -369,6 +378,10 @@ public class AoRDFile extends File {
             }
         }
 
+        /**
+         * Начинает запись данных.
+         * <br />#enable_danger
+         */
         public void startWriting() {
             try {
                 dataWriteStream = new FileOutputStream(selfFile);
@@ -380,6 +393,13 @@ public class AoRDFile extends File {
 
         }
 
+        /**
+         * Записывает массив двоичных данных в файл
+         * (при значении {@link AoRDSettingsManager#isNeedSaveData()} == true).
+         * До {@link DataFileManager#startWriting()} и после {@link DataFileManager#endWriting()}
+         * игнорируется.
+         * @param data - массив, который нужно записать.
+         */
         public void write(short[] data) {
             if (dataWriteStream != null && AoRDSettingsManager.isNeedSaveData()) {
                 ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
@@ -395,6 +415,11 @@ public class AoRDFile extends File {
             }
         }
 
+        /**
+         * Завершает запись данных. Автоматически вызывается в {@link AoRDFile#commit()} и
+         * {@link AoRDFile#close()}.
+         * <br />#enable_danger
+         */
         public void endWriting() {
             if (dataWriteStream == null) {
                 return;
@@ -411,6 +436,9 @@ public class AoRDFile extends File {
         }
     }
 
+    /**
+     * Класс для управления файлом конфигурации.
+     */
     public class ConfigurationFileManager extends BaseInnerFileManager {
         private VirtualDeviceConfiguration virtualDeviceConfiguration = null;
 
@@ -432,13 +460,18 @@ public class AoRDFile extends File {
             }
         }
 
-        /** Возвращает конфигурацию устройства, считанную из файла, либо null.
+        /** Возвращает конфигурацию устройства, считанную из файла.
          * @return null, если файл с конфигурацией не открыт.
          */
         public DeviceConfiguration getVirtual() {
             return virtualDeviceConfiguration;
         }
 
+        /**
+         * Запись конфигурации в файл (с удалением предыдущего файла).
+         * <br />#enable_danger
+         * @param configuration - объект класса {@link DeviceConfiguration}.
+         */
         public void write(DeviceConfiguration configuration) {
             try {
                 if(RadarBox.device == null)
@@ -517,12 +550,18 @@ public class AoRDFile extends File {
         }
     }
 
+    /**
+     * Класс для управления файлом статуса.
+     */
     public class StatusFileManager extends BaseInnerFileManager {
         StatusFileManager() throws IOException {
             super(Const.STATUS_FILE_NAME, false);
         }
     }
 
+    /**
+     * Класс для управления файлом описания.
+     */
     public class DescriptionFileManager extends BaseInnerFileManager {
         private String description = "";
 
@@ -531,10 +570,6 @@ public class AoRDFile extends File {
             readSelf();
         }
 
-        /**
-         * Чтение текстового файла.
-         * @throws IOException - при ошибке системы ввода/вывода.
-         */
         protected void readSelf() throws IOException {
             FileReader fileReader = new FileReader(selfFile);
             Scanner reader = new Scanner(fileReader);
@@ -559,7 +594,7 @@ public class AoRDFile extends File {
         }
 
         /**
-         * Запись в текстовый файл.
+         * Запись в файл.
          * @param text - строка, которую нужно записать.
          */
         public void write(String text) {
@@ -576,6 +611,11 @@ public class AoRDFile extends File {
         }
     }
 
+    /**
+     * Класс для управления файлом и папкой дополнений.
+     * Важно: <b>все методы родителя ({@link BaseInnerFileManager}) относятся к zip-файлу дополнений
+     * (не к папке, в которую он распакован)</b>.
+     */
     public class AdditionalFileManager extends BaseInnerFileManager {
         private File selfFolder = null;
         
@@ -588,19 +628,28 @@ public class AoRDFile extends File {
             }
         }
 
-        public File getFolder() {
-            return selfFolder;
-        }
-
+        /**
+         * @return массив имён файлов в управляемой папке.
+         */
         public String[] getNamesList() {
             return selfFolder.list();
         }
 
+        /**
+         * @return массив объектов {@link File} в управляемой папке.
+         */
         public File[] getFilesList() {
             return selfFolder.listFiles();
         }
 
+        /**
+         * Добавляет файл (не директорию) в управляемую папку.
+         * @param newFile - новый файл.
+         */
         public void addFile(File newFile) {
+            if (newFile.isDirectory()) {
+                return;
+            }
             RadarBox.logger.add(this, "DEBUG: Adding file " + newFile.getAbsolutePath() +
                     newFile.exists());
             if (!Helpers.copyFile(newFile, Helpers.createUniqueFile(
@@ -611,6 +660,10 @@ public class AoRDFile extends File {
             }
         }
 
+        /**
+         * Удаляет файл из управляемой папки по имени.
+         * @param name - имя файла, который нужно удалить.
+         */
         public void deleteFile(String name) {
             if (Arrays.asList(getNamesList()).contains(name)) {
                 File fileToDelete = new File(selfFolder.getAbsolutePath() + "/" + name);
@@ -630,7 +683,11 @@ public class AoRDFile extends File {
                 }
             }
         }
-        
+
+        /**
+         * Сохраняет изменения в папке дополнений.
+         * <br />#enable_danger
+         */
         public void commit() {
             try {
                 prepareToCommit();

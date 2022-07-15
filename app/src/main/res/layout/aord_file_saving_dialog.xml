@@ -22,14 +22,25 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
+            android:id="@+id/aord_saving_file_name_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:textSize="15sp"
+            android:text=""
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/aord_file_saving_title_textview" />
+
+        <TextView
             android:id="@+id/aord_saving_message_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:text="@string/description_for_file_to_send"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/aord_file_saving_title_textview" />
+            app:layout_constraintTop_toBottomOf="@+id/aord_saving_file_name_textview" />
 
         <EditText
             android:id="@+id/aord_description_edit"
