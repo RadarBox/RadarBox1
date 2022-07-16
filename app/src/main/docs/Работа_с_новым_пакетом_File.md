@@ -39,11 +39,11 @@ AoRDFile -- класс, предназначенный для работы с Ao
 Для создания объекта `AoRDFile` можно воспользоваться одним из конструкторов. В таком случае нужно обязательно проверить его на `isEnabled()` (отсутствие ошибок при инициализации):
 ```java
 AoRDFile aordFile = new AoRdFile(absolutePath);
-        if (aordFile.isEnabled()) {
-        // код
-        } else {
-        aordFile = null;
-        }
+if (aordFile.isEnabled()) {
+    // код
+} else {
+    aordFile = null;
+}
 ```
 Добавляет неудобства и то, что для создания объекта нужен абсолютный путь. Поэтому в большинстве случаев стоит воспользоваться функцией получения готового AoRD-файла (либо enabled, либо сразу null) по имени из папки для их хранения:
 ```java
@@ -52,7 +52,7 @@ AoRDFile aordFile = AoRDSettingsManager.getFileByName(name);
 Задавать атрибуты `fileRead` и `fileWrite` для `RadarBox` тоже рекомендуется с помощью метода, который сам закрывает старые файлы:
 ```java
 RadarBox.setAoRDFile(RadarBox.fileRead, aordFile1);
-        RadarBox.setAoRDFile(RadarBox.fileWrite, aordFile2);
+RadarBox.setAoRDFile(RadarBox.fileWrite, aordFile2);
 ```
 
 #### Создание
@@ -66,7 +66,7 @@ AoRDFile aordFile = AoRDSettingsManager.createNewAoRDFile();
 ```java
 // Получение объектов класса File
 File dataFile = RadarBox.fileRead.data.getFile();
-        File configFile = RadarBox.fileRead.config.getFile();
+File configFile = RadarBox.fileRead.config.getFile();
 // и т. д.
 ```
 Важно: метод `RadarBox.additional.getFile()` вернёт файл **архивированной** папки, а не её саму.
@@ -79,18 +79,18 @@ RadarBox.fileRead.data.getNextFrame(shortArray);
 
 // Configuration
 // Получение в виде объекта VirtualDeviceConfiguration
-        DeviceConfiguration config = RadarBox.fileRead.config.getVirtual();
+DeviceConfiguration config = RadarBox.fileRead.config.getVirtual();
 
 // Description
 // Получение текста
-        String text = RadarBox.fileRead.description.getText();
+String text = RadarBox.fileRead.description.getText();
 
 // Additional
 // Получение папки, в которую был распакован архив дополнений
-        File folder = RadarBox.fileRead.additional.getFolder();
+File folder = RadarBox.fileRead.additional.getFolder();
 // Получение списка файлов
-        String[] namesList = RadarBox.fileRead.additional.getNamesList();
-        File[] filesList = RadarBox.fileRead.additional.getFilesList();
+String[] namesList = RadarBox.fileRead.additional.getNamesList();
+File[] filesList = RadarBox.fileRead.additional.getFilesList();
 ```
 
 #### Запись
@@ -98,22 +98,22 @@ RadarBox.fileRead.data.getNextFrame(shortArray);
 ```java
 // Data
 RadarBox.fileWrite.data.startWriting();
-        RadarBox.fileWrite.data.write(shortArray);
+RadarBox.fileWrite.data.write(shortArray);
 // ...
-        RadarBox.fileWrite.data.endWriting();
+RadarBox.fileWrite.data.endWriting();
 
 // Configuration
 // Автоматически вызовется при создании
-        RadarBox.fileWrite.config.write(deviceConfiguration);
+RadarBox.fileWrite.config.write(deviceConfiguration);
 
 // Description
-        RadarBox.fileWrite.description.write(text);
+RadarBox.fileWrite.description.write(text);
 
 // Additional
-        RadarBox.fileWrite.additional.addFile(file);
-        RadarBox.fileWrite.additional.deleteFile(name); // только имя
+RadarBox.fileWrite.additional.addFile(file);
+RadarBox.fileWrite.additional.deleteFile(name); // только имя
 // Сохранение изменений (автоматически вызывается в aordFile.commit())
-        RadarBox.fileRead.additional.commit();
+RadarBox.fileRead.additional.commit();
 ```
 
 ### AoRDSettingsManager
@@ -121,16 +121,16 @@ RadarBox.fileWrite.data.startWriting();
 ```java
 // Get
 boolean need = AoRDSettingsManager.needSaveData;
-        String postfix = AoRDSettingsManager.getFileNamePostfix();
+String postfix = AoRDSettingsManager.getFileNamePostfix();
 
 // Set
-        AoRDSettingsManager.needSaveData = need;
-        AoRDSettingsManager.setFileNamePostfix(postfix);
+AoRDSettingsManager.needSaveData = need;
+AoRDSettingsManager.setFileNamePostfix(postfix);
 ```
 
 ### AoRD_DialogManager
 Комбинирует в себе функции сохранителя и бывшего `Sender` (`createDialogToSendFile` и `sendFileToOtherApplication` без изменений). Класс выполняет автоматическое завершение записи и сохранение пользователем описания и дополнительных файлов (+ отправка при необходимости):
 ```java
 AoRD_DialogManager saver = new AoRD_DialogManager(aordFile);
-        saver.createSavingDialog(activity, sendFile);
+saver.createSavingDialog(activity, sendFile);
 ```
