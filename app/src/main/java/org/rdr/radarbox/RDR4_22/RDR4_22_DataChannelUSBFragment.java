@@ -2,8 +2,7 @@ package org.rdr.radarbox.RDR4_22;
 
 import android.os.Bundle;
 
-import org.rdr.radarbox.DataChannels.DataChannelUSB;
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
+import org.rdr.radarbox.Device.DataChannels.DataChannelUSB;
 import org.rdr.radarbox.Device.DataChannel;
 import org.rdr.radarbox.Device.DeviceStatus;
 import org.rdr.radarbox.RadarBox;

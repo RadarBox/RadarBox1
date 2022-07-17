@@ -15,7 +15,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
-import org.w3c.dom.Text;
 
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.widget.NestedScrollView;
@@ -46,6 +45,7 @@ public class DeviceStatusFragment extends Fragment {
         scrollView.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         scrollView.addView(statusListLinearLayout);
         createStatusList(statusListLinearLayout);
+        mainLinearLayout.addView(scrollView);
 
         LinearLayoutCompat.LayoutParams layoutParams =new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         MaterialButton getStatusButton = new MaterialButton(mainLinearLayout.getContext());
@@ -69,9 +69,15 @@ public class DeviceStatusFragment extends Fragment {
             });
             thread.start();
         });
-        mainLinearLayout.addView(scrollView);
-
         mainLinearLayout.addView(getStatusButton);
+
+        MaterialButton updateStatusButton = new MaterialButton(mainLinearLayout.getContext());
+        updateStatusButton.setLayoutParams(layoutParams);
+        updateStatusButton.setText(R.string.update_status_text);
+        updateStatusButton.setOnClickListener(v -> {
+            changeStatusListValues();
+        });
+        mainLinearLayout.addView(updateStatusButton);
         return mainLinearLayout;
     }
 
@@ -162,7 +168,6 @@ public class DeviceStatusFragment extends Fragment {
         for (Object statusEntry:RadarBox.device.status.getStatusList()) {
             if(statusEntry.getClass().getSuperclass().equals(DeviceStatus.SimpleStatusEntry.class)) {
                 DeviceStatus.SimpleStatusEntry simple = (DeviceStatus.SimpleStatusEntry) statusEntry;
-
                 if(statusEntry.getClass().equals(DeviceStatus.IntegerStatusEntry.class)) {
                     ((TextView)(this.requireView().findViewById(id_status_counter)))
                             .setText(Integer.toString(((DeviceStatus.IntegerStatusEntry) simple).getValue()));

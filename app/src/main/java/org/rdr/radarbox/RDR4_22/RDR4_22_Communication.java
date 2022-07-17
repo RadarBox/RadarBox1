@@ -2,9 +2,8 @@ package org.rdr.radarbox.RDR4_22;
 
 import android.content.Context;
 
-import org.rdr.radarbox.DataChannels.DataChannelUSB;
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
-import org.rdr.radarbox.Device.DataChannel;
+import org.rdr.radarbox.Device.DataChannels.DataChannelUSB;
+import org.rdr.radarbox.Device.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.Device.DeviceCommunication;
 
 public class RDR4_22_Communication extends DeviceCommunication {

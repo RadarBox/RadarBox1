@@ -5,6 +5,7 @@ import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.File.AoRDSettingsManager;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
@@ -53,6 +54,13 @@ public class DataThreadService {
      * очередного кадра данных */
     public LiveData<Integer> getLiveFrameCounter() {return liveFrameCounter;}
 
+    /** Cчетчик опросов статуса. Значение этой переменной инкрементируется в {@link StatusGetter}*/
+    private int statusCounter;
+
+    private final MutableLiveData<Integer> liveStatusCounter = new MutableLiveData<>();
+    /** LiveData интерфейс для генерирования и обозревания событий обновления статуса устройства*/
+    public LiveData<Integer> getLiveStatusCounter() {return liveStatusCounter;}
+
 
     /** Период основного таймера в мс */
     private int period;
@@ -88,7 +96,6 @@ public class DataThreadService {
      * средний временной интервал между сканированиями или средний период сканирования.
      * В норме он не должен превышать {@link #period}
      * Можно отслеживать пиковые задержки.
-     * @return мгновенный интервал в миллисекунда
      * @return время в [мс] */
     public long getFullScanningTime() {return fullScanningTime;}
 
@@ -96,6 +103,8 @@ public class DataThreadService {
     private final DataSaving dataSaving;
     private final SignalProcessing signalProcessing;
     private final UiUpdater uiUpdater;
+    private final StatusGetter statusGetter;
+    private ScheduledFuture<?> statusFuture;
     private CyclicBarrier barrier;
     private final ArrayList<ScheduledFuture<?>> taskList;
     ScheduledExecutorService executor;
@@ -107,6 +116,7 @@ public class DataThreadService {
         uiUpdater = new UiUpdater();
         executor = Executors.newScheduledThreadPool(4);
 
+        statusGetter = new StatusGetter();
         taskList = new ArrayList<>(0);
 
         setDeviceDataSourceAutoSelection();
@@ -120,6 +130,7 @@ public class DataThreadService {
 
     public void start() {
         if(!liveCurrentSource.getValue().equals(DataSource.NO_SOURCE) && taskList.isEmpty()) {
+            stopGettingStatusAtFixedRate();
             logger.add(this,"Timer started. DataSource: "+liveCurrentSource.getValue()+
                     " Period: "+period);
             int periodForShedule = period;
@@ -146,13 +157,15 @@ public class DataThreadService {
             }
             taskList.clear();
             liveDataThreadState.postValue(DataThreadState.STOPPED);
+            if(Objects.equals(liveCurrentSource.getValue(), DataSource.DEVICE))
+                startGettingStatusAtFixedRate();
         }
     }
 
-    /** Если мы работали не работали с устройством и возникает связь с устройством хотя бы по одному
+    /** Если мы не работали с устройством и возникает связь с устройством хотя бы по одному
      * из каналов, перестраиваемся на получение данных с устройства. Если мы работали с устройством,
      * то ничего не происходит. Если мы работали с устройством и связь по подключённому каналу
-     * пропала, то переключаемся на файл, либо ни на что не переключаемся.
+     * пропала, переключаемся на NO_SOURCE.
      */
     private void setDeviceDataSourceAutoSelection() {
         if(RadarBox.device!=null) {
@@ -163,8 +176,7 @@ public class DataThreadService {
                             // остановить зондирование
                             stop();
                             // попробовать переключиться на файл. Если его нет, то на NO_SOURCE
-                            if (!setDataSource(DataSource.FILE))
-                                setDataSource(DataSource.NO_SOURCE);
+                            setDataSource(DataSource.NO_SOURCE);
                         }
                         else if (!liveCurrentSource.getValue().equals(DataSource.DEVICE)) {
                             setDataSource(DataSource.DEVICE);
@@ -192,6 +204,8 @@ public class DataThreadService {
                     ).findAny().ifPresent(parameter ->
                             ((DeviceConfiguration.IntegerParameter)parameter).getLiveValue()
                                     .observeForever(value->period=value));
+                    // если мы переключились с устройства на файл, то останавливаем получение статуса
+                    stopGettingStatusAtFixedRate();
                     liveCurrentSource.postValue(DataSource.FILE);
                     return true;
                 }
@@ -205,7 +219,7 @@ public class DataThreadService {
             return false;
         }
         else if(dataSource.equals(DataSource.DEVICE)) {
-            if(RadarBox.device==null)
+            if(RadarBox.device==null) // в списке устройств в RadarBox отсутствует устройство
                 return false;
             if(device.communication.getLiveConnectedChannel().getValue()==null)
                 return false;
@@ -227,10 +241,49 @@ public class DataThreadService {
                 return false;
             }
             liveCurrentSource.postValue(dataSource);
+            startGettingStatusAtFixedRate();
             return true;
+        }
+        // если мы переключились на NO_SOURCE с DEVICE, то прекратить получать статус
+        if(Objects.equals(liveCurrentSource.getValue(), DataSource.DEVICE)) {
+            stopGettingStatusAtFixedRate();
         }
         liveCurrentSource.postValue(DataSource.NO_SOURCE);
         return true;
+    }
+
+    /** Запускает опрос состяния устройства по таймеру */
+    public void startGettingStatusAtFixedRate() {
+        if(statusFuture == null || statusFuture.isDone()) {
+            statusCounter=0;
+            // раз в 2 секунды запрашивать статус устройства
+            statusFuture = executor.scheduleAtFixedRate(
+                    statusGetter, 0, 2000, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    /** Останавливает опрос состяния устройства по таймеру */
+    public void stopGettingStatusAtFixedRate() {
+        if(statusFuture == null || statusFuture.isDone())
+            return;
+        statusFuture.cancel(true);
+    }
+
+    /** Класс для выполнения операций считывания статуса устройства по таймеру (между зондированиями)
+     * Отправляются команды, считываются данные, обновляются поля в списке статуса устройства.
+     */
+    class StatusGetter implements Runnable {
+        @Override
+        public void run() {
+            if(Objects.equals(liveCurrentSource.getValue(), DataSource.DEVICE)) {
+                if (!device.getStatus())
+                    logger.add(this, "device.getStatus() return FALSE");
+                else
+                    liveStatusCounter.postValue(statusCounter++);
+            }
+            else
+                logger.add(this, "Trying to get device status, but CurrentSource!=DEVICE");
+        }
     }
 
     /** Класс для выполнения всех необходимых операций для сбора данных из выбранного источника
@@ -254,6 +307,8 @@ public class DataThreadService {
                     }
                 }
                 RadarBox.device.getNewFrame(RadarBox.freqSignals.getRawFreqFrame());
+                // в заголовке данных содержится часть статуса, поэтому инкрементируем statusCounter
+                liveStatusCounter.postValue(statusCounter++);
             }
 
             try {

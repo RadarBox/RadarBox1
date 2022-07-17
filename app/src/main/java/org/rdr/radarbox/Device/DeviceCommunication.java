@@ -3,7 +3,6 @@ package org.rdr.radarbox.Device;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.rdr.radarbox.DataChannels.DataChannelWiFi;
 import org.rdr.radarbox.RadarBox;
 
 import java.util.Comparator;

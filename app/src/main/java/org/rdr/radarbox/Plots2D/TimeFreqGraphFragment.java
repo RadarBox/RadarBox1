@@ -1,34 +1,23 @@
 package org.rdr.radarbox.Plots2D;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.GestureDetector;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Toast;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import org.rdr.radarbox.DSP.SNR;
 import org.rdr.radarbox.DSP.SettingsDSP;
-import org.rdr.radarbox.Plots2D.GraphView;
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
@@ -207,7 +196,7 @@ public class TimeFreqGraphFragment extends Fragment {
                 int line = rx*txN+tx;
                 freqGraphView.addLine(new Line2D(tempY, tempY,
                         GraphColor.values()[(line + 2) % GraphColor.values().length].argb,
-                        "r" + rx + "t" + tx + "abs snr"));
+                        "r" + rx + "t" + tx + "snr"));
             }
         }
     }

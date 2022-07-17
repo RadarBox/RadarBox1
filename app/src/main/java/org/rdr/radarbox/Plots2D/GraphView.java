@@ -99,7 +99,6 @@ public class GraphView extends View implements Serializable {
     public boolean getShowTitleX() {return mShowTitleX;}
     public boolean getShowTitleY() {return mShowTitleY;}
 
-    /* Функции, которые необходимо реализовать */
 
     /** Изменяеет текущий масштаб графика в scale раз по оси Y:
      * изменяются подписи к линиям сетки на оси Y, перерисовывается виджет.
@@ -132,10 +131,6 @@ public class GraphView extends View implements Serializable {
             drawLines2D(canvas);
         //Создание значний оси
         axisCaptions(canvas);
-    }
-
-    void drawTime(Canvas canvas){
-
     }
 
     private void drawLines2D(Canvas canvas) {

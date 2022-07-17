@@ -1,4 +1,4 @@
-package org.rdr.radarbox.DataChannels;
+package org.rdr.radarbox.Device.DataChannels;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -38,12 +38,6 @@ import java.net.SocketTimeoutException;
 import java.nio.channels.IllegalBlockingModeException;
 import java.util.List;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultCaller;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.ActivityResultRegistry;
-import androidx.activity.result.contract.ActivityResultContract;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.LiveData;

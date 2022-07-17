@@ -43,6 +43,13 @@ public class StatusBarFragment extends Fragment {
                 if (dataSource.equals(DataThreadService.DataSource.DEVICE)) {
                     ((TextView) view.findViewById(R.id.status_left_message))
                             .append(" " + RadarBox.device.configuration.getDeviceName());
+                    RadarBox.dataThreadService.getLiveStatusCounter().observe(getViewLifecycleOwner(),statusCounter -> {
+                        int currentCharge = RadarBox.device.status.getIntStatusValue("Uacc");
+                        ((TextView) view.findViewById(R.id.status_left_message))
+                                .setText(dataSource + " "
+                                        +RadarBox.device.configuration.getDeviceName() + " "
+                                        +currentCharge+"%");
+                    });
                 } else if (dataSource.equals(DataThreadService.DataSource.FILE)) {
                     ((TextView) view.findViewById(R.id.status_left_message))
                             .append(" " + RadarBox.fileRead.config.getVirtual().getDeviceName());
