@@ -361,8 +361,9 @@ public class DataThreadService {
                 }
                 else  {
                     RadarBox.fileWrite.data.write(RadarBox.freqSignals.getRawFreqFrame());
-                    //TODO запись строки статуса в архив данных
-                    if(frameCounter==0) { // если кадр нулевой, значит запись только началась
+                    RadarBox.fileWrite.status.write(frameCounter, getFullScanningTime(),
+                            device.status);
+                    /* if(frameCounter==0) { // если кадр нулевой, значит запись только началась
                         // создание ЗАГОЛОВКА таблицы из полей ID статусных показателей
                         device.status.getStatusList().forEach(statusEntry -> {
                             statusEntry.getID();
@@ -384,7 +385,7 @@ public class DataThreadService {
                         device.status.getStatusList().get(i).getID();
                         device.status.getStatusList().get(i).getName();
                         device.status.getStatusList().get(i).getValue().toString();
-                    }
+                    } */
                 }
             }
 

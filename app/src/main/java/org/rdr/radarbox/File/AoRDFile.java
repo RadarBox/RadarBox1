@@ -1,7 +1,9 @@
 package org.rdr.radarbox.File;
 
+
 import android.content.Context;
 
+import org.rdr.radarbox.Device.DeviceStatus;
 import org.rdr.radarbox.RadarBox;
 import org.rdr.radarbox.Device.DeviceConfiguration;
 
@@ -9,6 +11,9 @@ import android.util.Xml;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 
 import java.io.File;
 
@@ -30,6 +35,8 @@ import java.nio.InvalidMarkException;
 import java.nio.BufferUnderflowException;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import java.util.ArrayList;
 
@@ -236,6 +243,7 @@ public class AoRDFile extends File {
                 AoRDFile result = new AoRDFile(zipFile, folderWrite);
                 if (result.isEnabled()) {
                     result.config.write(RadarBox.device.configuration);
+                    result.status.writeHeader(RadarBox.device.status);
                     RadarBox.logger.add("Successful creation of file " + result.getAbsolutePath());
                     return result;
                 }
@@ -549,6 +557,36 @@ public class AoRDFile extends File {
     public class StatusFileManager extends BaseInnerFileManager {
         StatusFileManager() throws IOException {
             super(Const.STATUS_FILE_NAME, false);
+        }
+
+        public void writeHeader(DeviceStatus deviceStatus) {
+            ArrayList<String> list = new ArrayList<String>();
+            Collections.addAll(list, "FrNum", "Time, ms");
+            deviceStatus.getStatusList().forEach(statusEntry -> {
+                list.add(statusEntry.getID());
+            });
+            writeList(list);
+        }
+
+        public void write(int frameNumber, long time, DeviceStatus deviceStatus) {
+            ArrayList<String> list = new ArrayList<String>();
+            Collections.addAll(list, String.valueOf(frameNumber), String.valueOf(time));
+            deviceStatus.getStatusList().forEach(statusEntry -> {
+                list.add(statusEntry.getValue().toString());
+            });
+            writeList(list);
+        }
+
+        private void writeList(ArrayList<String> list) {
+            try {
+                CSVWriter writer = new CSVWriter(new FileWriter(selfFile, true),
+                        '\t', '"', '=', "\n");
+                writer.writeNext(list.toArray(new String[] {}));
+                writer.close();
+            } catch (IOException e) {
+                RadarBox.logger.add(this, e.toString());
+                e.printStackTrace();
+            }
         }
     }
 
