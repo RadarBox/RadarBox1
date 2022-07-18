@@ -361,30 +361,8 @@ public class DataThreadService {
                 }
                 else  {
                     RadarBox.fileWrite.data.write(RadarBox.freqSignals.getRawFreqFrame());
-                    //TODO запись строки статуса в архив данных
-                    if(frameCounter==0) { // если кадр нулевой, значит запись только началась
-                        // создание ЗАГОЛОВКА таблицы из полей ID статусных показателей
-                        device.status.getStatusList().forEach(statusEntry -> {
-                            statusEntry.getID();
-                        });
-                    }
-                    // номер кадра - frameCounter
-                    getLiveFrameCounter();
-                    // время, прошедшее с начала зондирования - fullScanningTime
-                    getFullScanningTime();
-                    // время, прошедшее между кадрами - lastFrameTimeInterval
-                    getLastFrameTimeInterval();
-
-                    // запись значений статусных показателей
-                    device.status.getStatusList().forEach(statusEntry -> {
-                        statusEntry.getValue().toString();
-                    });
-                    // либо так
-                    for(int i=0; i<device.status.getStatusList().size(); i++) {
-                        device.status.getStatusList().get(i).getID();
-                        device.status.getStatusList().get(i).getName();
-                        device.status.getStatusList().get(i).getValue().toString();
-                    }
+                    RadarBox.fileWrite.status.write(frameCounter, getFullScanningTime(),
+                            device.status);
                 }
             }
 
