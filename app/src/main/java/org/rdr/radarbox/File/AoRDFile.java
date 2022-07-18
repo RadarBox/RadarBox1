@@ -559,6 +559,10 @@ public class AoRDFile extends File {
             super(Const.STATUS_FILE_NAME, false);
         }
 
+        /**
+         * Записывает заголовок файла статуса;
+         * @param deviceStatus - статус устройства.
+         */
         public void writeHeader(DeviceStatus deviceStatus) {
             ArrayList<String> list = new ArrayList<String>();
             Collections.addAll(list, "FrNum", "Time, ms");
@@ -568,6 +572,12 @@ public class AoRDFile extends File {
             writeList(list);
         }
 
+        /**
+         * Записывает строку статуса в файл.
+         * @param frameNumber - номер кадра.
+         * @param time - время с начала эксперимента.
+         * @param deviceStatus - статус устройства.
+         */
         public void write(int frameNumber, long time, DeviceStatus deviceStatus) {
             ArrayList<String> list = new ArrayList<String>();
             Collections.addAll(list, String.valueOf(frameNumber), String.valueOf(time));

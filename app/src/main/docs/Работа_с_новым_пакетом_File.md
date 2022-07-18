@@ -106,6 +106,12 @@ RadarBox.fileWrite.data.endWriting();
 // Автоматически вызовется при создании
 RadarBox.fileWrite.config.write(deviceConfiguration);
 
+// Status
+// Запись заголовка (автоматически вызовется при создании)
+RadarBox.fileWrite.status.writeHeader(deviceStatus);
+// Запись строки
+RadarBox.fileWrite.status.write(frameNumber, time, deviceStatus);
+
 // Description
 RadarBox.fileWrite.description.write(text);
 
