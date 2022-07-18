@@ -10,6 +10,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Класс для получения информации о текущем состоянии устойства:
  * температуре, уровне заряда аккумулятора, ориентации и т.д.
@@ -21,6 +23,12 @@ public class DeviceStatus {
     InputStream fileStatus;
     protected ArrayList<StatusEntry> statusList;
 
+    /**
+     * Возвращает весь список с показателями состояния устройства. Для каждого элемента списка
+     * можно извлечь его короткое имя (ключ или ID) {@link StatusEntry#getID()},
+     * длинное имя {@link StatusEntry#getName()} и значение {@link StatusEntry#getValue()}
+     * @return список показателей состяния устройства
+     */
     public ArrayList<StatusEntry> getStatusList() {
         return statusList;
     }
@@ -35,11 +43,32 @@ public class DeviceStatus {
         }
     }
 
+    /**
+     * Показатель состяния устройства. Может быть простым {@link SimpleStatusEntry} в формате
+     * {@link FloatStatusEntry} или {@link IntegerStatusEntry} или сложным {@link ComplexStatusEntry}
+     * состоящим из {@link ComplexStatusEntry.Bit}
+     */
     public class StatusEntry <T> {
-        protected final String id;  public String getID() {return id;}
-        protected final String name; public String getName() {return name;}
+        protected final String id;
+
+        /**
+         * Короткое имя (ключ или ID). Берётся из протокола ВИ Суворова. И используется для
+         * поиска по нему в списке статусных показателей.
+         * @return короткое имя (ключ или ID)
+         */
+        public String getID() {return id;}
+        protected final String name;
+        /**
+         * Длинное понятное имя для отображения в тексте.
+         * @return короткое имя (ключ или ID)
+         */
+        public String getName() {return name;}
         protected T value;
         public void setValue(T value) {this.value = value;}
+        /**
+         * Значение статусного показателя.
+         * @return может быть разных типов данных
+         */
         public T getValue() {return this.value;}
         public StatusEntry(String id, String name) {
             this.id=id; this.name=name;
@@ -71,8 +100,8 @@ public class DeviceStatus {
         }
     }
 
-    /** Класс для сложного статусного слова, который состоит из нескольких битовых параметров.
-     * В объекте класса создаётся список битовых параметров, к которым можно обратиться по
+    /** Класс для сложного статусного показателя, который состоит из нескольких битовых показателей.
+     * В объекте класса создаётся список битовых показателей, к которым можно обратиться по
      * уникальным {@link Bit#id}, а значения битовых параметров возвращаются с помощью функции
      * {@link Bit#getBitVal()}.
      */
@@ -180,6 +209,18 @@ public class DeviceStatus {
             ret[0] = ((DeviceStatus.IntegerStatusEntry) statusEntry).getValue();
         });
         return ret[0];
+    }
+
+    /** Метод ищет статусный показатель с заданным ID в статусном списке
+     * и возвращает его текущее значение в формате строки. <p>
+     * В случае отстутствия показателя с таким ID выбрасывает исключение NoSuchElementException.
+     *
+     * @param statusID - ID необходимого показателя состояния (статуса)
+     * @return значение статуса с заданным ID.
+     */
+    public String getStatusValue(String statusID) throws NoSuchElementException {
+        return this.getStatusList().stream().filter(status -> status.getID().equals(statusID))
+                .findFirst().get().getValue().toString();
     }
 
     /** Метод задаёт значение целочисленного показателя состояния с заданным ID.
