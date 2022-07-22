@@ -1,10 +1,10 @@
 <config>
     <!-- Базовые настройки точки доступа Wi-Fi на устройстве -->
     <wifi ssid_default="esp_mai"
-        bssid_default="be:dd:c2:64:0b:d3"
+        bssid_default=""
         password_default="ghbdtn05"
         is_hidden_default="true"
-        autoconnect_default="true"/>
+        autoconnect_default="false"/>
     <tcp address_default="192.168.4.1"
         port_default="2000"/>
 </config>

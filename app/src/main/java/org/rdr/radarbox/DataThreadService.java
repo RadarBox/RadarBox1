@@ -361,6 +361,8 @@ public class DataThreadService {
                 }
                 else  {
                     RadarBox.fileWrite.data.write(RadarBox.freqSignals.getRawFreqFrame());
+                    RadarBox.fileWrite.status.write(frameCounter, getFullScanningTime(),
+                            device.status);
                 }
             }
 
