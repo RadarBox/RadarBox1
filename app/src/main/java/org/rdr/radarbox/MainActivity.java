@@ -81,10 +81,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private void setWifiButtonAnimation() {
         if(RadarBox.device==null) {// в списке устройств в RadarBox.java не выбрано устройство
-            // TODO добавить значок, означающий отсутствие выбранного устройства
+            ImageButton btnWifi = findViewById(R.id.btn_wifi);
+            btnWifi.setImageResource(R.drawable.sensors_off_48px);
+            btnWifi.setEnabled(false);
             return;
         }
         ImageButton btnWifi = findViewById(R.id.btn_wifi);
+        btnWifi.setEnabled(true);
         RadarBox.device.communication.channelSet.stream().filter(
                         dataChannel -> dataChannel.getName().equals("WiFi"))
                 .forEach(dataChannelWiFi -> {
