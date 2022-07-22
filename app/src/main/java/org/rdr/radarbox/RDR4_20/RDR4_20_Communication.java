@@ -22,9 +22,13 @@ public class RDR4_20_Communication extends DeviceCommunication {
         setChannelSettingsFromSharedSettings(context,devicePrefix);
         setChannelSelectionBasedOnPriority();
         this.selectChannel(dataChannelWiFi.getName());
-        //setConnectedChannelSelector();
+        setConnectedChannelSelector();
     }
 
+    /** Метод устарел, потому что теперь есть
+     * {@link org.rdr.radarbox.Device.DeviceCommunication#setChannelSelectionBasedOnPriority()}
+     */
+    @Deprecated
     private void setConnectedChannelSelector() {
         dataChannelUSB.getLiveState().observeForever(usbState->{
             //произошло подключение по USB

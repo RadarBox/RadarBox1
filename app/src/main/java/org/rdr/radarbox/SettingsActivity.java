@@ -119,6 +119,11 @@ public class SettingsActivity extends AppCompatActivity {
             RadarBox radarBox = RadarBox.getInstance();
             deviceList.setEntryValues(radarBox.getDevicePrefixList());
             deviceList.setEntries(deviceList.getEntryValues());
+            /* редкий случай при первом запуске приложения,
+             когда ничего не выбрано в списке, но текущее устройство в RadarBox уже установлено */
+            if(RadarBox.device!=null &&
+                    !RadarBox.device.getDevicePrefix().equals(deviceList.getValue()))
+                deviceList.setValue(RadarBox.device.getDevicePrefix());
             deviceList.setOnPreferenceChangeListener(((preference, newValue) ->
                     radarBox.setCurrentDevice(newValue.toString())));
             Preference currentDevice = findPreference("current_device");

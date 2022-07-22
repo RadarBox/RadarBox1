@@ -17,6 +17,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.net.wifi.WifiNetworkSuggestion;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -202,8 +203,16 @@ public class DataChannelWiFi extends DataChannel {
             else if(action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
                 parseScanResults();
             else if(action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
-                liveWiFiSignalLevel.postValue(mWifiManager
-                        .calculateSignalLevel(intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, -1)));
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    liveWiFiSignalLevel.postValue(
+                            WifiManager.calculateSignalLevel(
+                                    intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, -1),
+                                    5));
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    liveWiFiSignalLevel.postValue(mWifiManager
+                            .calculateSignalLevel(intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, -1)));
+                }
             }
         }
     };
