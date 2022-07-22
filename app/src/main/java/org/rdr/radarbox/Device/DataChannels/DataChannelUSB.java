@@ -154,7 +154,7 @@ public class DataChannelUSB extends DataChannel {
         boolean isUSBDeviceInFilterList = false;
         try {
             XmlResourceParser parser = context.getResources().getXml(R.xml.usb_device_filter);
-            while(parser.getEventType()!= XmlPullParser.END_DOCUMENT) {
+            while(parser.getEventType() != XmlPullParser.END_DOCUMENT) {
                 if (parser.getEventType() == XmlPullParser.START_TAG) {
                     if(parser.getName().equals("usb-device")) {
                         int VID = parser.getAttributeIntValue(null,"vendor-id",-1);

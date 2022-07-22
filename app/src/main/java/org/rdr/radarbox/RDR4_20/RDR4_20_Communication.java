@@ -22,7 +22,6 @@ public class RDR4_20_Communication extends DeviceCommunication {
         setChannelSettingsFromSharedSettings(context,devicePrefix);
         setChannelSelectionBasedOnPriority();
         this.selectChannel(dataChannelWiFi.getName());
-        setConnectedChannelSelector();
     }
 
     /** Метод устарел, потому что теперь есть

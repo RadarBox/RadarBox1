@@ -18,7 +18,8 @@ public class RDR4_22_Communication extends DeviceCommunication {
         dataChannelWiFi =new DataChannelWiFi(context, devicePrefix);
         channelSet.add(dataChannelWiFi); dataChannelWiFi.setPriority(0);
 
-        this.selectChannel(dataChannelUSB.getName());
+        setChannelSettingsFromSharedSettings(context,devicePrefix);
         setChannelSelectionBasedOnPriority();
+        this.selectChannel(dataChannelUSB.getName());
     }
 }

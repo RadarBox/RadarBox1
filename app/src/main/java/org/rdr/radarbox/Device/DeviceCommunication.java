@@ -2,6 +2,7 @@ package org.rdr.radarbox.Device;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.rdr.radarbox.RadarBox;
 
@@ -34,9 +35,10 @@ public abstract class DeviceCommunication {
     protected void setChannelSettingsFromSharedSettings(Context context, String devicePrefix) {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         for (DataChannel channel:channelSet) {
-            channel.setPriority(pref.getInt(devicePrefix+
-                            channel.getName()+"priority",
-                    0));
+            channel.setPriority(
+                    Integer.parseInt(
+                    pref.getString(devicePrefix+channel.getName()+"priority","0")
+                    ));
         }
     }
 
@@ -79,8 +81,6 @@ public abstract class DeviceCommunication {
                                     //возвращаем его, либо, если таких нет, то возвращаем null
                                     .orElse(null)
                             );
-
-
                         }
                         break;
                 }

@@ -197,6 +197,7 @@ public class DeviceCommunicationFragment extends PreferenceFragmentCompat {
             });
             channelPriority.setKey(RadarBox.device.configuration.getDevicePrefix()+
                     selectedChannel.getName()+"priority");
+            channelPriority.setText(Integer.toString(selectedChannel.getPriority()));
             channelPriority.setOnPreferenceChangeListener((preference2, newValue2) -> {
                 int priority = Integer.parseInt(newValue2.toString());
                 selectedChannel.setPriority(priority);
