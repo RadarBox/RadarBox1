@@ -1,8 +1,12 @@
 package org.rdr.radarbox.DSP;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
+import org.rdr.radarbox.Plots2D.GraphColor;
+import org.rdr.radarbox.Plots2D.Line2D;
 import org.rdr.radarbox.R;
+import org.rdr.radarbox.RadarBox;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -22,12 +26,12 @@ import androidx.preference.PreferenceManager;
  * @author Сапронов Данил Игоревич
  * @version 0.1
  */
-public class FreqSignals extends PreferenceFragmentCompat {
+public class FreqSignals extends PreferenceFragmentCompat implements OperationDSP {
     private int FN, rxN, txN, chN, frameSize, freqInitMHz, freqStepMHz;
     private short[] rawFreqFrame;
-    private short[] rawFreqFrameReshuffled;
     private int[] frequenciesMHz;
     private int[][] rxtxOrder;
+    private ArrayList<ComplexSignal> freqSignals = null;
     public FreqSignals() {
 
     }
@@ -109,7 +113,6 @@ public class FreqSignals extends PreferenceFragmentCompat {
             }
             frameSize=2*FN*chN;
             rawFreqFrame= new short[2*FN*chN];
-            rawFreqFrameReshuffled = new short[2*FN*chN];
         });
         DeviceConfiguration.Parameter param = deviceConfig.getParameters().stream().filter(
                 parameter -> parameter.getID().equals("FN")
@@ -119,7 +122,6 @@ public class FreqSignals extends PreferenceFragmentCompat {
                     FN=value;
                     frameSize=2*FN*chN;
                     rawFreqFrame= new short[2*FN*chN];
-                    rawFreqFrameReshuffled = new short[2*FN*chN];
                     frequenciesMHz = new int[FN];
                     for(int i=0; i<FN; i++) frequenciesMHz[i] = freqInitMHz+i*freqStepMHz;
                 });
@@ -174,24 +176,6 @@ public class FreqSignals extends PreferenceFragmentCompat {
      */
     public final short[] getRawFreqFrame() {
         return rawFreqFrame;
-    }
-
-    /** Метод перемешивает сырые данные, так, чтобы они были объединены по каналам
-     * так как данные в сыром сигнале перемешаны (на одной частоте данные с нескольких
-     * приёмников), то, чтобы правильно вычленить частотные данные для одного канала,
-     * используется метод вычисляющий индексы отсчётов и происходит правильное перемешивание.
-     */
-    private void reshuffleRawFrame() {
-        int notNullChannelCounter = 0;
-        short[] oneChannelSignalReshuffled = new short[2*FN];
-        for(int tx=0; tx<txN; tx++)
-            for(int rx=0; rx<txN; rx++)
-                if(rxtxOrder[rx][tx]!=0)
-                    if(reshuffleOneChannelSignal(rx,tx,oneChannelSignalReshuffled)) {
-                        System.arraycopy(oneChannelSignalReshuffled, 0,
-                                rawFreqFrameReshuffled, notNullChannelCounter * 2 * FN, 2 * FN);
-                        notNullChannelCounter++;
-                    }
     }
 
     public boolean reshuffleOneChannelSignal(int rx, int tx, short[] oneChannelArray) {
@@ -326,4 +310,48 @@ public class FreqSignals extends PreferenceFragmentCompat {
         return 1;
     }
 
+    @Override
+    public String getName() {
+        return "Raw freq signals";
+    }
+
+    @Override
+    public ArrayList<ComplexSignal> getInputSignals() {
+        return null;
+    }
+
+    @Override
+    public void setInputSignals(ArrayList<ComplexSignal> inputSignals) {
+
+    }
+
+    @Override
+    public ArrayList<ComplexSignal> getOutputSignals() {
+        return freqSignals;
+    }
+
+    @Override
+    public void doOperation() {
+        freqSignals.clear();
+
+        float[] xVector = new float[frequenciesMHz.length];
+        for(int i = 0; i<xVector.length;i++)
+            xVector[i]=frequenciesMHz[i];
+
+        short[] oneChannelSignal = new short[FN*2];
+        for(int rx = 0; rx<rxN; rx++) {
+            for(int tx=0; tx<txN; tx++) {
+                getRawFreqOneChannelSignal(rx,tx,oneChannelSignal);
+                Complex[] yVector = new Complex[frequenciesMHz.length];
+                for(int i=0; i<yVector.length; i++) {
+                    yVector[i].re = oneChannelSignal[2*i];
+                    yVector[i].im = oneChannelSignal[2*i+1];
+                }
+                freqSignals.add(new ComplexSignal(
+                        xVector,"mHz",
+                        yVector,"",
+                        "t"+tx+"r"+rx));
+            }
+        }
+    }
 }

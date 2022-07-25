@@ -5,8 +5,8 @@ import java.util.LinkedList;
 /** Главный класс, содержащий всю последовательность обработки цифровых сигналов.
  */
 public class Processing {
-    /** Последовательность обработки сигналов */
-    LinkedList<OperationDSP> processingSequence;
+    /** Последовательность обработки сигналов. Создаётся в конструкторе класса */
+    protected LinkedList<OperationDSP> processingSequence;
     public Processing() {
 
     }

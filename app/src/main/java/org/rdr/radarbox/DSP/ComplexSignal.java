@@ -25,6 +25,7 @@ public class ComplexSignal {
     private Complex[] y;
     private String unitsX="";
     private String unitsY="";
+    private String name="";
 
     public float[] getX() { return x; }
     public Complex[] getY() { return y; }
@@ -32,9 +33,14 @@ public class ComplexSignal {
     public String getUnitsY() { return unitsY; }
     public void setUnitsX(String unitsX) { this.unitsX = unitsX; }
     public void setUnitsY(String unitsY) { this.unitsY = unitsY; }
+    public String getName() {return name;}
 
     public ComplexSignal(float[] x, Complex[] y) {
         this.x = x; this.y=y;
+    }
+
+    public ComplexSignal(float[] x, Complex[] y, String name) {
+        this(x,y); this.name = name;
     }
 
     public ComplexSignal(float[] x, String unitsX, Complex[] y) {
@@ -44,6 +50,10 @@ public class ComplexSignal {
 
     public ComplexSignal(float[] x, String unitsX, Complex[] y, String unitsY) {
         this(x,unitsX,y); this.unitsY=unitsY;
+    }
+
+    public ComplexSignal(float[] x, String unitsX, Complex[] y, String unitsY, String name) {
+        this(x,unitsX,y,unitsY); this.name=name;
     }
 
     /** Упрощённый конструктор сигнала. В x в таком случае записываются номера отсчётов (индексы).
