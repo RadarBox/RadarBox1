@@ -6,8 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.rdr.radarbox.Device.DataChannel;
-
 import androidx.fragment.app.Fragment;
 
 /**
@@ -23,7 +21,20 @@ public class StatusBarFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.status_bar_fragment, container, false);
+
         // вывод текущего источника данных (файл/устройство) + (префикс устройства)
+        setCurrentDataSource(view);
+
+        // вывод количества кадров и периода сбора данных
+        setTimingAnimation(view);
+
+        // анимация статуса подключения
+        setConnectionChannel(view);
+
+        return view;
+    }
+
+    private void setCurrentDataSource(View view) {
         if(RadarBox.dataThreadService.getLiveCurrentSource().getValue()!=null) {
             if(RadarBox.dataThreadService.getLiveCurrentSource().getValue()
                     .equals(DataThreadService.DataSource.DEVICE)) {
@@ -34,7 +45,7 @@ public class StatusBarFragment extends Fragment {
                     .equals(DataThreadService.DataSource.FILE)) {
                 ((TextView)view.findViewById(R.id.status_left_message))
                         .append(" " + RadarBox.fileRead.config.getVirtual().getDeviceName());
-                        // .append(" "+RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
+                // .append(" "+RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
             }
         }
         RadarBox.dataThreadService.getLiveCurrentSource().observe(getViewLifecycleOwner(),dataSource -> {
@@ -53,12 +64,13 @@ public class StatusBarFragment extends Fragment {
                 } else if (dataSource.equals(DataThreadService.DataSource.FILE)) {
                     ((TextView) view.findViewById(R.id.status_left_message))
                             .append(" " + RadarBox.fileRead.config.getVirtual().getDeviceName());
-                            // .append(" " + RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
+                    // .append(" " + RadarBox.fileReader.getVirtualDeviceConfiguration().getDeviceName());
                 }
             }
         });
+    }
 
-        // вывод количества кадров и периода сбора данных
+    private void setTimingAnimation(View view) {
         RadarBox.dataThreadService.getLiveFrameCounter().observe(getViewLifecycleOwner(), frameNumber -> {
             int tFrame = (int) RadarBox.dataThreadService.getLastFrameTimeInterval();
             long divisor = frameNumber; if(frameNumber==0) divisor = 1;
@@ -66,8 +78,9 @@ public class StatusBarFragment extends Fragment {
             String timeString = String.format("%03d %03d %03d", tFrame, tFrameAvg, frameNumber);
             ((TextView) view.findViewById(R.id.status_center_message)).setText(timeString);
         });
+    }
 
-        // анимация статуса подключения
+    private void setConnectionChannel(View view) {
         if(RadarBox.device!=null) {
             RadarBox.device.communication.getLiveConnectedChannel().observe(getViewLifecycleOwner(),
                     connectedChannel -> {
@@ -77,16 +90,7 @@ public class StatusBarFragment extends Fragment {
                             ((TextView) view.findViewById(R.id.status_right_message)).setText(
                                     connectedChannel.getName());
                     });
-
-            RadarBox.device.communication.channelSet.stream().filter(
-                    dataChannel -> dataChannel.getName().equals("WiFi"))
-                    .forEach(dataChannelWiFi -> {
-                        if (dataChannelWiFi.getLiveState().getValue().equals(DataChannel.ChannelState.CONNECTING))
-                            view.findViewById(R.id.wifi_connection_animation).setVisibility(View.VISIBLE);
-                        else
-                            view.findViewById(R.id.wifi_connection_animation).setVisibility(View.GONE);
-                    });
-                /*
+            /*
                 .getStatusWiFi().observe(getViewLifecycleOwner(),statusWiFi -> {
             ((TextView)view.findViewById(R.id.status_right_message)).setText(statusWiFi.toString());
             if(statusWiFi.equals(DataChannelWiFi.StatusWiFi.CONNECTING))
@@ -103,6 +107,20 @@ public class StatusBarFragment extends Fragment {
         });
         */
         }
-        return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        View view = this.getView();
+        // вывод текущего источника данных (файл/устройство) + (префикс устройства)
+        setCurrentDataSource(view);
+
+        // вывод количества кадров и периода сбора данных
+        setTimingAnimation(view);
+
+        // анимация статуса подключения
+        setConnectionChannel(view);
+        //this.getView();
     }
 }

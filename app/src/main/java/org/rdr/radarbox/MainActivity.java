@@ -66,13 +66,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        setStartStopButtonAnimation();
     }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
         setWifiButtonAnimation();
+        setStartStopButtonAnimation();
     }
 
     /** Настройка анимации клавиши Wi-Fi
