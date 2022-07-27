@@ -1,0 +1,99 @@
+<dsp>
+    <fft>
+        <integer_parameter id="fftN"
+            name="Количество точек БПФ"
+            summary="не обязательно кратное степени двойки"
+            min="0"
+            step="1"
+            max="4096"
+            def="1024" />
+    </fft>
+    <device name="RDR4.22"
+        rxN="2"
+        txN="2"
+        rxtxOrder="1, 2, 3, 4"
+        dimensionOrder="RX_TF_TX"
+        isComplex="true"/>
+    <integer_parameter id="Trep"
+        name="Период сбора данных (мс)"
+        summary="При Trep=0 данные собираются по готовности предыдущих, в противном случае создаётся таймер с постоянным периодом"
+        min="0"
+        step="1"
+        max="1000"
+        def="100" />
+    <integer_parameter id="F0"
+        name="Начальная частота (МГц)"
+        min="1400"
+        step="2"
+        max="2800"
+        def="1400"/>
+    <integer_parameter
+        id="dF"
+        name="Шаг перестройки частоты (МГц)"
+        min="0"
+        step="2"
+        max="62"
+        def="4" />
+    <integer_parameter
+        id="FN"
+        name="Количество частот"
+        min="1"
+        step="1"
+        max="2048"
+        def="350" />
+    <integer_parameter
+        id="t_paus"
+        name="Пауза (мкс)"
+        summary="Пауза, которая выдерживается для захвата фазы ФАПЧ на каждой частоте"
+        min="0"
+        step="1"
+        max="127"
+        def="20" />
+    <integer_parameter
+        id="tx_mode"
+        name="Режим излучения"
+        summary="00 – используется только излучатель Tr0,
+        01 - используется только излучатель Tr1,
+        1x - используются оба излучателя, сначала Tr0, затем Tr1"
+        min="0"
+        step="1"
+        max="3"
+        def="2" />
+    <integer_parameter
+        id="rx_mode"
+        name="Режим приема"
+        summary="00 – используется только один канал: Rd0 при Tr0, Rd1 при Tr1,
+        01 – используется только один канал: Rd1 при Tr0, Rd0 при Tr1,
+        1x – используются оба канала: Rd0+Rd1."
+        min="0"
+        step="1"
+        max="3"
+        def="2" />
+    <integer_parameter
+        id="acc_coef"
+        name="Коэффициент накопления (acc_coef)"
+        summary="Количество импульсов, накапливаемых на каждой частоте N=2^acc_coef"
+        min="0"
+        step="1"
+        max="3"
+        def="3" />
+    <boolean_parameter
+        id="CurSet1"
+        name="Запрет коррекции АЧХ"
+        summary="Запрет изменения выходного тока фазового детектора"
+        def="1" />
+    <integer_parameter
+        id="MUX"
+        name="Код управления MUX ADF4106"
+        summary="Параметр используется для отладки, при сборе данных устанавливается 0b001"
+        min="0"
+        step="1"
+        max="7"
+        def="1" />
+    <boolean_parameter id="ISEL" name="ISEL смесителя LTC5551"
+        summary="Значение 1 уменьшает потребление на четверть, но сужает диапазон;"
+        def="1" />
+    <integer_parameter id="ADF4106" name="Параметры синтезатора ADF4106"
+        summary="Биты: 7,6 – разрешение и выбор режима FastLock, 5..3=CurSet2, 2..0=CurSet1;"
+        radix="16" min="0" step="1"  max="FF"  def="9A" />
+</dsp>

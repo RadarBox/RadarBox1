@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
  * Создание двух комплексных чисел и запись их перемножения с сохранением результата в 1-е число:
  *  Complex a(1,2); Complex b(3,4); a.times(b);
  * @author Danil Sapronov
- * @version 0.2
+ * @version 1.0
  */
 public class Complex {
 
@@ -52,16 +52,14 @@ public class Complex {
         return (float) Math.atan2(im, re);
     }
 
-    /** Сумма этого комплексного числа с другим
-     * Результат возвращается в текущее число.
+    /** Сумма этого комплексного числа с другим <p>
+     * Результат возвращается в объект, вызывающий метод.
      *
      * @param b второе слогаемое
-     * @return сумма
      */
-    public Complex plus(Complex b) {
+    public void plus(Complex b) {
         this.re = this.re +b.re;
         this.im = this.im +b.im;
-        return this;
     }
 
     /** Сумма двух комплексных чисел
@@ -74,32 +72,30 @@ public class Complex {
         this.im = a.im +b.im;
     }
 
-    /** Разность этого комплексного числа с другим
-     * Результат возвращается в текущее число.
+    /** Разность этого комплексного числа с другим <p>
+     * Результат возвращается в объект, вызывающий метод.
      *
      * @param b вычитаемое
-     * @return разность
      */
-    public Complex minus(Complex b) {
+    public void minus(Complex b) {
         this.re = this.re -b.re;
         this.im = this.im -b.im;
-        return this;
     }
 
-    /** Разность двух комплексных чисел
+    /** Разность двух комплексных чисел.<p>
+     * Результат возвращается в объект, вызывающий метод.
      *
      * @param a уменьшаемое
      * @param b вычитаемое
-     * @return разность
+     *
      */
-    public Complex minus(Complex a, Complex b) {
+    public void minus(Complex a, Complex b) {
         this.re = a.re -b.re;
         this.im = a.im -b.im;
-        return this;
     }
 
-    /** Произведение этого комплексного числа на {@param b}
-     * Результат возвращается в текущее число.
+    /** Произведение этого комплексного числа на {@param b} <p>
+     * Результат возвращается в объект, вызывающий метод.
      *
      * @param b второй сомножитель
      * @return произведение
@@ -110,7 +106,8 @@ public class Complex {
         return this;
     }
 
-    /** Произведение двух комплексных чисел.
+    /** Произведение двух комплексных чисел. <p>
+     * Результат возвращается в объект, вызывающий метод.
      * @param a первый сомножитель
      * @param b второй сомножитель
      */
@@ -119,7 +116,8 @@ public class Complex {
         this.im = a.re *b.im +a.im *b.re;
     }
 
-    /** Произведение комплексного числа на скаляр.
+    /** Произведение комплексного числа на скаляр. <p>
+     * Результат возвращается в объект, вызывающий метод.
      * @param alpha скаляр
      */
     public void scale(float alpha) {
@@ -127,6 +125,20 @@ public class Complex {
         this.im=this.im*alpha;
     }
 
-    //TODO Добавить операции деления div(Complex b) и div(Complex a, Complex b) по аналогии c times()
-    //TODO Добавить операции комплекного сопряжения
+    /** Деление двух комплексных чисел. <p>
+     * Результат возвращается в объект, вызывающий метод.
+     * @param a делимое
+     * @param b делитель
+     */
+    public void div(Complex a, Complex b) {
+        this.re = (a.re *b.re +a.im *b.im)/(b.re*b.re+b.im*b.im);
+        this.im = (b.re *a.im -a.re *b.im)/(b.re*b.re+b.im*b.im);
+    }
+
+    /** Комплексное сопряжение <p>
+     * Результат возвращается в объект, вызывающий метод.
+     */
+    public void conj() {
+        this.im = -1*this.im;
+    }
 }

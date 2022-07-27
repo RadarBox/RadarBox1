@@ -31,11 +31,83 @@ public class ComplexSignal {
     public Complex[] getY() { return y; }
     public String getUnitsX() { return unitsX; }
     public String getUnitsY() { return unitsY; }
-    public void setUnitsX(String unitsX) { this.unitsX = unitsX; }
-    public void setUnitsY(String unitsY) { this.unitsY = unitsY; }
+    public int getLength() {return y.length;}
+
+    /** Задать название единиц измерения по оси X <p>
+     * (нужно для графиков)
+     *
+     * @param unitsX единицы измерения по оси X
+     * @return этот же объект для реализации присваивания по цепочке
+     */
+    public ComplexSignal setUnitsX(String unitsX) { this.unitsX = unitsX; return this;}
+
+    /** Задать название единиц измерения по оси Y <p>
+     * (нужно для графиков)
+     *
+     * @param unitsY единицы измерения по оси Y
+     * @return этот же объект для реализации присваивания по цепочке
+     */
+    public ComplexSignal setUnitsY(String unitsY) { this.unitsY = unitsY; return this;}
+
+    /** Задать название сигнала <p>
+     * Нужно для графиков. Особенно, когда сигналов несколько. Например, сигналы с разных
+     * передатчиков / приёмников.
+     *
+     * @param name название сигнала
+     * @return этот же объект для реализации присваивания по цепочке
+     */
+    public ComplexSignal setName(String name) { this.name = name; return this;}
+
+    /** название сигнала <p>
+     * Нужно для графиков. Особенно, когда сигналов несколько. Например, сигналы с разных
+     * передатчиков / приёмников.
+     * @return название сигнала
+     */
     public String getName() {return name;}
 
+    public ComplexSignal setX(short[] x) {
+        if (x.length != this.y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+        this.x = new float[x.length];
+        for(int i=0; i<x.length; i++)
+            this.x[i] = x[i];
+        return this;
+    }
+
+    public ComplexSignal setX(int[] x) {
+        if (x.length != this.y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+        this.x = new float[x.length];
+        for(int i=0; i<x.length; i++)
+            this.x[i] = x[i];
+        return this;
+    }
+
+    public ComplexSignal setX(float[] x) {
+        if (x.length != this.y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+        this.x = new float[x.length];
+        for(int i=0; i<x.length; i++)
+            this.x[i] = x[i];
+        return this;
+    }
+
+    /** Простейший конструктор сигнала. По сути выделяет память для хранения.
+     *
+     * @param length - количество отсчётов сигнала
+     */
+    public ComplexSignal(int length) {
+        this.x = new float[length];
+        this.y = new Complex[length];
+    }
+
     public ComplexSignal(float[] x, Complex[] y) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
         this.x = x; this.y=y;
     }
 
@@ -64,52 +136,6 @@ public class ComplexSignal {
      * @param samplesOrder - порядок следования отсчётов
      */
     public ComplexSignal(float[] y, @NonNull SamplesOrder samplesOrder) {
-        switch (samplesOrder) {
-            case ONLY_RE:
-                this.x = new float[y.length];
-                this.y = new Complex[y.length];
-                for (int i = 0; i < x.length; i++) {
-                    this.x[i] = i;
-                    this.y[i].re=y[i];
-                }
-                break;
-            case ONLY_IM:
-                this.x = new float[y.length];
-                this.y = new Complex[y.length];
-                for (int i = 0; i < x.length; i++) {
-                    this.x[i] = i;
-                    this.y[i].im=y[i];
-                }
-                break;
-            case RE_IM_RE_IM:
-                this.x = new float[y.length/2];
-                this.y = new Complex[y.length/2];
-                for (int i = 0; i < x.length; i++) {
-                    this.x[i] = i;
-                    this.y[i].re=y[2*i];
-                    this.y[i].im=y[2*i+1];
-                }
-                break;
-            case IM_RE_IM_RE:
-                this.x = new float[y.length/2];
-                this.y = new Complex[y.length/2];
-                for (int i = 0; i < x.length; i++) {
-                    this.x[i] = i;
-                    this.y[i].re=y[2*i+1];
-                    this.y[i].im=y[2*i];
-                }
-                break;
-        }
-    }
-
-    /** Упрощённый конструктор сигнала. В x в таком случае записываются номера отсчётов (индексы).
-     * В зависимости от порядка следования отсчётов <em>y</em>, определяемом переменной samplesOrder,
-     * данные из аргумента <em>y</em> будут по-разному записываться в this.y.
-     *
-     * @param y - массив отсчётов сигнала <em>y(x)</em>
-     * @param samplesOrder - порядок следования отсчётов
-     */
-    public ComplexSignal(short[] y, @NonNull SamplesOrder samplesOrder) {
         switch (samplesOrder) {
             case ONLY_RE:
                 this.x = new float[y.length];
@@ -194,6 +220,52 @@ public class ComplexSignal {
         }
     }
 
+    /** Упрощённый конструктор сигнала. В x в таком случае записываются номера отсчётов (индексы).
+     * В зависимости от порядка следования отсчётов <em>y</em>, определяемом переменной samplesOrder,
+     * данные из аргумента <em>y</em> будут по-разному записываться в this.y.
+     *
+     * @param y - массив отсчётов сигнала <em>y(x)</em>
+     * @param samplesOrder - порядок следования отсчётов
+     */
+    public ComplexSignal(short[] y, @NonNull SamplesOrder samplesOrder) {
+        switch (samplesOrder) {
+            case ONLY_RE:
+                this.x = new float[y.length];
+                this.y = new Complex[y.length];
+                for (int i = 0; i < x.length; i++) {
+                    this.x[i] = i;
+                    this.y[i].re=y[i];
+                }
+                break;
+            case ONLY_IM:
+                this.x = new float[y.length];
+                this.y = new Complex[y.length];
+                for (int i = 0; i < x.length; i++) {
+                    this.x[i] = i;
+                    this.y[i].im=y[i];
+                }
+                break;
+            case RE_IM_RE_IM:
+                this.x = new float[y.length/2];
+                this.y = new Complex[y.length/2];
+                for (int i = 0; i < x.length; i++) {
+                    this.x[i] = i;
+                    this.y[i].re=y[2*i];
+                    this.y[i].im=y[2*i+1];
+                }
+                break;
+            case IM_RE_IM_RE:
+                this.x = new float[y.length/2];
+                this.y = new Complex[y.length/2];
+                for (int i = 0; i < x.length; i++) {
+                    this.x[i] = i;
+                    this.y[i].re=y[2*i+1];
+                    this.y[i].im=y[2*i];
+                }
+                break;
+        }
+    }
+
     /** Возвращает массив модулей комплексного сигнала
      * <p>
      *     Пример применения:
@@ -224,5 +296,41 @@ public class ComplexSignal {
         for (int i=0; i<y.length; i++)
             argY[i] = y[i].arg();
         return argY;
+    }
+
+    /** Произведение комплексных сигналов <p>
+     * Результат возвращается в объект, вызывающий данный метод.
+     * Предполагается, что длины векторов, содержащих отсчёты сигналов совпадают.
+     * Т.е. a.y.length == b.y.length == this.y.length
+     *
+     * @param a один комплексный синал
+     * @param b другой комплексный сигнал
+     */
+    public void mult(ComplexSignal a, ComplexSignal b) {
+        if(a.y.length != b.y.length)
+            throw new IllegalArgumentException("arg1.length != arg2.length");
+        if(this.y.length != a.y.length)
+            throw new IllegalArgumentException("this.length != arg.length");
+        for(int i =0; i<this.y.length; i++) {
+            this.y[i].times(a.y[i],b.y[i]);
+        }
+    }
+
+    /** Деление комплексных сигналов <p>
+     * Результат возвращается в объект, вызывающий данный метод.
+     * Предполагается, что длины векторов, содержащих отсчёты сигналов совпадают.
+     * Т.е. a.y.length == b.y.length == this.y.length
+     *
+     * @param a один комплексный синал (делимое)
+     * @param b другой комплексный сигнал (делитель)
+     */
+    public void div(ComplexSignal a, ComplexSignal b) {
+        if(a.y.length != b.y.length)
+            throw new IllegalArgumentException("arg1.length != arg2.length");
+        if(this.y.length != a.y.length)
+            throw new IllegalArgumentException("this.length != arg.length");
+        for(int i =0; i<this.y.length; i++) {
+            this.y[i].div(a.y[i],b.y[i]);
+        }
     }
 }

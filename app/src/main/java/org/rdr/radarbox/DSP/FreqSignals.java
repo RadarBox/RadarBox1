@@ -1,14 +1,9 @@
 package org.rdr.radarbox.DSP;
 
 import org.rdr.radarbox.Device.DeviceConfiguration;
-import org.rdr.radarbox.Plots2D.GraphColor;
-import org.rdr.radarbox.Plots2D.Line2D;
 import org.rdr.radarbox.R;
-import org.rdr.radarbox.RadarBox;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
 
 import static org.rdr.radarbox.RadarBox.logger;
 
@@ -31,7 +26,7 @@ public class FreqSignals extends PreferenceFragmentCompat implements OperationDS
     private short[] rawFreqFrame;
     private int[] frequenciesMHz;
     private int[][] rxtxOrder;
-    private ArrayList<ComplexSignal> freqSignals = null;
+    private ArrayList<ComplexSignal> outputSignals = null;
     public FreqSignals() {
 
     }
@@ -158,15 +153,6 @@ public class FreqSignals extends PreferenceFragmentCompat implements OperationDS
             return false;
         }
         return true;
-    }
-
-    /**
-     * <p>Функция для обработки полученных "сырых" данных радара.</p>
-     * Дальнейшее использование данных осуществляется через функции-геттеры данного класса.
-     * Например {@link FreqSignals#getRawFreqOneChannelSignal(int,short[])}
-     */
-    public void doSignalProcessing() {
-        //reshuffleRawFrame(); // больше не нужно, потому что выполняется в RawDataAdapter в классе Device
     }
 
     /** <p>Массив сырых частотных данных (кадр)</p>
@@ -316,23 +302,18 @@ public class FreqSignals extends PreferenceFragmentCompat implements OperationDS
     }
 
     @Override
-    public ArrayList<ComplexSignal> getInputSignals() {
-        return null;
-    }
-
-    @Override
     public void setInputSignals(ArrayList<ComplexSignal> inputSignals) {
 
     }
 
     @Override
     public ArrayList<ComplexSignal> getOutputSignals() {
-        return freqSignals;
+        return outputSignals;
     }
 
     @Override
     public void doOperation() {
-        freqSignals.clear();
+        outputSignals.clear();
 
         float[] xVector = new float[frequenciesMHz.length];
         for(int i = 0; i<xVector.length;i++)
@@ -342,16 +323,20 @@ public class FreqSignals extends PreferenceFragmentCompat implements OperationDS
         for(int rx = 0; rx<rxN; rx++) {
             for(int tx=0; tx<txN; tx++) {
                 getRawFreqOneChannelSignal(rx,tx,oneChannelSignal);
-                Complex[] yVector = new Complex[frequenciesMHz.length];
-                for(int i=0; i<yVector.length; i++) {
-                    yVector[i].re = oneChannelSignal[2*i];
-                    yVector[i].im = oneChannelSignal[2*i+1];
-                }
-                freqSignals.add(new ComplexSignal(
-                        xVector,"mHz",
-                        yVector,"",
-                        "t"+tx+"r"+rx));
+                outputSignals.add(
+                        new ComplexSignal(oneChannelSignal,ComplexSignal.SamplesOrder.RE_IM_RE_IM)
+                        .setX(frequenciesMHz)
+                        .setUnitsX("MHz")
+                        .setName("t"+tx+"r"+rx));
             }
         }
+    }
+
+    @Override
+    public boolean setParameters(Object parameters) throws IllegalArgumentException {
+        if(!(parameters instanceof DeviceConfiguration))
+            throw new IllegalArgumentException(
+                    "Input argument is not instance of DeviceConfiguration");
+        return this.updateSignalParameters((DeviceConfiguration) parameters);
     }
 }

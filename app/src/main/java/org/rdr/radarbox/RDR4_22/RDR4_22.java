@@ -24,16 +24,6 @@ public class RDR4_22 extends Device {
     }
 
     @Override
-    public boolean Connect() {
-        return super.Connect();
-    }
-
-    @Override
-    public boolean Disconnect() {
-        return super.Disconnect();
-    }
-
-    @Override
     public boolean setConfiguration() {
         protocolRDR.sendCommand0();
         return ((RDR4_22_ProtocolRDR)protocolRDR).sendCommand8() &&

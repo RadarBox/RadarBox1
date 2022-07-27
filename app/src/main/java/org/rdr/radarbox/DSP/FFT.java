@@ -33,6 +33,21 @@ public class FFT {
     private FFT() {
     }
 
+    public static boolean isPowerOfTwo(int n)
+    {
+        return (int)(Math.ceil((Math.log(n) / Math.log(2))))
+                == (int)(Math.floor(((Math.log(n) / Math.log(2)))));
+    }
+
+    public static int nextPowerOf2(int a)
+    {
+        int b = 1;
+        while (b < a) {
+            b = b << 1;
+        }
+        return b;
+    }
+
     /**
      * Returns the FFT of the specified complex array.
      *
@@ -49,9 +64,11 @@ public class FFT {
         }
 
         // radix 2 Cooley-Tukey FFT
-        if (n % 2 != 0) {
+        if (!isPowerOfTwo(n)) {
             throw new IllegalArgumentException("n is not a power of 2");
         }
+
+
 
         // fft of even terms
         Complex[] even = new Complex[n / 2];

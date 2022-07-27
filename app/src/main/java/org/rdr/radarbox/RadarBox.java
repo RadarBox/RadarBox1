@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Bundle;
 
 import org.rdr.radarbox.DSP.FreqSignals;
+import org.rdr.radarbox.DSP.Processing;
 import org.rdr.radarbox.Device.Device;
 import org.rdr.radarbox.File.AoRDFile;
 import org.rdr.radarbox.File.AoRDSettingsManager;
@@ -55,6 +56,7 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
     public static AoRDFile fileWrite;
     public static FreqSignals freqSignals;
     public static DataThreadService dataThreadService;
+    public static Processing processing;
 
     /**
      * Задаёт AoRD-файлу в {@link RadarBox} новое значение.

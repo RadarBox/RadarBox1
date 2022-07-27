@@ -10,8 +10,17 @@ import java.util.ArrayList;
  */
 public interface OperationDSP {
     String getName();
-    ArrayList<ComplexSignal> getInputSignals();
     void setInputSignals(ArrayList<ComplexSignal> inputSignals);
     ArrayList<ComplexSignal> getOutputSignals();
     void doOperation();
+
+    /**
+     * Абстрактный метод, который подразумевает, что в реализации конкретной операции цифровой
+     * обработки сигналов в нём будут задаваться параметры этой операции
+     * @param parameters новые параметры операции (количество точек для БПФ, порядок для фильтра и т.д.)
+     * @throws IllegalArgumentException должно выбрасываться тогда, когда с аргументом метода
+     * есть проблемы
+     * @return
+     */
+    boolean setParameters(Object parameters) throws IllegalArgumentException;
 }

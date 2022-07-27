@@ -327,10 +327,9 @@ public class DataThreadService {
     class SignalProcessing implements Runnable {
         @Override
         public void run() {
-
             // дальнейшая обработка сигналов
             if(frameCounter>0)
-                RadarBox.freqSignals.doSignalProcessing();
+
             try {
                 barrier.await();
             }
