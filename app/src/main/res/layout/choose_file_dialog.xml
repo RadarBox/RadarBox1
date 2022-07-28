@@ -33,7 +33,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <HorizontalScrollView
-        android:id="@+id/horizontalScrollView"
+        android:id="@+id/path_scroll"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="4dp"
@@ -43,8 +43,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/choose_file_title_textview">
 
-        <EditText
-            android:id="@+id/path_edit"
+        <TextView
+            android:id="@+id/path_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
@@ -60,7 +60,7 @@
         android:layout_marginTop="6dp"
         android:text=".."
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView" />
+        app:layout_constraintTop_toBottomOf="@+id/path_scroll" />
 
     <Spinner
         android:id="@+id/files_list_spinner"
@@ -69,7 +69,7 @@
         android:layout_marginTop="6dp"
         android:layout_marginRight="4dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView" />
+        app:layout_constraintTop_toBottomOf="@+id/path_scroll" />
 
     <Button
         android:id="@+id/choose_file_button"

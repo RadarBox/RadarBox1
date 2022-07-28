@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
             RadarBox.dataThreadService.stop();
             // Если выбрано "Сохранять файлы" и "Отправлять файлы", то вызвать диалог, отправляющий файл
             // if (RadarBox.fileWriter.isNeedSaveData()) {
-            if (AoRDSettingsManager.needSaveData) {
+            if (AoRDSettingsManager.isNeedSaveData()) {
                 // Сохранение файла
                 boolean sendFile = PreferenceManager.getDefaultSharedPreferences(
                         this).getBoolean("need_send", false);

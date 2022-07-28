@@ -15,7 +15,9 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.AdapterView;
@@ -34,30 +36,29 @@ import java.util.ArrayList;
 /**
  * Класс-надстройка над {@link AoRDFile} для сохранения и отправки AoRD-файлов с помощью диалогов.
  * @author Шишмарев Ростислав Иванович; Сапронов Данил Игоревич
- * @version v1.0.0
+ * @version v1.1.0
  */
 public class AoRD_DialogManager {
     private AoRDFile aordFile;
-
-    // Variables for Add file dialog
-    private final String mainDir = Environment.getExternalStorageDirectory().getAbsolutePath();
-    private EditText pathEdit;
-    private Spinner chooser;
 
     private static String lastExtraText = "";
 
     public AoRD_DialogManager(AoRDFile aordFile_) {
         aordFile = aordFile_;
-        aordFile.data.endWriting();
     }
 
     // Saving dialog
     /**
      * Создание череды диалогов для сохранения (и отправки при необходимости) AoRD-файла.
      * @param activityForDialog - текущая активность.
-     * @param sendFile - отправлятьт ли файл после сохранения.
+     * @param sendFile - отправлять ли файл после сохранения.
      */
     public void createSavingDialog(Activity activityForDialog, boolean sendFile) {
+        if (!aordFile.isEnabled()) {
+            RadarBox.logger.add(this, "ERROR: AoRD-file isn`t enabled. Maybe, " +
+                    "there was an error in AoRDFile class. See log upper.");
+            return;
+        }
         final Dialog dialog = new Dialog(activityForDialog);
         Window window = dialog.getWindow();
         window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -74,7 +75,8 @@ public class AoRD_DialogManager {
         Button addFileButton = dialog.findViewById(R.id.add_aord_item_button);
         addFileButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                createAddFileDialog(activityForDialog, dialog);
+                AddFileDialogManager manager = new AddFileDialogManager(activityForDialog);
+                manager.createAddFileDialog(dialog);
             }
         });
 
@@ -93,7 +95,7 @@ public class AoRD_DialogManager {
                 RadarBox.logger.add(this, "Written to desc file: " +
                         textEditor.getEditableText().toString());
                 aordFile.commit();
-                if (sendFile && aordFile != null) {
+                if (sendFile) {
                     createDialogToSendFile(activityForDialog, aordFile);
                 }
                 dialog.dismiss();
@@ -128,7 +130,7 @@ public class AoRD_DialogManager {
         ListView filesListView = savingDialog.findViewById(R.id.list_of_additional_files);
         String[] namesList = aordFile.additional.getNamesList();
         if (namesList.length == 0) {
-            namesList = new String[] {"Ничего нет"};
+            namesList = new String[] {activityForDialog.getString(R.string.str_container_empty)};
         }
         ArrayAdapter<String> listAdapter = new ArrayAdapter<>(activityForDialog,
                 android.R.layout.simple_list_item_1, namesList);
@@ -137,112 +139,155 @@ public class AoRD_DialogManager {
     }
 
     // Add file dialog
-    private void createAddFileDialog(Activity activityForDialog, Dialog savingDialog) {
-        if (!Environment.isExternalStorageManager()) {
-            Helpers.requestPermissions(activityForDialog, Helpers.PERMISSION_STORAGE);
+    private class AddFileDialogManager {
+        private Activity activityForDialog;
+        private final String mainDir = Environment.getExternalStorageDirectory().getAbsolutePath();
+        private TextView pathView;
+        private Spinner chooser;
+        private HorizontalScrollView scrollView;
+
+        protected AddFileDialogManager(Activity activity) {
+            activityForDialog = activity;
         }
-        final Dialog dialog = new Dialog(activityForDialog);
-        Window window = dialog.getWindow();
-        window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        dialog.setCancelable(true);
-        dialog.setCanceledOnTouchOutside(true);
-        dialog.setContentView(R.layout.choose_file_dialog);
 
-        pathEdit = dialog.findViewById(R.id.path_edit);
-        pathEdit.setText("");
-        TextView statusBar = dialog.findViewById(R.id.file_chooser_status_bar);
-
-        Button up = dialog.findViewById(R.id.up_in_explorer_button);
-        up.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String path = pathEdit.getText().toString();
-                if (path.equals("")) {
-                    return;
-                }
-                String[] splitArray = path.split("/");
-                List<String> splitList = Arrays.asList(splitArray);
-                path = String.join("/", splitList.subList(0, splitArray.length - 1));
-                pathEdit.setText(path);
-                updateSpinner(activityForDialog);
+        protected void createAddFileDialog(Dialog savingDialog) {
+            if (!Helpers.checkStoragePermission(activityForDialog)) {
+                Helpers.requestStoragePermission(activityForDialog);
             }
-        });
-        chooser = dialog.findViewById(R.id.files_list_spinner);
-        chooser.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Object item = chooser.getSelectedItem();
-                if (item != null) {
-                    String newPath = chooser.getSelectedItem().toString();
-                    if (!newPath.equals("")) {
-                        pathEdit.setText(pathEdit.getText().toString() + "/" + newPath);
-                        updateSpinner(activityForDialog);
+            if (!Helpers.checkStoragePermission(activityForDialog)) {
+                return;
+            }
+            final Dialog dialog = new Dialog(activityForDialog);
+            Window window = dialog.getWindow();
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT);
+            dialog.setCancelable(true);
+            dialog.setCanceledOnTouchOutside(true);
+            dialog.setContentView(R.layout.choose_file_dialog);
+
+            pathView = dialog.findViewById(R.id.path_textview);
+
+            scrollView = dialog.findViewById(R.id.path_scroll);
+
+            TextView statusBar = dialog.findViewById(R.id.file_chooser_status_bar);
+
+            Button up = dialog.findViewById(R.id.up_in_explorer_button);
+            up.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String path = pathView.getText().toString();
+                    if (path.equals("")) {
+                        return;
+                    }
+                    String[] splitArray = path.split("/");
+                    List<String> splitList = Arrays.asList(splitArray);
+                    updatePath(String.join("/", splitList.subList(0,
+                            splitArray.length - 1)));
+                }
+            });
+
+            chooser = dialog.findViewById(R.id.files_list_spinner);
+            chooser.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    Object item = chooser.getSelectedItem();
+                    if (item != null) {
+                        String newPath = chooser.getSelectedItem().toString();
+                        if (!newPath.equals("")) {
+                            updatePath(pathView.getText().toString() + "/" + newPath);
+                        }
                     }
                 }
-            }
-            public void onNothingSelected(AdapterView<?> adView) {
+                public void onNothingSelected(AdapterView<?> adView) {}
+            });
 
-            }
-        });
-        updateSpinner(activityForDialog);
-
-        Button ok = dialog.findViewById(R.id.choose_file_button);
-        ok.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                File fileToAdd = new File(getCurrentPath());
-                if (!fileToAdd.exists()) {
-                    statusBar.setText("Файл не существует");
-                } else if (!fileToAdd.isFile()) {
-                    statusBar.setText("Вы не выбрали файл");
-                } else {
-                    aordFile.additional.addFile(fileToAdd);
-                    updateFilesList(activityForDialog, savingDialog);
-                    RadarBox.logger.add(AoRD_DialogManager.this, "End of adding file " +
-                            fileToAdd.getAbsolutePath());
-                    dialog.dismiss();
+            Button ok = dialog.findViewById(R.id.choose_file_button);
+            ok.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    File fileToAdd = new File(getCurrentPath());
+                    if (!fileToAdd.exists()) {
+                        statusBar.setText(activityForDialog.getString(
+                                R.string.choose_file_error__not_found));
+                    } else if (!checkFilePermission(fileToAdd.getName())) {
+                        statusBar.setText(activityForDialog.getString(
+                                R.string.choose_file_error__can_not_get));
+                    } else if (!fileToAdd.isFile()) {
+                        statusBar.setText(activityForDialog.getString(
+                                R.string.choose_file_error__not_a_file));
+                    } else {
+                        aordFile.additional.addFile(fileToAdd);
+                        updateFilesList(activityForDialog, savingDialog);
+                        dialog.dismiss();
+                    }
                 }
-            }
-        });
+            });
 
-        Button cancel = dialog.findViewById(R.id.close_file_chooser_button);
-        cancel.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                dialog.cancel();
-            }
-        });
-        dialog.show();
-    }
+            Button cancel = dialog.findViewById(R.id.close_file_chooser_button);
+            cancel.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    dialog.cancel();
+                }
+            });
 
-    private String getCurrentPath() {
-        String result = mainDir + "/" + pathEdit.getText().toString();
-        if (result.endsWith("/")) {
-            result = result.substring(0, result.length() - 1);
+            updatePath("");
+            dialog.show();
         }
-        return result;
-    }
 
-    private List<String> getCurrentFolderList() {
-        File curFile = new File(getCurrentPath());
-        if (curFile.exists() && curFile.isDirectory()) {
-            String[] filesArray = curFile.list();
-            if (filesArray == null) {
-                return new ArrayList<>();
+        // Get methods
+        private String getCurrentPath() {
+            String result = mainDir + "/" + pathView.getText().toString();
+            if (result.endsWith("/")) {
+                result = result.substring(0, result.length() - 1);
             }
-            Arrays.sort(filesArray);
-            ArrayList<String> list = new ArrayList<String>(Arrays.asList(filesArray));
-            // Обязательное добавление пустого элемента в начало.
-            // (Android не позполяет различать события выбора элемента в Spinner автоматически и
-            //  пользователем)
-            list.add(0, "");
-            return list;
+            return result;
         }
-        return new ArrayList<>();
-    }
 
-    private void updateSpinner(Activity activityForDialog) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(activityForDialog,
-                android.R.layout.simple_spinner_item, getCurrentFolderList());
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        chooser.setAdapter(adapter);
+        private List<String> getCurrentFolderList() {
+            File curFile = new File(getCurrentPath());
+            if (curFile.exists() && curFile.isDirectory()) {
+                String[] filesArray = curFile.list();
+                if (filesArray == null) {
+                    return new ArrayList<>();
+                }
+                Arrays.sort(filesArray);
+                ArrayList<String> list = new ArrayList<String>(Arrays.asList(filesArray));
+                // Удаление лишних элементов (заготовка)
+                /* ArrayList<String> listToRemove = new ArrayList<>();
+                for (String el : filesArray) {
+                    if (!checkFilePermission(el)) {
+                        listToRemove.add(el);
+                    }
+                }
+                for (int i = 0; i < listToRemove.size(); i++) {
+                    list.remove(listToRemove.get(i));
+                } */
+
+                // Обязательное добавление пустого элемента в начало.
+                // (Android не позполяет различать события выбора элемента в Spinner автоматически и
+                //  пользователем)
+                list.add(0, "");
+                return list;
+            }
+            return new ArrayList<>();
+        }
+
+        // Help methods
+        private void updatePath(String newPath) {
+            pathView.setText(newPath);
+
+            scrollView.postDelayed(new Runnable() {
+                public void run() {
+                    scrollView.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+                }
+            }, 50L);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(activityForDialog,
+                    android.R.layout.simple_spinner_item, getCurrentFolderList());
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            chooser.setAdapter(adapter);
+        }
+
+        private boolean checkFilePermission(String name) {
+            return true;
+        }
     }
 
     // Delete file dialog
@@ -322,7 +367,7 @@ public class AoRD_DialogManager {
         sendFileIntent.putExtra(Intent.EXTRA_STREAM,
                 FileProvider.getUriForFile(context,
                         BuildConfig.APPLICATION_ID + ".file_provider", file));
-        sendFileIntent.setType("application/pdf");
+        sendFileIntent.setType("application/zip");
         context.startActivity(sendFileIntent);
     }
 }

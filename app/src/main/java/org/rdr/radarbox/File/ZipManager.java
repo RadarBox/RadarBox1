@@ -22,11 +22,13 @@ import java.util.zip.ZipOutputStream;
 /**
  * Универсальный класс для работы с zip-архивами.
  * @author Шишмарев Ростислав Иванович
- * @version v1.0.1
+ * @version v1.0.2
  */
 public class ZipManager {
     private File mainZipFile = null;
     private File mainUnzippedFolder = null;
+
+    private int maxRecursionLevel = 2;
 
     // Initialize methods
     /**
@@ -68,6 +70,16 @@ public class ZipManager {
         mainUnzippedFolder = null;
     }
 
+    /**
+     * Задаёт максимальный уровень рекурсии в распаковке архива (по умолчанию = 2).
+     * @param newLevel - новый уровень (>= 1, иначе игнорируется).
+     */
+    public void setMaxRecursionLevel(int newLevel) {
+        if (newLevel >= 1) {
+            maxRecursionLevel = newLevel;
+        }
+    }
+
     // <Main methods>
     // Unzip methods
     /**
@@ -82,15 +94,16 @@ public class ZipManager {
         mainUnzippedFolder = new File(mainZipFile.getParent() + "/" +
                 getUnzippedFolderName(mainZipFile));
         Helpers.removeTreeIfExists(mainUnzippedFolder);
-        unzipFileRecursive(mainZipFile);
+        unzipFileRecursive(mainZipFile, 1);
     }
 
     /**
      * Скрытая реалиэация метода {@link #unzipFile()}.
      * @param zipFile - zip-файл, который нужно распаковать.
+     * @param level - текущий уровень рекурсии.
      * @throws IOException - при ошибке системы ввода/вывода.
      */
-    private void unzipFileRecursive(File zipFile) throws IOException {
+    private void unzipFileRecursive(File zipFile, int level) throws IOException {
         String folderName = getUnzippedFolderName(zipFile);
         String parentPath = zipFile.getParent();
         File unzippedFolder = Helpers.createUniqueFile(parentPath + "/" + folderName);
@@ -125,9 +138,13 @@ public class ZipManager {
         }
         in.close();
         zipInputStream.close();
+        // Достигнут верхний уровень рекурсии
+        if (level >= maxRecursionLevel) {
+            return;
+        }
 
         for (File fileToUnzip : filesToUnzip) {
-            unzipFileRecursive(fileToUnzip);
+            unzipFileRecursive(fileToUnzip, level + 1);
         }
     }
 

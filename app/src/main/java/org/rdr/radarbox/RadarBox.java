@@ -64,15 +64,25 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
      */
     public static void setAoRDFile(AoRDFile attribute, AoRDFile newFile) {
         if (attribute == fileRead) {
+            closeAoRDFile(attribute);
+            fileRead = newFile;
+        } else if (attribute == fileWrite) {
+            closeAoRDFile(attribute);
+            fileWrite = newFile;
+        }
+    }
+
+    public static void closeAoRDFile(AoRDFile attribute) {
+        if (attribute == fileRead) {
             if (fileRead != null) {
                 fileRead.close();
+                fileRead = null;
             }
-            fileRead = newFile;
         } else if (attribute == fileWrite) {
             if (fileWrite != null) {
                 fileWrite.close();
+                fileWrite = null;
             }
-            fileWrite = newFile;
         }
     }
 
@@ -86,8 +96,8 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                fileRead.close();
-                fileWrite.close();
+                closeAoRDFile(fileRead);
+                closeAoRDFile(fileWrite);
                 // На случай прошлых обрушений приложения
                 AoRDSettingsManager.cleanDefaultDir();
             }

@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 /**
  * Класс-надстройка над {@link AoRDFile} для работы с общими настройками AoRD-файлов приложения.
  * @author Шишмарев Ростислав Иванович
- * @version v1.0.0
+ * @version v1.0.1
  */
 public class AoRDSettingsManager {
     private static final File defaultDirectory =
@@ -116,16 +116,22 @@ public class AoRDSettingsManager {
      * Очищает папку для AoRD-файлов от директорий.
      */
     public static void cleanDefaultDir() {
-        for (String name : getFilesList()) {
-            File file = new File(defaultDirectory.getAbsolutePath() + "/" + name);
-            if (file.isDirectory()) {
-                try {
-                    Helpers.removeTree(file);
-                } catch (IOException e) {
-                    RadarBox.logger.add(e.toString());
-                    e.printStackTrace();
+        RadarBox.logger.add("DEBUG: Start cleaning");
+        String[] listOfFiles = defaultDirectory.list();
+        if (listOfFiles != null) {
+            for (String name : listOfFiles) {
+                File file = new File(defaultDirectory.getAbsolutePath() + "/" + name);
+                if (file.isDirectory()) {
+                    try {
+                        Helpers.removeTree(file);
+                        RadarBox.logger.add("DEBUG: Deleted " + file.getAbsolutePath());
+                    } catch (IOException e) {
+                        RadarBox.logger.add(e.toString());
+                        e.printStackTrace();
+                    }
                 }
             }
         }
+        RadarBox.logger.add("DEBUG: Cleaning ended");
     }
 }

@@ -149,7 +149,7 @@ public class SettingsActivity extends AppCompatActivity {
                 RadarBox.setAoRDFile(RadarBox.fileRead,
                         AoRDSettingsManager.getFileByName(newValue.toString()));
                 if (RadarBox.fileRead == null) {
-                    RadarBox.logger.add(this,"AoRDFile" + newValue + " isn`t enabled");
+                    RadarBox.logger.add(this,"AoRDFile " + newValue + " isn`t enabled");
                     return false;
                 }
                 if (RadarBox.fileRead.config.getVirtual() == null) {

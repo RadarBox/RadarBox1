@@ -2,8 +2,15 @@ package org.rdr.radarbox.File;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.provider.Settings;
+import android.Manifest;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.rdr.radarbox.RadarBox;
 
@@ -26,20 +33,44 @@ public class Helpers {
     public static final int PERMISSION_STORAGE = 101;
 
     /**
-     * Создание запроса к пользователю на разрешение.
+     * Создание запроса к пользователю на разрешение управлять файлами устройства.
      * @param activity - текущая активность.
-     * @param requestCode - код разрешения.
      */
-    public static void requestPermissions(Activity activity, int requestCode) {
-        try {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-            intent.addCategory("android.intent.category.DEFAULT");
-            intent.setData(Uri.parse(String.format("package:%s", activity.getPackageName())));
-            activity.startActivityForResult(intent, requestCode);
-        } catch (Exception e) {
-            Intent intent = new Intent();
-            intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            activity.startActivityForResult(intent, requestCode);
+    public static void requestStoragePermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                intent.addCategory("android.intent.category.DEFAULT");
+                intent.setData(Uri.parse(String.format("package:%s", activity.getApplicationContext().getPackageName())));
+                activity.startActivityForResult(intent, 2296);
+            } catch (Exception e) {
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                activity.startActivityForResult(intent, 2296);
+            }
+        } else {
+            //below android 11
+            ActivityCompat.requestPermissions(activity,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_STORAGE);
+        }
+    }
+
+    /**
+     * Проверка разрешения управлять файлами устройства.
+     * @param activity - текущая активность.
+     * @return true, если разрешение дано, false в противном случае.
+     */
+    public static boolean checkStoragePermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager();
+        } else {
+            int read_result = ContextCompat.checkSelfPermission(activity,
+                    Manifest.permission.READ_EXTERNAL_STORAGE);
+            int write_result = ContextCompat.checkSelfPermission(activity,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            return read_result == PackageManager.PERMISSION_GRANTED && write_result ==
+                    PackageManager.PERMISSION_GRANTED;
         }
     }
 
@@ -104,6 +135,9 @@ public class Helpers {
             return false;
         }
         try {
+            if (!destination.createNewFile()) {
+                throw new IOException("Can`t create destination file on Helpers.copy()");
+            };
             FileInputStream fileInputStream = null;
             FileOutputStream fileOutputStream = null;
             try {
