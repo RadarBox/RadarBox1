@@ -2,6 +2,8 @@ package org.rdr.radarbox.File;
 
 
 import android.content.Context;
+import android.app.Activity;
+import android.net.Uri;
 
 import org.rdr.radarbox.Device.DeviceStatus;
 import org.rdr.radarbox.RadarBox;
@@ -12,12 +14,10 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
-import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 import java.io.File;
 
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.FileInputStream;
@@ -26,7 +26,6 @@ import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 
 import java.io.IOException;
@@ -34,10 +33,10 @@ import java.io.FileNotFoundException;
 import java.nio.file.NotDirectoryException;
 import java.nio.InvalidMarkException;
 import java.nio.BufferUnderflowException;
+import java.nio.channels.ClosedByInterruptException;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Scanner;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -222,7 +221,7 @@ public class AoRDFile extends File {
         if (path.endsWith(".zip")) {
             return null;
         }
-        File folderWrite = Helpers.createUniqueFile(path);
+        File folderWrite = Helpers.createFileWithUniquePath(path);
         try {
             if (!folderWrite.mkdir()) {
                 throw new IOException("Can`t create main write folder");
@@ -617,18 +616,7 @@ public class AoRDFile extends File {
         }
 
         protected void readSelf() throws IOException {
-            FileReader fileReader = new FileReader(selfFile);
-            Scanner reader = new Scanner(fileReader);
-            String result = "";
-            while (reader.hasNextLine()) {
-                result += reader.nextLine() + "\n";
-            }
-            reader.close();
-            fileReader.close();
-            if (result.length() >= 1) {
-                result = result.substring(0, result.length() - 1);
-            }
-            description = result;
+            description = Helpers.readTextFile(selfFile);
         }
 
         /**
@@ -645,9 +633,7 @@ public class AoRDFile extends File {
          */
         public void write(String text) {
             try {
-                FileWriter writer = new FileWriter(selfFile, false);
-                writer.write(text);
-                writer.flush();
+                Helpers.writeToTextFile(selfFile, text, false);
                 description = text;
                 RadarBox.logger.add(this, "DEBUG: Description written: " + description);
             } catch (IOException e) {
@@ -711,7 +697,7 @@ public class AoRDFile extends File {
             }
             RadarBox.logger.add(this, "DEBUG: Adding file " + newFile.getAbsolutePath() +
                     " Exists: " + newFile.exists());
-            if (!Helpers.copyFile(newFile, Helpers.createUniqueFile(
+            if (!Helpers.copyFile(newFile, Helpers.createFileWithUniquePath(
                     selfFolder.getAbsolutePath() + "/" + newFile.getName()))) {
                 RadarBox.logger.add(this, "ERROR: Can`t add file " +
                         newFile.getAbsolutePath() + " to additional folder " +
@@ -720,6 +706,28 @@ public class AoRDFile extends File {
             }
             RadarBox.logger.add(this, "DEBUG: End of adding file " +
                     newFile.getAbsolutePath());
+        }
+
+        /**
+         * Добавляет файл (не директорию) в управляемую папку.
+         * @param fileUri - {@link Uri} файла, который нужно добавить.
+         */
+        public void addFile(Uri fileUri, Activity activity) {
+            String[] arrFromUri = fileUri.getPath().split(":");
+            String path = arrFromUri[arrFromUri.length - 1];
+            String[] arrFromPath = path.split("/");
+            String name = arrFromPath[arrFromPath.length - 1];
+
+            File destination = Helpers.createFileWithUniquePath(
+                    selfFolder.getAbsolutePath() + "/" + name);
+
+            RadarBox.logger.add(this, "DEBUG: Adding file " + fileUri.getPath());
+            if (!Helpers.copyFile(fileUri, destination, activity)) {
+                RadarBox.logger.add(this, "ERROR: Can`t add file " + fileUri.getPath() +
+                        " to additional folder " + selfFolder.getAbsolutePath());
+                return;
+            }
+            RadarBox.logger.add(this, "DEBUG: End of adding file " + fileUri.getPath());
         }
 
         /**

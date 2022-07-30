@@ -106,7 +106,8 @@ public class ZipManager {
     private void unzipFileRecursive(File zipFile, int level) throws IOException {
         String folderName = getUnzippedFolderName(zipFile);
         String parentPath = zipFile.getParent();
-        File unzippedFolder = Helpers.createUniqueFile(parentPath + "/" + folderName);
+        File unzippedFolder = Helpers.createFileWithUniquePath(parentPath + "/" +
+                folderName);
         if (!unzippedFolder.mkdir()) {
             throw new IOException("Error on creation directory for unzip");
         };
@@ -201,7 +202,7 @@ public class ZipManager {
      */
     private static File archiveFolderRecursive(File folder) throws IOException {
         String[] listOfFiles = folder.list();
-        File zipFile = Helpers.createUniqueFile(folder.getAbsolutePath() + ".zip");
+        File zipFile = Helpers.createFileWithUniquePath(folder.getAbsolutePath() + ".zip");
         FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
         ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
 
