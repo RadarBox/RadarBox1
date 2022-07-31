@@ -62,7 +62,7 @@ public class AoRDFileSavingActivity extends AppCompatActivity {
         builder.setTitle(getString(R.string.elements_deletion));
 
         Spinner delFileChooser = new Spinner(this);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, RadarBox.fileWrite.additional.getNamesList());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         delFileChooser.setAdapter(adapter);
@@ -108,20 +108,17 @@ public class AoRDFileSavingActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {}
+    public void onBackPressed() {
+        // Нужно, чтобы процесс сохранения всегда завершался
+    }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch(requestCode) {
-            case CHOOSE_FILE_REQUEST_CODE: {
-                if (resultCode == RESULT_OK) {
-                    Uri fileUri = data.getData();
-                    RadarBox.fileWrite.additional.addFile(fileUri, this);
-                    updateFilesList();
-                }
-                break;
-            }
+        if (requestCode == CHOOSE_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
+            Uri fileUri = data.getData();
+            RadarBox.fileWrite.additional.addFile(fileUri, this);
+            updateFilesList();
         }
     }
 

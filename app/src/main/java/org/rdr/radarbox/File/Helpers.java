@@ -1,18 +1,13 @@
 package org.rdr.radarbox.File;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import androidx.core.content.FileProvider;
 
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.MediaStore;
 
-import org.rdr.radarbox.BuildConfig;
 import org.rdr.radarbox.RadarBox;
 
 import java.io.File;
+import java.util.Scanner;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -22,8 +17,6 @@ import java.io.FileOutputStream;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
-
-import java.util.Scanner;
 
 /**
  * Класс-хранилище констант и функций для работы пакета File.
@@ -85,7 +78,6 @@ public class Helpers {
      * @param destination - файл, куда нужно скопировать.
      * @return true, если операция удалась, false в противном случае.
      */
-
     public static boolean copyFile(File source, File destination) {
         if (destination.exists() || !source.exists()) {
             return false;

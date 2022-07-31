@@ -62,7 +62,7 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
             public void run() {
                 closeAoRDFile(fileRead);
                 closeAoRDFile(fileWrite);
-                // На случай прошлых обрушений приложения
+                // На случай прошлых выходов без помощи кнопки
                 AoRDSettingsManager.cleanDefaultDir();
             }
         });
