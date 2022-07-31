@@ -2,12 +2,17 @@ package org.rdr.radarbox.File;
 
 import android.app.Activity;
 import android.content.Context;
-import android.app.AlertDialog;
+
+import android.app.Dialog;
 import android.content.DialogInterface;
 
 import android.content.Intent;
-
-import androidx.appcompat.widget.AppCompatEditText;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import org.rdr.radarbox.R;
 import org.rdr.radarbox.RadarBox;
@@ -18,8 +23,8 @@ import androidx.core.content.FileProvider;
 
 /**
  * Класс для отправки AoRD-файлов.
- * @author Сапронов Данил Игоревич; Шишмарев Ростислав Иванович
- * @version 1.1.0
+ * @author Шишмарев Ростислав Иванович; Сапронов Данил Игоревич
+ * @version 1.2.0
  */
 public class AoRDSender {
     private static String lastSendFileExtraText = "";
@@ -30,10 +35,17 @@ public class AoRDSender {
      * @param file - файл, который нужно отправить.
      */
     public static void createDialogToSendAoRDFile(Context context, AoRDFile file) {
-        createDialogToSendAoRDFile(context, file, new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {}
-        });
+        createDialogToSendAoRDFile(context, file,
+                new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                    }
+                },
+                new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                    }
+                });
     }
 
     /**
@@ -44,48 +56,66 @@ public class AoRDSender {
      * @param file - файл, который нужно отправить.
      */
     public static void createDialogToSendAoRDFile(Activity activity, AoRDFile file) {
-        createDialogToSendAoRDFile(activity, file, new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                activity.finish();
-            }
-        });
+        createDialogToSendAoRDFile(activity, file,
+                new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        activity.finish();
+                    }
+                },
+                new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        activity.finish();
+                    }
+                });
     }
 
-    private static void createDialogToSendAoRDFile(Context context, AoRDFile file,
-                                                   DialogInterface.OnDismissListener closeListener) {
+    private static void createDialogToSendAoRDFile(Context context, AoRDFile aordFile,
+                                                   DialogInterface.OnDismissListener dismissListener,
+                                                   DialogInterface.OnCancelListener cancelListener) {
         if ((lastSendFileExtraText == null || lastSendFileExtraText.equals("")) &&
                 RadarBox.device != null)
             lastSendFileExtraText = "#" + RadarBox.device.getDevicePrefix() + "\n";
-        final AppCompatEditText editExtra = new AppCompatEditText(context);
-        editExtra.setText(lastSendFileExtraText);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(context.getString(R.string.file_sender_header));
-        builder.setMessage(file.getName() + "\n" + context.getString(
-                R.string.description_for_file_to_send) + "\n\n" +
-                file.description.getText() + "\n\n" + context.getString(R.string.str_message) + ":");
-        builder.setView(editExtra);
-        builder.setPositiveButton(context.getString(R.string.str_send),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        lastSendFileExtraText = editExtra.getText().toString();
-                        sendFileToOtherApplication(context, file,
-                                editExtra.getText().toString());
-                        RadarBox.logger.add(this,"File " + file.getName()+" have sent");
-                    }
-                });
-        builder.setNegativeButton(context.getString(R.string.str_close), (dialog, which) -> { });
-        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                dialog.dismiss();
-            }
+        final Dialog dialog = new Dialog(context);
+        Window window = dialog.getWindow();
+        window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setContentView(R.layout.send_aordfile_dialog);
+
+        TextView aordFileNameView = dialog.findViewById(R.id.send_aordfile_file_name_textview);
+        aordFileNameView.setText(aordFile.getName());
+
+        TextView aordFileMessageView = dialog.findViewById(R.id.send_aordfile_description_textview);
+        aordFileMessageView.setText(aordFile.description.getText());
+
+        final EditText messageEditor = dialog.findViewById(R.id.send_aordfile_message_edit);
+        messageEditor.setText(lastSendFileExtraText);
+
+        Button ok = dialog.findViewById(R.id.send_aordfile_send_button);
+        ok.setOnClickListener(new View.OnClickListener() {
+                                  public void onClick(View view) {
+                                      lastSendFileExtraText = messageEditor.getText().toString();
+                                      sendFileToOtherApplication(context, aordFile,
+                                              messageEditor.getText().toString());
+                                      RadarBox.logger.add(this,"File " +
+                                              aordFile.getName() + " have sent");
+                                      dialog.dismiss();
+                                  }
         });
-        builder.setOnDismissListener(closeListener);
-        builder.create();
-        builder.show();
+
+        Button cancel = dialog.findViewById(R.id.send_aordfile_close_button);
+        cancel.setOnClickListener(new View.OnClickListener() {
+                                      public void onClick(View view) {
+                                          dialog.cancel();
+                                      }
+                                  });
+
+        dialog.setOnDismissListener(dismissListener);
+        dialog.setOnCancelListener(cancelListener);
+        dialog.show();
     }
 
     /**

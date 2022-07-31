@@ -10,8 +10,9 @@ import android.net.Uri;
 import android.content.Intent;
 
 import android.view.View;
-import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.ListView;
 import android.widget.ArrayAdapter;
 
@@ -23,7 +24,6 @@ import org.rdr.radarbox.File.AoRDSender;
  */
 public class AoRDFileSavingActivity extends AppCompatActivity {
     private static boolean sendFile = false;
-    private static boolean lastFileSavedSuccessful = false;
 
     private static final int CHOOSE_FILE_REQUEST_CODE = 1;
 
@@ -32,14 +32,11 @@ public class AoRDFileSavingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_aordfile_saving);
+
+        TextView aordFileNameView = findViewById(R.id.aord_saving_file_name_textview);
+        aordFileNameView.setText(RadarBox.fileWrite.getName());
+
         updateFilesList();
-
-        lastFileSavedSuccessful = false;
-    }
-
-    // Get methods
-    public static boolean isLastFileSavedSuccessful() {
-        return lastFileSavedSuccessful;
     }
 
     // Set methods
@@ -98,7 +95,6 @@ public class AoRDFileSavingActivity extends AppCompatActivity {
         RadarBox.fileWrite.description.write(textEditor.getText().toString());
         RadarBox.fileWrite.commit();
         if (RadarBox.fileWrite.isEnabled()) {
-            lastFileSavedSuccessful = true;
             if (sendFile) {
                 AoRDSender.createDialogToSendAoRDFile(this, RadarBox.fileWrite);
                 return;
