@@ -143,8 +143,17 @@ public class SettingsActivity extends AppCompatActivity {
             // имя файла для чтения данных
             final ListPreference readFileName = findPreference("file_reader_filename");
             assert readFileName != null;
-            readFileName.setEntryValues(AoRDSettingsManager.getFilesList());
+            String[] fileListAtStart = AoRDSettingsManager.getFilesList();
+            readFileName.setEntryValues(fileListAtStart);
             readFileName.setEntries(readFileName.getEntryValues());
+            if(fileListAtStart.length>0) {
+                /* редкий случай при первом запуске приложения,
+             когда ничего не выбрано в списке, но файлы в директории присутствуют.
+             Тогда в качестве значения выбирается первый файл.*/
+                if(readFileName.getValue()==null)
+                    readFileName.setValue(fileListAtStart[0]);
+            }
+
             readFileName.setOnPreferenceChangeListener((preference, newValue) -> {
                 RadarBox.setAoRDFile(RadarBox.fileRead,
                         AoRDSettingsManager.getFileByName(newValue.toString()));
