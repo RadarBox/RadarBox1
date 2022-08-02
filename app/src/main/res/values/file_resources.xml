@@ -14,4 +14,7 @@
     <string name="elements_deletion">Удаление элементов</string>
     <string name="add_file">Добавить файл</string>
     <string name="choose_file">Выбрать файл</string>
+    <string name="choose_file_error__not_found">Файл не существует</string>
+    <string name="choose_file_error__can_not_get">Не поддерживаемый тип файла</string>
+    <string name="choose_file_error__not_a_file">Вы не выбрали файл</string>
 </resources>

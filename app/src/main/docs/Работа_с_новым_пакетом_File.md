@@ -126,7 +126,7 @@ RadarBox.fileRead.additional.commit();
 Кроме функций, упомянутых в разделе AoRDFile, в `AoRDSettingsManager` также хранятся настройки бывшего `Writer`: `needSaveData` и `fileNamePostfix`.
 ```java
 // Get
-boolean need = AoRDSettingsManager.needSaveData;
+boolean need = AoRDSettingsManager.isNeedSaveData();
 String postfix = AoRDSettingsManager.getFileNamePostfix();
 
 // Set
@@ -134,9 +134,5 @@ AoRDSettingsManager.needSaveData = need;
 AoRDSettingsManager.setFileNamePostfix(postfix);
 ```
 
-### AoRD_DialogManager
-Комбинирует в себе функции сохранителя и бывшего `Sender` (`createDialogToSendFile` и `sendFileToOtherApplication` без изменений). Класс выполняет автоматическое завершение записи и сохранение пользователем описания и дополнительных файлов (+ отправка при необходимости):
-```java
-AoRD_DialogManager saver = new AoRD_DialogManager(aordFile);
-saver.createSavingDialog(activity, sendFile);
-```
+### AoRDSender
+Наследует функции `Sender` с небольшими изменениями.

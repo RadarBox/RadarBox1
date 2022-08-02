@@ -1,54 +1,33 @@
 package org.rdr.radarbox.File;
 
 import android.app.Activity;
-import android.content.Intent;
+
 import android.net.Uri;
-import android.provider.Settings;
 
 import org.rdr.radarbox.RadarBox;
 
 import java.io.File;
+import java.util.Scanner;
 
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
 
-import java.util.Scanner;
-
 /**
  * Класс-хранилище констант и функций для работы пакета File.
  */
 public class Helpers {
-    public static final int PERMISSION_STORAGE = 101;
-
-    /**
-     * Создание запроса к пользователю на разрешение.
-     * @param activity - текущая активность.
-     * @param requestCode - код разрешения.
-     */
-    public static void requestPermissions(Activity activity, int requestCode) {
-        try {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-            intent.addCategory("android.intent.category.DEFAULT");
-            intent.setData(Uri.parse(String.format("package:%s", activity.getPackageName())));
-            activity.startActivityForResult(intent, requestCode);
-        } catch (Exception e) {
-            Intent intent = new Intent();
-            intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            activity.startActivityForResult(intent, requestCode);
-        }
-    }
-
     /**
      * Создание файла с уникальным именем.
      * @param start_name - изначальный путь.
      * @return файл с именем вида <Имя>[_<Номер (если файл уже есть)>]<Расширение>
      */
-    public static File createUniqueFile(String start_name) {
+    public static File createFileWithUniquePath(String start_name) {
         File file = new File(start_name);
         Integer i = 1;
         String[] nameAndExt = splitFIleName(start_name);
@@ -104,6 +83,9 @@ public class Helpers {
             return false;
         }
         try {
+            if (!destination.createNewFile()) {
+                throw new IOException("Can`t create destination file on Helpers.copy()");
+            };
             FileInputStream fileInputStream = null;
             FileOutputStream fileOutputStream = null;
             try {
@@ -121,6 +103,44 @@ public class Helpers {
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
             e.printStackTrace();
+            destination.delete();
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Копирование файла.
+     * @param source - {@link Uri} файла, который нужно скопировать.
+     * @param destination - файл, куда нужно скопировать.
+     * @param activity - текущая активность.
+     * @return true, если операция удалась, false в противном случае.
+     */
+    public static boolean copyFile(Uri source, File destination, Activity activity) {
+        if (destination.exists()) {
+            return false;
+        }
+        try {
+            if (!destination.createNewFile()) {
+                throw new IOException("Can`t create destination file on Helpers.copy()");
+            };
+            InputStream fileInputStream = null;
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileInputStream = activity.getContentResolver().openInputStream(source);
+                fileOutputStream = new FileOutputStream(destination);
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = fileInputStream.read(buffer)) > 0) {
+                    fileOutputStream.write(buffer, 0, length);
+                }
+            } finally {
+                try {fileInputStream.close();} catch (NullPointerException ignored) {}
+                try {fileOutputStream.close();} catch (NullPointerException ignored) {}
+            }
+        } catch (IOException e) {
+            RadarBox.logger.add(e.toString());
+            e.printStackTrace();
+            destination.delete();
             return false;
         }
         return true;

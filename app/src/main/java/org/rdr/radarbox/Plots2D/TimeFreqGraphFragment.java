@@ -217,11 +217,13 @@ public class TimeFreqGraphFragment extends Fragment {
 
     private void update(long frameNumber) {
         flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
-        if (flag==SELECT_RAW)
-            updateFreq(frameNumber);
-        else if (flag==SELECT_SNR)
-            updateSNR(frameNumber);
 
+        if (flag == SELECT_RAW) {
+            updateFreq(frameNumber);
+        }
+        else if (flag == SELECT_SNR) {
+            updateSNR(frameNumber); // TODO исправить ошибку в считывании SNR
+        }
         freqGraphView.invalidate();
     }
 

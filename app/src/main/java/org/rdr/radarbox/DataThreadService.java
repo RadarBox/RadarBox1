@@ -347,17 +347,15 @@ public class DataThreadService {
     class DataSaving implements Runnable {
         @Override
         public void run() {
-            if (AoRDSettingsManager.needSaveData) {
+            if (AoRDSettingsManager.isNeedSaveData()) {
                 if (frameCounter == 0) {
-                    if (RadarBox.fileWrite != null) {
-                        RadarBox.fileWrite.close();
-                    }
                     RadarBox.setAoRDFile(RadarBox.fileWrite,
                             AoRDSettingsManager.createNewAoRDFile());
                     if (RadarBox.fileWrite == null) {
-                        RadarBox.logger.add("File to write is null");
+                        RadarBox.logger.add(this, "ERROR: file to write is null");
+                    } else {
+                        RadarBox.fileWrite.data.startWriting();
                     }
-                    RadarBox.fileWrite.data.startWriting();
                 }
                 else  {
                     RadarBox.fileWrite.data.write(RadarBox.freqSignals.getRawFreqFrame());
@@ -371,16 +369,14 @@ public class DataThreadService {
             }
             catch (BrokenBarrierException bbe) {
                 RadarBox.logger.add(this,"barrier is broken " + bbe.getLocalizedMessage());
-                if (AoRDSettingsManager.needSaveData) {
+                if (AoRDSettingsManager.isNeedSaveData()) {
                     RadarBox.fileWrite.data.endWriting();
-                    RadarBox.fileWrite.commit();
                 }
             }
             catch (InterruptedException ie) {
                 RadarBox.logger.add(this,"thread interrupted " + ie.getLocalizedMessage());
-                if (AoRDSettingsManager.needSaveData) {
+                if (AoRDSettingsManager.isNeedSaveData()) {
                     RadarBox.fileWrite.data.endWriting();
-                    RadarBox.fileWrite.commit();
                 }
             }
         }

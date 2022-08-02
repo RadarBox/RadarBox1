@@ -2,6 +2,8 @@ package org.rdr.radarbox.File;
 
 
 import android.content.Context;
+import android.app.Activity;
+import android.net.Uri;
 
 import org.rdr.radarbox.Device.DeviceStatus;
 import org.rdr.radarbox.RadarBox;
@@ -12,12 +14,10 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
-import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 import java.io.File;
 
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.FileInputStream;
@@ -33,11 +33,10 @@ import java.io.FileNotFoundException;
 import java.nio.file.NotDirectoryException;
 import java.nio.InvalidMarkException;
 import java.nio.BufferUnderflowException;
+import java.nio.channels.ClosedByInterruptException;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -62,9 +61,10 @@ import androidx.annotation.NonNull;
  *  <br />---------- ^ сделано
  *  <br />- Файл статуса устройства (.csv) -- данные с датчиков устройства и прочая
  *  информация, которая меняется в процессе сканирования.
+ *  <br />
  *  <br />*Курсивом выделены обязательные файлы.
  * @author Шишмарев Ростислав Иванович; Сапронов Данил Игоревич
- * @version v0.1.0
+ * @version v0.1.2
  */
 public class AoRDFile extends File {
     private Context aordFileContext = RadarBox.getAppContext();
@@ -221,7 +221,7 @@ public class AoRDFile extends File {
         if (path.endsWith(".zip")) {
             return null;
         }
-        File folderWrite = Helpers.createUniqueFile(path);
+        File folderWrite = Helpers.createFileWithUniquePath(path);
         try {
             if (!folderWrite.mkdir()) {
                 throw new IOException("Can`t create main write folder");
@@ -244,8 +244,11 @@ public class AoRDFile extends File {
                 if (result.isEnabled()) {
                     result.config.write(RadarBox.device.configuration);
                     result.status.writeHeader(RadarBox.device.status);
-                    RadarBox.logger.add("Successful creation of file " + result.getAbsolutePath());
-                    return result;
+                    if (result.isEnabled()) {
+                        RadarBox.logger.add("Successful creation of file " +
+                                result.getAbsolutePath());
+                        return result;
+                    }
                 }
             } catch (IOException ie) {
                 RadarBox.logger.add("ERROR on creation zip");
@@ -259,27 +262,26 @@ public class AoRDFile extends File {
     }
 
     /**
-     * Сохранение всех изменений.
-     * <br />#enable_danger
+     * Сохранение всех изменений.<br />
+     * #enable_danger<br /><br />
+     * <b>При вызове {@link ClosedByInterruptException} остаётся
+     * {@link AoRDFile#isEnabled()} == true</b>.
      */
     public void commit() {
-        data.endWriting();
-        if (!delete()) {
+        if (!data.endWriting() || exists() && !delete()) {
             RadarBox.logger.add(this, "ERROR: Can`t commit file " + getAbsolutePath());
+            close();
             return;
         }
         try {
             additional.prepareToCommit();
-            File newSelf = ZipManager.archiveFolder(unzipFolder);
-            if (!newSelf.getAbsolutePath().equals(getAbsolutePath())) {
-                close();
-                throw new IOException("Error on commit file: incorrect archive name");
-            }
+            ZipManager.archiveFolder(unzipFolder);
             additional.commit();
-        } catch (IOException e) {
-            RadarBox.logger.add(this, e.toString());
-            e.printStackTrace();
+        } catch (IOException e1) {
+            RadarBox.logger.add(this, e1.toString());
+            e1.printStackTrace();
             close();
+            return;
         }
         RadarBox.logger.add(this, "INFO: Commit on file " + getName() + " is successful");
     }
@@ -391,28 +393,24 @@ public class AoRDFile extends File {
                 e.printStackTrace();
                 endWriting();
             }
-
         }
 
         /**
          * Записывает массив двоичных данных в файл
-         * (при значении {@link AoRDSettingsManager#isNeedSaveData()} == true).
          * До {@link DataFileManager#startWriting()} и после {@link DataFileManager#endWriting()}
          * игнорируется.
          * @param data - массив, который нужно записать.
          */
         public void write(short[] data) {
-            if (dataWriteStream != null && AoRDSettingsManager.isNeedSaveData()) {
-                ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
-                byteBuffer.asShortBuffer().put(data);
-                try {
-                    dataWriteStream.write(byteBuffer.array());
-                    dataWriteStream.flush();
-                } catch (IOException e) {
-                    RadarBox.logger.add(this, e.toString());
-                    e.printStackTrace();
-                    endWriting();
-                }
+            ByteBuffer byteBuffer = ByteBuffer.allocate(2 * data.length);
+            byteBuffer.asShortBuffer().put(data);
+            try {
+                dataWriteStream.write(byteBuffer.array());
+                dataWriteStream.flush();
+            } catch (IOException e) {
+                RadarBox.logger.add(this, e.toString());
+                e.printStackTrace();
+                endWriting();
             }
         }
 
@@ -420,20 +418,26 @@ public class AoRDFile extends File {
          * Завершает запись данных. Автоматически вызывается в {@link AoRDFile#commit()} и
          * {@link AoRDFile#close()}.
          * <br />#enable_danger
+         * @return true, если завершение прошло успешно, false в противном случае.
          */
-        public void endWriting() {
+        public boolean endWriting() {
             if (dataWriteStream == null) {
-                return;
+                return true;
             }
             try {
                 dataWriteStream.close();
+                dataWriteStream = null;
                 readSelf();
+                return true;
+            } catch (ClosedByInterruptException e2) {
+                RadarBox.logger.add(this,
+                        "WARNING: end of writing interrupted by ClosedByInterruptException");
             } catch (IOException e) {
                 RadarBox.logger.add(this, e.toString());
                 e.printStackTrace();
                 close();
             }
-            dataWriteStream = null;
+            return false;
         }
     }
 
@@ -612,18 +616,7 @@ public class AoRDFile extends File {
         }
 
         protected void readSelf() throws IOException {
-            FileReader fileReader = new FileReader(selfFile);
-            Scanner reader = new Scanner(fileReader);
-            String result = "";
-            while (reader.hasNextLine()) {
-                result += reader.nextLine() + "\n";
-            }
-            reader.close();
-            fileReader.close();
-            if (result.length() >= 1) {
-                result = result.substring(0, result.length() - 1);
-            }
-            description = result;
+            description = Helpers.readTextFile(selfFile);
         }
 
         /**
@@ -640,9 +633,7 @@ public class AoRDFile extends File {
          */
         public void write(String text) {
             try {
-                FileWriter writer = new FileWriter(selfFile, false);
-                writer.write(text);
-                writer.flush();
+                Helpers.writeToTextFile(selfFile, text, false);
                 description = text;
                 RadarBox.logger.add(this, "DEBUG: Description written: " + description);
             } catch (IOException e) {
@@ -653,7 +644,7 @@ public class AoRDFile extends File {
     }
 
     /**
-     * Класс для управления файлом и папкой дополнений.
+     * Класс для управления файлом и папкой дополнений.<br />
      * Важно: <b>все методы родителя ({@link BaseInnerFileManager}) относятся к zip-файлу дополнений
      * (не к папке, в которую он распакован)</b>.
      */
@@ -705,13 +696,38 @@ public class AoRDFile extends File {
                 return;
             }
             RadarBox.logger.add(this, "DEBUG: Adding file " + newFile.getAbsolutePath() +
-                    newFile.exists());
-            if (!Helpers.copyFile(newFile, Helpers.createUniqueFile(
+                    " Exists: " + newFile.exists());
+            if (!Helpers.copyFile(newFile, Helpers.createFileWithUniquePath(
                     selfFolder.getAbsolutePath() + "/" + newFile.getName()))) {
                 RadarBox.logger.add(this, "ERROR: Can`t add file " +
-                        newFile.getAbsolutePath() + " to additional folder of AoRD-file " +
+                        newFile.getAbsolutePath() + " to additional folder " +
                         selfFolder.getAbsolutePath());
+                return;
             }
+            RadarBox.logger.add(this, "DEBUG: End of adding file " +
+                    newFile.getAbsolutePath());
+        }
+
+        /**
+         * Добавляет файл (не директорию) в управляемую папку.
+         * @param fileUri - {@link Uri} файла, который нужно добавить.
+         */
+        public void addFile(Uri fileUri, Activity activity) {
+            String[] arrFromUri = fileUri.getPath().split(":");
+            String path = arrFromUri[arrFromUri.length - 1];
+            String[] arrFromPath = path.split("/");
+            String name = arrFromPath[arrFromPath.length - 1];
+
+            File destination = Helpers.createFileWithUniquePath(
+                    selfFolder.getAbsolutePath() + "/" + name);
+
+            RadarBox.logger.add(this, "DEBUG: Adding file " + fileUri.getPath());
+            if (!Helpers.copyFile(fileUri, destination, activity)) {
+                RadarBox.logger.add(this, "ERROR: Can`t add file " + fileUri.getPath() +
+                        " to additional folder " + selfFolder.getAbsolutePath());
+                return;
+            }
+            RadarBox.logger.add(this, "DEBUG: End of adding file " + fileUri.getPath());
         }
 
         /**

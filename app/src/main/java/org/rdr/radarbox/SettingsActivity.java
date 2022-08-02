@@ -23,7 +23,7 @@ import android.widget.TextView;
 import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.Device.DeviceConfigurationFragment;
 import org.rdr.radarbox.File.AoRDSettingsManager;
-import org.rdr.radarbox.File.AoRD_DialogManager;
+import org.rdr.radarbox.File.AoRDSender;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,7 +149,7 @@ public class SettingsActivity extends AppCompatActivity {
                 RadarBox.setAoRDFile(RadarBox.fileRead,
                         AoRDSettingsManager.getFileByName(newValue.toString()));
                 if (RadarBox.fileRead == null) {
-                    RadarBox.logger.add(this,"AoRDFile" + newValue + " isn`t enabled");
+                    RadarBox.logger.add(this,"AoRDFile " + newValue + " isn`t enabled");
                     return false;
                 }
                 if (RadarBox.fileRead.config.getVirtual() == null) {
@@ -179,7 +179,7 @@ public class SettingsActivity extends AppCompatActivity {
                 // Если выбрано "Отправлять файлы", то вызвать диалог, отправляющий файл
                 if (PreferenceManager.getDefaultSharedPreferences(
                                 this.requireContext()).getBoolean("need_send",false))
-                    AoRD_DialogManager.createDialogToSendFile(this.requireContext(),
+                    AoRDSender.createDialogToSendAoRDFile(this.requireContext(),
                             RadarBox.fileRead);
 
                 return true;
