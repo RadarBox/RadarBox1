@@ -142,7 +142,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[i];
+                    this.y[i]=new Complex(y[i],0);
                 }
                 break;
             case ONLY_IM:
@@ -150,7 +150,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].im=y[i];
+                    this.y[i]=new Complex(0,y[i]);
                 }
                 break;
             case RE_IM_RE_IM:
@@ -158,8 +158,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length/2];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[2*i];
-                    this.y[i].im=y[2*i+1];
+                    this.y[i]=new Complex(y[2*i],y[2*i+1]);
                 }
                 break;
             case IM_RE_IM_RE:
@@ -167,8 +166,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length/2];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[2*i+1];
-                    this.y[i].im=y[2*i];
+                    this.y[i]=new Complex(y[2*i+1],y[2*i]);
                 }
                 break;
         }
@@ -188,7 +186,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[i];
+                    this.y[i]=new Complex(y[i],0);
                 }
                 break;
             case ONLY_IM:
@@ -196,7 +194,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].im=y[i];
+                    this.y[i]=new Complex(0,y[i]);
                 }
                 break;
             case RE_IM_RE_IM:
@@ -204,8 +202,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length/2];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[2*i];
-                    this.y[i].im=y[2*i+1];
+                    this.y[i]=new Complex(y[2*i],y[2*i+1]);
                 }
                 break;
             case IM_RE_IM_RE:
@@ -213,8 +210,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length/2];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[2*i+1];
-                    this.y[i].im=y[2*i];
+                    this.y[i]=new Complex(y[2*i+1],y[2*i]);
                 }
                 break;
         }
@@ -234,7 +230,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[i];
+                    this.y[i]=new Complex(y[i],0);
                 }
                 break;
             case ONLY_IM:
@@ -242,7 +238,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].im=y[i];
+                    this.y[i]=new Complex(0,y[i]);
                 }
                 break;
             case RE_IM_RE_IM:
@@ -250,8 +246,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length/2];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[2*i];
-                    this.y[i].im=y[2*i+1];
+                    this.y[i]=new Complex(y[2*i],y[2*i+1]);
                 }
                 break;
             case IM_RE_IM_RE:
@@ -259,8 +254,7 @@ public class ComplexSignal {
                 this.y = new Complex[y.length/2];
                 for (int i = 0; i < x.length; i++) {
                     this.x[i] = i;
-                    this.y[i].re=y[2*i+1];
-                    this.y[i].im=y[2*i];
+                    this.y[i]=new Complex(y[2*i+1],y[2*i]);
                 }
                 break;
         }

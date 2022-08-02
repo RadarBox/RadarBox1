@@ -27,7 +27,7 @@ public class FreqSignals extends PreferenceFragmentCompat implements OperationDS
     private short[] rawFreqFrame;
     private int[] frequenciesMHz;
     private int[][] rxtxOrder;
-    private ArrayList<ComplexSignal> outputSignals = null;
+    private ArrayList<ComplexSignal> outputSignals = new ArrayList<>();
     public FreqSignals() {
 
     }

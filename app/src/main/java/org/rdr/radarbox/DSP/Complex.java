@@ -16,6 +16,12 @@ public class Complex {
     public float re;
     public float im;
 
+    /** Создание комплексного числа в формате re+i*im: re = 0, im = 0. */
+    public Complex() {
+        re=0;
+        im=0;
+    }
+
     /** Создание комплексного числа в формате re+i*im
      *
      * @param real - действительная составляющая

@@ -257,9 +257,11 @@ public class DataThreadService {
     public void startGettingStatusAtFixedRate() {
         if(statusFuture == null || statusFuture.isDone()) {
             statusCounter=0;
+            int statusPeriod = 2;
             // раз в 2 секунды запрашивать статус устройства
             statusFuture = executor.scheduleAtFixedRate(
-                    statusGetter, 0, 2000, TimeUnit.MILLISECONDS);
+                    statusGetter, 0, statusPeriod, TimeUnit.SECONDS);
+            logger.add("Start receiving status with "+statusPeriod+" sec interval");
         }
     }
 

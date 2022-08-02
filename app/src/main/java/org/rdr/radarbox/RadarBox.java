@@ -57,6 +57,7 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
         setDeviceArrayListOnStart();
         freqSignals = new FreqSignals();
         dataThreadService = new DataThreadService();
+        processing = new Processing();
 
         // Обязательное закрытие AoRD-файлов
         Runtime.getRuntime().addShutdownHook(new Thread() {

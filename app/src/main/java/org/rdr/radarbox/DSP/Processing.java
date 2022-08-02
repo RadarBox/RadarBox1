@@ -11,17 +11,28 @@ import java.util.LinkedList;
  */
 public class Processing {
     /** Последовательность обработки сигналов. Создаётся в конструкторе класса */
-    protected LinkedList<OperationDSP> processingSequence;
+    protected LinkedList<OperationDSP> processingSequence = new LinkedList<>();
     public Processing() {
-        processingSequence.add(RadarBox.freqSignals);
-        processingSequence.add(new OperationCorrection());
-        processingSequence.add(new OperationFFT());
+        processingSequenceClear();
+        processingSequenceAdd(RadarBox.freqSignals);
+        //processingSequence.add(new OperationCorrection());
+        //processingSequence.add(new OperationFFT());
+    }
+
+    public void processingSequenceClear() {
+        processingSequence.clear();
+    }
+
+    public void processingSequenceAdd(OperationDSP operation) {
+        if(!processingSequence.contains(operation))
+            processingSequence.add(operation);
     }
 
     /** Главноая функция, которая вызывается для последовательного выполнения
      *  всех необходимых операций в рамках цифровой обработки сигналов.
      */
     public void doProcessing() {
+        if(processingSequence.isEmpty()) return;
         processingSequence.getFirst().doOperation();
         for (int i = 1; i < processingSequence.size(); i++) {
             processingSequence.get(i).setInputSignals(
