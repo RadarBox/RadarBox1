@@ -1,4 +1,6 @@
-package org.rdr.radarbox.DSP;
+package org.rdr.radarbox.DSP.Operations;
+
+import org.rdr.radarbox.DSP.ComplexSignal;
 
 import java.util.ArrayList;
 

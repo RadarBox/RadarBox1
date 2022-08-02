@@ -2,7 +2,6 @@ package org.rdr.radarbox.DSP.Operations;
 
 import org.rdr.radarbox.DSP.ComplexSignal;
 import org.rdr.radarbox.DSP.FFT;
-import org.rdr.radarbox.DSP.OperationDSP;
 
 import java.util.ArrayList;
 

@@ -18,6 +18,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import static org.rdr.radarbox.RadarBox.device;
 import static org.rdr.radarbox.RadarBox.logger;
+import static org.rdr.radarbox.RadarBox.processing;
 
 /** Класс для распараллеливания операций сбора, обработки и сохранения данных.
  * Здесь задаётся период главного таймера приложения. Также внутри данного класса созадаётся главный
@@ -329,7 +330,7 @@ public class DataThreadService {
         public void run() {
             // дальнейшая обработка сигналов
             if(frameCounter>0)
-
+                processing.doProcessing();
             try {
                 barrier.await();
             }
