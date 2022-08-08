@@ -140,7 +140,7 @@ public class AoRDFileSavingActivity extends AppCompatActivity {
 
     private void abortSaving() {
         AoRDFile aordFile = RadarBox.fileWrite;
-        RadarBox.setAoRDFile(RadarBox.fileWrite, null);
+        RadarBox.setAoRDFile(RadarBox.FILE_WRITE_KEY, null);
         if (!aordFile.delete()) {
             RadarBox.logger.add("ERROR: Can`t delete file " +
                     aordFile.getAbsolutePath());

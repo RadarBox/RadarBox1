@@ -26,6 +26,9 @@ import androidx.preference.PreferenceManager;
  * @version 0.3
  */
 public class RadarBox extends Application implements Application.ActivityLifecycleCallbacks {
+    public static final String FILE_READ_KEY = "file read";
+    public static final String FILE_WRITE_KEY = "file write";
+
     private static RadarBox radarBox;
     private static Context appContext;
     private static Activity currentActivity;
@@ -57,15 +60,12 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
         dataThreadService = new DataThreadService();
 
         // Обязательное закрытие AoRD-файлов
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                closeAoRDFile(fileRead);
-                closeAoRDFile(fileWrite);
-                // На случай прошлых выходов без помощи кнопки
-                AoRDSettingsManager.cleanDefaultDir();
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            closeAoRDFile(FILE_READ_KEY);
+            closeAoRDFile(FILE_WRITE_KEY);
+            // На случай прошлых выходов без помощи кнопки
+            AoRDSettingsManager.cleanDefaultDir();
+        }));
     }
 
     // Get methods
@@ -118,8 +118,8 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
                     + "." + devicePrefix.toUpperCase() + "." + devicePrefix.toUpperCase();
             try {
                 Class<?> clazz = Class.forName(className);
-                Constructor<?> ctor = clazz.getConstructor(Context.class, String.class);
-                device = (Device) ctor.newInstance(new Object[] {appContext, devicePrefix});
+                Constructor<?> constructor = clazz.getConstructor(Context.class, String.class);
+                device = (Device) constructor.newInstance(new Object[] {appContext, devicePrefix});
                 return true;
             } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
                     InstantiationException | InvocationTargetException e) {
@@ -134,27 +134,28 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
 
     /**
      * Задаёт атрибуту AoRD-файла новое значение.
-     * @param attribute - один из атрибутов: {@link RadarBox#fileRead} или
-     * {@link RadarBox#fileWrite}.
+     * @param key - один из ключей:
+     * {@link RadarBox#FILE_READ_KEY} (для {@link RadarBox#fileRead}) или
+     * {@link RadarBox#FILE_WRITE_KEY} (для {@link RadarBox#fileWrite}).
      * @param newFile - новое значение атрибута (в том числе null).
      */
-    public static void setAoRDFile(AoRDFile attribute, AoRDFile newFile) {
-        if (attribute == fileRead) {
-            closeAoRDFile(attribute);
+    public static void setAoRDFile(String key, AoRDFile newFile) {
+        closeAoRDFile(key);
+        if (key.equals(FILE_READ_KEY)) {
             fileRead = newFile;
-        } else if (attribute == fileWrite) {
-            closeAoRDFile(attribute);
+        } else if (key.equals(FILE_WRITE_KEY)) {
             fileWrite = newFile;
         }
     }
 
-    private static void closeAoRDFile(AoRDFile attribute) {
-        if (attribute == fileRead) {
+    // Help methods
+    private static void closeAoRDFile(String key) {
+        if (key.equals(FILE_READ_KEY)) {
             if (fileRead != null) {
                 fileRead.close();
                 fileRead = null;
             }
-        } else if (attribute == fileWrite) {
+        } else if (key.equals(FILE_WRITE_KEY)) {
             if (fileWrite != null) {
                 fileWrite.close();
                 fileWrite = null;
@@ -163,19 +164,26 @@ public class RadarBox extends Application implements Application.ActivityLifecyc
     }
 
     // Life cycle methods
-    @Override public void onActivityCreated(@NonNull Activity activity,
-                                            @Nullable Bundle savedInstanceState) {}
+    @Override
+    public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {}
 
-    @Override public void onActivityStarted(@NonNull Activity activity) {}
+    @Override
+    public void onActivityStarted(@NonNull Activity activity) {}
 
-    @Override public void onActivityResumed(@NonNull Activity activity) {currentActivity = activity;}
+    @Override
+    public void onActivityResumed(@NonNull Activity activity) {
+        currentActivity = activity;
+    }
 
-    @Override public void onActivityPaused(@NonNull Activity activity) {}
+    @Override
+    public void onActivityPaused(@NonNull Activity activity) {}
 
-    @Override public void onActivityStopped(@NonNull Activity activity) {}
+    @Override
+    public void onActivityStopped(@NonNull Activity activity) {}
 
-    @Override public void onActivitySaveInstanceState(@NonNull Activity activity,
-                                                      @NonNull Bundle outState) {}
+    @Override
+    public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {}
 
-    @Override public void onActivityDestroyed(@NonNull Activity activity) {}
+    @Override
+    public void onActivityDestroyed(@NonNull Activity activity) {}
 }

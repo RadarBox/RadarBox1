@@ -146,7 +146,7 @@ public class SettingsActivity extends AppCompatActivity {
             readFileName.setEntryValues(AoRDSettingsManager.getFilesList());
             readFileName.setEntries(readFileName.getEntryValues());
             readFileName.setOnPreferenceChangeListener((preference, newValue) -> {
-                RadarBox.setAoRDFile(RadarBox.fileRead,
+                RadarBox.setAoRDFile(RadarBox.FILE_READ_KEY,
                         AoRDSettingsManager.getFileByName(newValue.toString()));
                 if (RadarBox.fileRead == null) {
                     RadarBox.logger.add(this,"AoRDFile " + newValue + " isn`t enabled");
@@ -230,7 +230,7 @@ public class SettingsActivity extends AppCompatActivity {
                         RadarBox.logger.add(this, "File " + readFileName.getValue() +
                                 " was not opened. Opening it...");
                         // попытаться установить открыть файл для чтения
-                        RadarBox.setAoRDFile(RadarBox.fileRead,
+                        RadarBox.setAoRDFile(RadarBox.FILE_READ_KEY,
                                 AoRDSettingsManager.getFileByName(readFileName.getValue()));
                         if (RadarBox.fileRead == null) {
                             RadarBox.logger.add(this, "ERROR on opening File " +

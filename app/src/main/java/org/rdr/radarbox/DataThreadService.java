@@ -349,7 +349,7 @@ public class DataThreadService {
         public void run() {
             if (AoRDSettingsManager.isNeedSaveData()) {
                 if (frameCounter == 0) {
-                    RadarBox.setAoRDFile(RadarBox.fileWrite,
+                    RadarBox.setAoRDFile(RadarBox.FILE_WRITE_KEY,
                             AoRDSettingsManager.createNewAoRDFile());
                     if (RadarBox.fileWrite == null) {
                         RadarBox.logger.add(this, "ERROR: file to write is null");

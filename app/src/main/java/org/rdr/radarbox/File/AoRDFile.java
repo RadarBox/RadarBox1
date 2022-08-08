@@ -67,8 +67,6 @@ import androidx.annotation.NonNull;
  * @version v0.1.2
  */
 public class AoRDFile extends File {
-    private Context aordFileContext = RadarBox.getAppContext();
-
     private File unzipFolder = null;
     private ZipManager zipManager = null;
 
@@ -189,13 +187,6 @@ public class AoRDFile extends File {
     }
 
     /**
-     * @return контекст AoRD-файла (по умолчанию имеет значение RadarBox.getAppContext()).
-     */
-    public Context getContext() {
-        return aordFileContext;
-    }
-
-    /**
      * @return объект {@link File} папки, в которую был распакован AoRD-файл.
      */
     public File getUnzipFolder() {
@@ -209,6 +200,7 @@ public class AoRDFile extends File {
         status = new StatusFileManager();
         description = new DescriptionFileManager();
         additional = new AdditionalFileManager();
+        RadarBox.logger.add(this, "INFO: Reading file " + getName() + " is successful");
     }
 
     /**
@@ -278,7 +270,7 @@ public class AoRDFile extends File {
             ZipManager.archiveFolder(unzipFolder);
             additional.commit();
         } catch (IOException e1) {
-            RadarBox.logger.add(this, e1.toString());
+            RadarBox.logger.add(this, "ERROR: " + e1);
             e1.printStackTrace();
             close();
             return;
@@ -303,7 +295,7 @@ public class AoRDFile extends File {
      * Базовый класс для классов внутренних файлов AoRD-файла.
      */
     protected class BaseInnerFileManager {
-        protected File selfFile = null;
+        protected File selfFile;
 
         protected BaseInnerFileManager(String name, boolean required) throws IOException {
             selfFile = new File(unzipFolder.getAbsolutePath() + "/" + name);
@@ -364,7 +356,7 @@ public class AoRDFile extends File {
                 curReadFrame++;
             }
             catch (BufferUnderflowException e) {
-                RadarBox.logger.add(this,e.toString() + "\n\tCouldn't read " + curReadFrame
+                RadarBox.logger.add(this,e + "\n\tCouldn't read " + curReadFrame
                         + "-th frame. \n\tFileBuffer position: " + fileReadBuffer.position()
                         + "\n\tReading elements count: " + dest.length + "(int16)"
                         + "\n\tElements remaining in buffer: " + fileReadShortBuffer.remaining()
@@ -374,7 +366,7 @@ public class AoRDFile extends File {
                     curReadFrame=0;
 
                 } catch (InvalidMarkException e2) {
-                    RadarBox.logger.add(this,e2.getLocalizedMessage() +
+                    RadarBox.logger.add(this,"ERROR: " + e2.getLocalizedMessage() +
                             "\n\tCouldn't reload file");
                     // RadarBox.mainDataThread.extraStop();
                 }
@@ -408,7 +400,7 @@ public class AoRDFile extends File {
                 dataWriteStream.write(byteBuffer.array());
                 dataWriteStream.flush();
             } catch (IOException e) {
-                RadarBox.logger.add(this, e.toString());
+                RadarBox.logger.add(this, "ERROR: " + e);
                 e.printStackTrace();
                 endWriting();
             }
@@ -433,7 +425,7 @@ public class AoRDFile extends File {
                 RadarBox.logger.add(this,
                         "WARNING: end of writing interrupted by ClosedByInterruptException");
             } catch (IOException e) {
-                RadarBox.logger.add(this, e.toString());
+                RadarBox.logger.add(this, "ERROR: " + e);
                 e.printStackTrace();
                 close();
             }
@@ -455,9 +447,11 @@ public class AoRDFile extends File {
         protected void readSelf() throws IOException {
             try {
                 FileInputStream configReadStream = new FileInputStream(selfFile);
-                virtualDeviceConfiguration = new VirtualDeviceConfiguration(aordFileContext,
-                        "virtual", configReadStream);
+                virtualDeviceConfiguration = new VirtualDeviceConfiguration(
+                        RadarBox.getAppContext(),"virtual", configReadStream);
                 configReadStream.close();
+                RadarBox.logger.add(this, "DEBUG: Reading configuration of file " + getName() +
+                        " is successful");
             } catch (IllegalStateException e) {
                 RadarBox.logger.add(this,
                         "WARNING: Reading null configuration " +
@@ -568,11 +562,9 @@ public class AoRDFile extends File {
          * @param deviceStatus - статус устройства.
          */
         public void writeHeader(DeviceStatus deviceStatus) {
-            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<String> list = new ArrayList<>();
             Collections.addAll(list, "FrNum", "Time, ms");
-            deviceStatus.getStatusList().forEach(statusEntry -> {
-                list.add(statusEntry.getID());
-            });
+            deviceStatus.getStatusList().forEach(statusEntry -> list.add(statusEntry.getID()));
             writeList(list);
         }
 
@@ -583,11 +575,10 @@ public class AoRDFile extends File {
          * @param deviceStatus - статус устройства.
          */
         public void write(int frameNumber, long time, DeviceStatus deviceStatus) {
-            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<String> list = new ArrayList<>();
             Collections.addAll(list, String.valueOf(frameNumber), String.valueOf(time));
-            deviceStatus.getStatusList().forEach(statusEntry -> {
-                list.add(statusEntry.getValue().toString());
-            });
+            deviceStatus.getStatusList().forEach(statusEntry ->
+                    list.add(statusEntry.getValue().toString()));
             writeList(list);
         }
 
@@ -598,7 +589,7 @@ public class AoRDFile extends File {
                 writer.writeNext(list.toArray(new String[] {}));
                 writer.close();
             } catch (IOException e) {
-                RadarBox.logger.add(this, e.toString());
+                RadarBox.logger.add(this, "ERROR: " + e);
                 e.printStackTrace();
             }
         }
@@ -637,7 +628,7 @@ public class AoRDFile extends File {
                 description = text;
                 RadarBox.logger.add(this, "DEBUG: Description written: " + description);
             } catch (IOException e) {
-                RadarBox.logger.add(this, e.toString());
+                RadarBox.logger.add(this, "ERROR: " + e);
                 e.printStackTrace();
             }
         }
@@ -649,7 +640,7 @@ public class AoRDFile extends File {
      * (не к папке, в которую он распакован)</b>.
      */
     public class AdditionalFileManager extends BaseInnerFileManager {
-        private File selfFolder = null;
+        private File selfFolder;
         
         AdditionalFileManager() throws IOException {
             super(Const.ADDITIONAL_ARCH_NAME, false);
@@ -763,7 +754,7 @@ public class AoRDFile extends File {
                 prepareToCommit();
                 selfFile = ZipManager.archiveFolder(selfFolder);
             } catch (IOException e) {
-                RadarBox.logger.add(this, e.toString());
+                RadarBox.logger.add(this, "ERROR: " + e);
                 e.printStackTrace();
                 close();
             }

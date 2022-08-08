@@ -8,6 +8,7 @@
     <string name="need_read_file_title">Читать данные из файла</string>
     <string name="read_file_config_title">Конфигурация устройства из файла</string>
     <string name="file_sender_header">Отправка файлов по сети</string>
+    <string name="send_file_with">Отправить с помощью:</string>
     <string name="need_send_file_title">Отправлять файл после записи</string>
     <string name="description_for_file_to_send">Описание к файлу:</string>
     <string name="additional_files">Дополнительные файлы:</string>
