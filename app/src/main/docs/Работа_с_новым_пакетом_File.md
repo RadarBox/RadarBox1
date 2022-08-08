@@ -1,5 +1,5 @@
 ## Руководство по использованию нового пакета File
-Новый пакет File состоит из классов `AoRDFile` (наследник `java.io.File`), `AoRD_DialogManager`, `AoRDSettingsManager` и нескольких вспомогательных.
+Новый пакет File состоит из классов `AoRDFile` (наследник `java.io.File`), `AoRDSender`, `AoRDSettingsManager` и нескольких вспомогательных.
 
 Файл для чтения хранится в `RadarBox.fileRead`, для записи в `RadarBox.fileWrite`.
 
@@ -51,8 +51,8 @@ AoRDFile aordFile = AoRDSettingsManager.getFileByName(name);
 ```
 Задавать атрибуты `fileRead` и `fileWrite` для `RadarBox` тоже рекомендуется с помощью метода, который сам закрывает старые файлы:
 ```java
-RadarBox.setAoRDFile(RadarBox.fileRead, aordFile1);
-RadarBox.setAoRDFile(RadarBox.fileWrite, aordFile2);
+RadarBox.setAoRDFile(RadarBox.FILE_READ_KEY, aordFile1);
+RadarBox.setAoRDFile(RadarBox.FILE_WRITE_KEY, aordFile2);
 ```
 
 #### Создание
