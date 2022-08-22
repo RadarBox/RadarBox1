@@ -29,15 +29,15 @@ public class Helpers {
      */
     public static File createFileWithUniquePath(String start_name) {
         File file = new File(start_name);
-        Integer i = 1;
+        int i = 1;
         String[] nameAndExt = splitFIleName(start_name);
         String name = nameAndExt[0];
         String ext = nameAndExt[1];
         while (file.exists()) {
             if (file.isDirectory()) {
-                file = new File(start_name + "__" + i.toString());
+                file = new File(start_name + "__" + i);
             } else {
-                file = new File(name + "__" + i.toString() + "." + ext);
+                file = new File(name + "__" + i + "." + ext);
             }
             ++i;
         }
@@ -85,20 +85,14 @@ public class Helpers {
         try {
             if (!destination.createNewFile()) {
                 throw new IOException("Can`t create destination file on Helpers.copy()");
-            };
-            FileInputStream fileInputStream = null;
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileInputStream = new FileInputStream(source);
-                fileOutputStream = new FileOutputStream(destination);
+            }
+            try (FileInputStream fileInputStream = new FileInputStream(source);
+                 FileOutputStream fileOutputStream = new FileOutputStream(destination)) {
                 byte[] buffer = new byte[1024];
                 int length;
                 while ((length = fileInputStream.read(buffer)) > 0) {
                     fileOutputStream.write(buffer, 0, length);
                 }
-            } finally {
-                try {fileInputStream.close();} catch (NullPointerException ignored) {}
-                try {fileOutputStream.close();} catch (NullPointerException ignored) {}
             }
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
@@ -122,20 +116,14 @@ public class Helpers {
         try {
             if (!destination.createNewFile()) {
                 throw new IOException("Can`t create destination file on Helpers.copy()");
-            };
-            InputStream fileInputStream = null;
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileInputStream = activity.getContentResolver().openInputStream(source);
-                fileOutputStream = new FileOutputStream(destination);
+            }
+            try (InputStream fileInputStream = activity.getContentResolver().openInputStream(source);
+                 FileOutputStream fileOutputStream = new FileOutputStream(destination)) {
                 byte[] buffer = new byte[1024];
                 int length;
                 while ((length = fileInputStream.read(buffer)) > 0) {
                     fileOutputStream.write(buffer, 0, length);
                 }
-            } finally {
-                try {fileInputStream.close();} catch (NullPointerException ignored) {}
-                try {fileOutputStream.close();} catch (NullPointerException ignored) {}
             }
         } catch (IOException e) {
             RadarBox.logger.add(e.toString());
@@ -176,7 +164,7 @@ public class Helpers {
             if (file.isFile()) {
                 if (!file.delete()) {
                     throw new IOException("Can`t delete file " + file.getAbsolutePath());
-                };
+                }
             } else {
                 removeTree(file);
             }
@@ -195,16 +183,16 @@ public class Helpers {
     public static String readTextFile(File file) throws IOException {
         FileReader fileReader = new FileReader(file);
         Scanner reader = new Scanner(fileReader);
-        String result = "";
+        StringBuilder result = new StringBuilder();
         while (reader.hasNextLine()) {
-            result += reader.nextLine() + "\n";
+            result.append(reader.nextLine()).append("\n");
         }
         reader.close();
         fileReader.close();
         if (result.length() >= 1) {
-            result = result.substring(0, result.length() - 1);
+            result = new StringBuilder(result.substring(0, result.length() - 1));
         }
-        return result;
+        return result.toString();
     }
 
     /**
