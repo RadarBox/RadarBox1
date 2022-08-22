@@ -25,7 +25,7 @@ import java.util.zip.ZipOutputStream;
  * @version v1.0.2
  */
 public class ZipManager {
-    private File mainZipFile = null;
+    private File mainZipFile;
     private File mainUnzippedFolder = null;
 
     private int maxRecursionLevel = 2;
@@ -110,12 +110,12 @@ public class ZipManager {
                 folderName);
         if (!unzippedFolder.mkdir()) {
             throw new IOException("Error on creation directory for unzip");
-        };
+        }
 
         ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
         BufferedInputStream in = new BufferedInputStream(zipInputStream);
         ZipEntry entry;
-        LinkedList<File> filesToUnzip = new LinkedList<File>();
+        LinkedList<File> filesToUnzip = new LinkedList<>();
         while((entry = zipInputStream.getNextEntry())!=null){
             String entryName = entry.getName();
             File entryFile = new File(unzippedFolder.getAbsolutePath() + "/" + entryName);
@@ -182,7 +182,7 @@ public class ZipManager {
      * @return объект {@link File} zip-архива.
      */
     public static File archiveFolder(File folderToBeArchived)
-            throws IOException, NotDirectoryException, FileNotFoundException {
+            throws IOException {
         if (!folderToBeArchived.exists()) {
             throw new FileNotFoundException("No such file or directory: " +
                     folderToBeArchived.getAbsolutePath());
@@ -206,7 +206,7 @@ public class ZipManager {
         FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
         ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
 
-        LinkedList<File> filesToArchive = new LinkedList<File>();
+        LinkedList<File> filesToArchive = new LinkedList<>();
         if (listOfFiles != null) {
             for (String fileName : listOfFiles) {
                 File file = new File(folder.getAbsolutePath() + "/" + fileName);

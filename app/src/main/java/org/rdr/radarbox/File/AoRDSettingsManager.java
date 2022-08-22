@@ -32,7 +32,7 @@ public class AoRDSettingsManager {
     /**
      * Получение AoRD-файла из файловой папки приложения по имени.
      * @param fileName - имя файла.
-     * @return
+     * @return null, если {@link AoRDFile#isEnabled()} == false.
      */
     public static AoRDFile getFileByName(String fileName) {
         AoRDFile aordFile = new AoRDFile(defaultDirectory.getAbsolutePath() + "/" +
