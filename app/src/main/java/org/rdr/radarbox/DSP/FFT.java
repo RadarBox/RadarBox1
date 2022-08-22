@@ -68,8 +68,6 @@ public class FFT {
             throw new IllegalArgumentException("n is not a power of 2");
         }
 
-
-
         // fft of even terms
         Complex[] even = new Complex[n / 2];
         for (int k = 0; k < n / 2; k++) {
@@ -84,7 +82,7 @@ public class FFT {
         }
         Complex[] r = fft(odd);
 
-        // combine
+        // combine //TODO здесь есть ошибка при вызове метода void plus(Complex, Complex)
         Complex[] y = new Complex[n];
         for (int k = 0; k < n / 2; k++) {
             double kth = -2 * k * Math.PI / n;

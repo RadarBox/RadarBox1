@@ -3,9 +3,11 @@ package org.rdr.radarbox.DSP;
 import org.rdr.radarbox.DSP.Operations.OperationCorrection;
 import org.rdr.radarbox.DSP.Operations.OperationDSP;
 import org.rdr.radarbox.DSP.Operations.OperationFFT;
+import org.rdr.radarbox.Device.DeviceConfiguration;
 import org.rdr.radarbox.RadarBox;
 
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 /** Главный класс, содержащий всю последовательность обработки цифровых сигналов.
  */
@@ -16,7 +18,17 @@ public class Processing {
         processingSequenceClear();
         processingSequenceAdd(RadarBox.freqSignals);
         //processingSequence.add(new OperationCorrection());
-        //processingSequence.add(new OperationFFT());
+        processingSequence.add(new OperationFFT());
+
+        //TODO перенести задание количества точек для БПФ в отдельную функцию
+        try {
+            OperationFFT operationFFT = (OperationFFT) processingSequence.stream()
+                    .filter(operationDSP -> operationDSP.getName().equals("FFT"))
+                    .findFirst().get();
+            operationFFT.setParameters(Integer.valueOf(512));
+        } catch (NoSuchElementException e) {
+            RadarBox.logger.add(this,"No FFT operation in processingSequence");
+        }
     }
 
     public void processingSequenceClear() {

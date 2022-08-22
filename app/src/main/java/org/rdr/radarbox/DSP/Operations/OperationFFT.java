@@ -1,5 +1,6 @@
 package org.rdr.radarbox.DSP.Operations;
 
+import org.rdr.radarbox.DSP.Complex;
 import org.rdr.radarbox.DSP.ComplexSignal;
 import org.rdr.radarbox.DSP.FFT;
 
@@ -7,7 +8,7 @@ import java.util.ArrayList;
 
 public class OperationFFT implements OperationDSP {
     ArrayList<ComplexSignal> inputSignals;
-    ArrayList<ComplexSignal> outputSignals;
+    ArrayList<ComplexSignal> outputSignals = new ArrayList<>();
     Integer fftLength;
     String outputUnitsX = "";
     float[] x;
@@ -52,6 +53,7 @@ public class OperationFFT implements OperationDSP {
             return;
 
         setOutputUnitsXbasedOnInput(inputSignals.get(0));
+        outputSignals.clear();
         for (int i=0; i<inputSignals.size(); i++) {
             ComplexSignal inputSignal = inputSignals.get(i);
             // создание выходного сигнала
@@ -60,15 +62,29 @@ public class OperationFFT implements OperationDSP {
                     .setX(x)
                     .setUnitsX(outputUnitsX)
             );
+
             // выполнение операции преобразования Фурье
-            // 1) копирование из входного сигнала в массив выходного сигнала
-            for (int j=0; j<Math.min(inputSignal.getLength(),fftLength); j++)
-                outputSignals.get(i).getY()[j]=inputSignal.getY()[j];
+            for (int j=0; j<Math.min(inputSignal.getLength(),fftLength); j++) {
+                // 1) копирование из входного сигнала в массив выходного сигнала
+                outputSignals.get(i).getY()[j] = inputSignal.getY()[j];
+            }
             // 2) вызов функции БПФ
-            FFT.fft(outputSignals.get(i).getY());
+            Complex[] tempArray=FFT.fft(outputSignals.get(i).getY());
+            // 3) копирование результата в массив выходных сигналов
+            System.arraycopy(
+                    tempArray,0,
+                    outputSignals.get(i).getY(),0,fftLength);
+
+
         }
     }
 
+    /** Задать количество точек БПФ
+     *
+     * @param parameters Integer параметр, задающий количество точек для преобразования Фурье
+     * @return true, если всё хорошо
+     * @throws IllegalArgumentException если передан аргумент, не являющийся типом Integer
+     */
     @Override
     public boolean setParameters(Object parameters) throws IllegalArgumentException {
         if(!(parameters instanceof Integer))

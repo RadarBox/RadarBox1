@@ -17,7 +17,7 @@ public class RDR4_22 extends Device {
         TFcount = 1; RXenabled = configuration.getRxN(); TXenabled = configuration.getTxN();
         configuration.getLiveRxEnabled().observeForever(value -> RXenabled=value);
         configuration.getLiveTfCount().observeForever(value -> TFcount=value);
-        configuration.getLiveTxEnabled().observeForever(value -> TXenabled =value);
+        configuration.getLiveTxEnabled().observeForever(value -> TXenabled=value);
         status = new DeviceStatus(context, devicePrefix);
         communication = new RDR4_22_Communication(context, devicePrefix);
         protocolRDR = new RDR4_22_ProtocolRDR(communication,configuration,status);
