@@ -2,6 +2,7 @@ package org.rdr.radarbox.DSP.Operations;
 
 import org.rdr.radarbox.DSP.ComplexSignal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -10,7 +11,7 @@ import java.util.ArrayList;
  * набор выходных сигналов и название. Весь процесс выполнения операции происходит в методе
  * {@link #doOperation()};
  */
-public interface OperationDSP {
+public interface OperationDSP extends Serializable {
     String getName();
     void setInputSignals(ArrayList<ComplexSignal> inputSignals);
     ArrayList<ComplexSignal> getOutputSignals();
@@ -22,7 +23,7 @@ public interface OperationDSP {
      * @param parameters новые параметры операции (количество точек для БПФ, порядок для фильтра и т.д.)
      * @throws IllegalArgumentException должно выбрасываться тогда, когда с аргументом метода
      * есть проблемы
-     * @return
+     * @return true, если параметры установлены
      */
     boolean setParameters(Object parameters) throws IllegalArgumentException;
 }

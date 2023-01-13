@@ -129,7 +129,6 @@ public class TimeFreqGraphFragment extends Fragment {
                 graphContainer.setLayoutParams(params);
             });
         });
-
         return view;
     }
 
@@ -164,7 +163,7 @@ public class TimeFreqGraphFragment extends Fragment {
     }
 
     private void resetFreqLines() {
-        double[] tempY = new double[1];
+        float[] tempY = new float[1];
         int rxN = RadarBox.freqSignals.getRxN();
         int txN = RadarBox.freqSignals.getTxN();
         int chN = rxN*txN;
@@ -186,7 +185,7 @@ public class TimeFreqGraphFragment extends Fragment {
     }
 
     private void resetSNRLines() {
-        double[] tempY = new double[1];
+        float[] tempY = new float[1];
         int rxN = RadarBox.freqSignals.getRxN();
         int txN = RadarBox.freqSignals.getTxN();
         int chN = rxN*txN;
@@ -234,7 +233,7 @@ public class TimeFreqGraphFragment extends Fragment {
         if(freqGraphView.getLines().size()!=chN*3)
             resetAllFreqLines();
 
-        double[] tempVector = new double[RadarBox.freqSignals.getFrequenciesMHz().length];
+        float[] tempVector = new float[RadarBox.freqSignals.getFrequenciesMHz().length];
         for(int i = 0; i<tempVector.length;i++)
             tempVector[i]=RadarBox.freqSignals.getFrequenciesMHz()[i];
         // координата X
@@ -257,7 +256,7 @@ public class TimeFreqGraphFragment extends Fragment {
                             tempVector[i] = rawFreqSignal[2 * i + 1];
                         freqGraphView.getLine("r" + rx + "t" + tx + "im").setY(tempVector);
                         for (int i = 0; i < tempVector.length; i++)
-                            tempVector[i] = Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
+                            tempVector[i] = (float)Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
                                     + rawFreqSignal[2 * i + 1] * rawFreqSignal[2 * i + 1]);
                         freqGraphView.getLine("r" + rx + "t" + tx + "abs").setY(tempVector);
                     }
@@ -273,13 +272,13 @@ public class TimeFreqGraphFragment extends Fragment {
         if(freqGraphView.getLines().size()!=chN)
             resetAllFreqLines();
 
-        double[] tempVector = new double[RadarBox.freqSignals.getFrequenciesMHz().length];
+        float[] tempVector = new float[RadarBox.freqSignals.getFrequenciesMHz().length];
         for(int i = 0; i<tempVector.length;i++)
             tempVector[i]=RadarBox.freqSignals.getFrequenciesMHz()[i];
         // координата X
         for(int rx = 0; rx<rxN; rx++) {
             for (int tx = 0; tx < txN; tx++) {
-                    freqGraphView.getLine("r" + rx + "t" + tx + "abs snr").setX(tempVector);
+                    freqGraphView.getLine("r" + rx + "t" + tx + "snr").setX(tempVector);
 
             }
         }
@@ -290,10 +289,10 @@ public class TimeFreqGraphFragment extends Fragment {
                 int line = rx*txN+tx;
                 if(RadarBox.freqSignals.getRawFreqOneChannelSignal(rx,tx,rawFreqSignal)>=0) {
                         for (int i = 0; i < tempVector.length; i++)
-                            tempVector[i] = Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
+                            tempVector[i] = (float)Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
                                     + rawFreqSignal[2 * i + 1] * rawFreqSignal[2 * i + 1]);
                         listSnr.get(line).calculateSNR(tempVector);
-                        freqGraphView.getLine("r" + rx + "t" + tx + "abs snr").setY(listSnr.get(line).getArrayAvgSNR());
+                        freqGraphView.getLine("r" + rx + "t" + tx + "snr").setY(listSnr.get(line).getArrayAvgSNR());
                 }
             }
         }
@@ -308,5 +307,11 @@ public class TimeFreqGraphFragment extends Fragment {
         if(graphSettingsFragment.isAdded())
             closeGraphSettings();
         super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        resetAllFreqLines();
     }
 }

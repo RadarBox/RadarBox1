@@ -7,7 +7,7 @@ import org.rdr.radarbox.DSP.FFT;
 import java.util.ArrayList;
 
 public class OperationFFT implements OperationDSP {
-    ArrayList<ComplexSignal> inputSignals;
+    ArrayList<ComplexSignal> inputSignals = new ArrayList<>();
     ArrayList<ComplexSignal> outputSignals = new ArrayList<>();
     Integer fftLength;
     String outputUnitsX = "";
@@ -49,7 +49,7 @@ public class OperationFFT implements OperationDSP {
 
     @Override
     public void doOperation() {
-        if(inputSignals==null)
+        if(inputSignals==null || inputSignals.isEmpty())
             return;
 
         setOutputUnitsXbasedOnInput(inputSignals.get(0));

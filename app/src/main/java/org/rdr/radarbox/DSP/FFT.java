@@ -82,8 +82,11 @@ public class FFT {
         }
         Complex[] r = fft(odd);
 
-        // combine //TODO здесь есть ошибка при вызове метода void plus(Complex, Complex)
+        // combine
         Complex[] y = new Complex[n];
+        for (int i=0; i<n; i++) { // к сожалению, приходится ещё выделять память под каждый объект
+            y[i]=new Complex();
+        }
         for (int k = 0; k < n / 2; k++) {
             double kth = -2 * k * Math.PI / n;
             Complex wk = new Complex((float)Math.cos(kth), (float)Math.sin(kth));

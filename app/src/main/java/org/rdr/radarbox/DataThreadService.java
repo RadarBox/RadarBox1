@@ -134,17 +134,17 @@ public class DataThreadService {
             stopGettingStatusAtFixedRate();
             logger.add(this,"Timer started. DataSource: "+liveCurrentSource.getValue()+
                     " Period: "+period);
-            int periodForShedule = period;
-            if(period==0) periodForShedule=1;
+            int periodForSchedule = period;
+            if(period==0) periodForSchedule=1;
             tStart=System.currentTimeMillis(); fullScanningTime=0;
             barrier = new CyclicBarrier(3, uiUpdater);
             frameCounter = 0; liveFrameCounter.setValue(frameCounter);
             taskList.add(executor.scheduleAtFixedRate(
-                    dataReading, 0, periodForShedule, TimeUnit.MILLISECONDS));
+                    dataReading, 0, periodForSchedule, TimeUnit.MILLISECONDS));
             taskList.add(executor.scheduleAtFixedRate(
-                    dataSaving, 0, periodForShedule, TimeUnit.MILLISECONDS));
+                    dataSaving, 0, periodForSchedule, TimeUnit.MILLISECONDS));
             taskList.add(executor.scheduleAtFixedRate(
-                    signalProcessing, 0, periodForShedule, TimeUnit.MILLISECONDS));
+                    signalProcessing, 0, periodForSchedule, TimeUnit.MILLISECONDS));
             liveDataThreadState.postValue(DataThreadState.STARTED);
         }
     }

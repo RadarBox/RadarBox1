@@ -2,6 +2,8 @@ package org.rdr.radarbox.DSP;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
+
 /** Класс для работы с сигналами. <p>
  * Сигнал представялется, как функция y(x). <p>
  *  y - всегда комплексные ({@link Complex} отсчёты типа float <p>
@@ -9,7 +11,7 @@ import androidx.annotation.NonNull;
  * Для удобства использования в графиках и других средствах отображения, для переменных x и y
  * указываются единицы измерений unitsX, unitsY. <p>
  */
-public class ComplexSignal {
+public class ComplexSignal implements Serializable {
 
     /** Порядок следования отсчётов сигнала при передачи массива сигнала в конструктор класса.
      * По названиям понятно, какой порядок, что означает.
@@ -102,6 +104,10 @@ public class ComplexSignal {
     public ComplexSignal(int length) {
         this.x = new float[length];
         this.y = new Complex[length];
+        for (int i = 0; i < x.length; i++) {
+            this.x[i] = i;
+            this.y[i]=new Complex(0,0);
+        }
     }
 
     public ComplexSignal(float[] x, Complex[] y) {

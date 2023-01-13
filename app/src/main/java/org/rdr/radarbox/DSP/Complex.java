@@ -2,6 +2,8 @@ package org.rdr.radarbox.DSP;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
+
 /** Класс комплексных чисел. <p>
  * За основу взят тип данных float для экономии ресурсов.
  * (для радарных применений редко требуется бОльшая точность)
@@ -11,7 +13,7 @@ import androidx.annotation.NonNull;
  * @author Danil Sapronov
  * @version 1.0
  */
-public class Complex {
+public class Complex implements Serializable {
 
     public float re;
     public float im;
@@ -107,8 +109,9 @@ public class Complex {
      * @return произведение
      */
     public Complex times(Complex b) {
-        this.re = this.re *b.re -this.im *b.im;
-        this.im = this.re *b.im +this.im *b.re;
+        float tempRe = this.re;
+        this.re = tempRe *b.re -this.im *b.im;
+        this.im = tempRe *b.im +this.im *b.re;
         return this;
     }
 

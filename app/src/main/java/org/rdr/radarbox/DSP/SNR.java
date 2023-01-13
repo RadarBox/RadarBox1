@@ -22,11 +22,11 @@ import org.rdr.radarbox.RadarBox;
 public class SNR extends PreferenceFragmentCompat {
     static int nAccumulated = 10;
     static int nSnrAccumulated = 10;
-    double[][] accumulatedData;
-    double[] arrayAvgSNR;
-    static double maxSNR = 0;
-    static double avgSNR = 0;
-    static double[][] arraySNR;
+    float[][] accumulatedData;
+    float[] arrayAvgSNR;
+    static float maxSNR = 0;
+    static float avgSNR = 0;
+    static float[][] arraySNR;
     private int iFrame = 0;
 
     public SNR(int length){
@@ -74,11 +74,11 @@ public class SNR extends PreferenceFragmentCompat {
     }
 
     public void reinitSNR(int nF){
-        accumulatedData = new double[nAccumulated][nF];
-        arrayAvgSNR = new double[nF];
+        accumulatedData = new float[nAccumulated][nF];
+        arrayAvgSNR = new float[nF];
     }
 
-    public void calculateSNR(double[] rawFreqFrame) {
+    public void calculateSNR(float[] rawFreqFrame) {
         int nF = rawFreqFrame.length;
         if (nF!=arrayAvgSNR.length)
             reinitSNR(nF);
@@ -94,7 +94,7 @@ public class SNR extends PreferenceFragmentCompat {
         for (int i = 0; i < nSnrAccumulated; i++)
             arrayAvgSNR[i] = 0;
 
-        arraySNR = new double[nSnrAccumulated][nF];
+        arraySNR = new float[nSnrAccumulated][nF];
         // Variance Calculation
         float mu;
         for (int f = 0; f < nF; f++) {
@@ -118,13 +118,13 @@ public class SNR extends PreferenceFragmentCompat {
         }
     }
 
-    public double getAvgSNR() {
+    public float getAvgSNR() {
         return avgSNR;
     }
-    public double getMaxSNR() {
+    public float getMaxSNR() {
         return maxSNR;
     }
-    public double[] getArrayAvgSNR() {
+    public float[] getArrayAvgSNR() {
         return arrayAvgSNR;
     }
 }

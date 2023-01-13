@@ -9,9 +9,9 @@ import java.util.ArrayList;
  * В простейшем случае, применяющий "калибровочные коеффициенты" к частотным данным сигнала.
  */
 public class OperationCorrection implements OperationDSP {
-    ArrayList<ComplexSignal> correctionCoefficients;
-    ArrayList<ComplexSignal> inputSignals;
-    ArrayList<ComplexSignal> outputSignals;
+    ArrayList<ComplexSignal> correctionCoefficients = new ArrayList<>();
+    ArrayList<ComplexSignal> inputSignals = new ArrayList<>();
+    ArrayList<ComplexSignal> outputSignals = new ArrayList<>();
     @Override
     public String getName() {
         return "Amplitude and phase correction";
@@ -29,7 +29,7 @@ public class OperationCorrection implements OperationDSP {
 
     @Override
     public void doOperation() {
-        if(inputSignals==null) return;
+        if(inputSignals==null || inputSignals.isEmpty()) return;
         for (int i=0; i<inputSignals.size(); i++) {
             ComplexSignal inputSignal = inputSignals.get(i);
             // создание выходного сигнала
@@ -39,6 +39,8 @@ public class OperationCorrection implements OperationDSP {
                     .setUnitsX(inputSignal.getUnitsX())
                     .setUnitsY(inputSignal.getUnitsY())
             );
+            if(correctionCoefficients == null || correctionCoefficients.isEmpty())
+                return;
             // выполнение операции произведения входного сигнала на калибровочные коэффициенты
             outputSignals.get(i).mult(inputSignal,correctionCoefficients.get(i));
         }
