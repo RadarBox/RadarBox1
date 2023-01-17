@@ -1,32 +1,22 @@
 package org.rdr.radarbox.DSP;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.content.res.XmlResourceParser;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.CheckBoxPreference;
-import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import org.rdr.radarbox.R;
-import org.rdr.radarbox.SettingsActivity;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Objects;
-import java.util.ResourceBundle;
-
+/** Акативность, которая вызывается при нажатии на иконку с ползунками.
+ * В ней задаётся конфигурация для блока цифровой обработки сигналов. В том числе
+ */
 public class SettingsDSP extends AppCompatActivity {
 
     @Override
@@ -44,7 +34,7 @@ public class SettingsDSP extends AppCompatActivity {
 
 
     public static class SettingsDspFragment extends PreferenceFragmentCompat{
-        static int select_freq_signal;
+        static int select_signal;
         ListPreference pref;
 
         Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
@@ -55,13 +45,13 @@ public class SettingsDSP extends AppCompatActivity {
                     ((CheckBoxPreference) preference).setChecked(checkValue);
                 }
                 else if (preference instanceof ListPreference){
-                    pref = findPreference("select_freq_signal");
+                    pref = findPreference("select_signal");
                     assert pref != null;
-                    select_freq_signal = pref.findIndexOfValue(newValue.toString());
+                    select_signal = pref.findIndexOfValue(newValue.toString());
                     pref.setDefaultValue(newValue.toString());
                     String[] strings = getResources().getStringArray(R.array.select_freq_chart);
-                    pref.setSummary(strings[select_freq_signal]);
-                    pref.setValueIndex(select_freq_signal);
+                    pref.setSummary(strings[select_signal]);
+                    pref.setValueIndex(select_signal);
                 }
                 return false;
             }
@@ -78,17 +68,17 @@ public class SettingsDSP extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_settings_dsp,rootKey);
 
-            pref = findPreference("select_freq_signal");
+            pref = findPreference("select_signal");
             assert pref != null;
             bindSummaryValue(pref);
-            pref.setValueIndex(select_freq_signal);
+            pref.setValueIndex(select_signal);
             String[] array = getResources().getStringArray(R.array.select_freq_chart);
-            pref.setSummary(array[select_freq_signal]);
+            pref.setSummary(array[select_signal]);
         }
 
         public static void restorePreferences(Context context) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            select_freq_signal = Integer.parseInt(prefs.getString("select_freq_signal","0"));
+            select_signal = Integer.parseInt(prefs.getString("select_signal","0"));
         }
     }
 

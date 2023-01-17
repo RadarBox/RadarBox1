@@ -40,6 +40,11 @@ public class Processing {
             processingSequence.add(operation);
     }
 
+    /** Возвращает список операций, которые выполняются на каждом цикле сбора данных*/
+    public LinkedList<OperationDSP> getProcessingSequence() {
+        return processingSequence;
+    }
+
     /** Главноая функция, которая вызывается для последовательного выполнения
      *  всех необходимых операций в рамках цифровой обработки сигналов.
      */

@@ -18,6 +18,8 @@ public class OperationFFT implements OperationDSP {
         return "FFT";
     }
 
+    public int getLength() {return fftLength;}
+
     @Override
     public void setInputSignals(ArrayList<ComplexSignal> inputSignals) {
         if(inputSignals==null)
@@ -39,7 +41,7 @@ public class OperationFFT implements OperationDSP {
             outputUnitsX = "ns";
             float fullSpectrumWidth = (input.getX()[(input.getX().length-1)]-input.getX()[0]);
             for(int i=0; i<fftLength; i++)
-                x[i] = i/fullSpectrumWidth/1000;
+                x[i] = i/fullSpectrumWidth*1000;
         }
         else {
             for(int i=0; i<fftLength; i++)

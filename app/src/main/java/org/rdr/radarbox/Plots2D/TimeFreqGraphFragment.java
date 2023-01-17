@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import org.rdr.radarbox.DSP.Operations.OperationDSP;
 import org.rdr.radarbox.DSP.SNR;
 import org.rdr.radarbox.DSP.SettingsDSP;
 import org.rdr.radarbox.R;
@@ -24,14 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TimeFreqGraphFragment extends Fragment {
-    GraphView freqGraphView, timeGraphView;
+    GraphView graphView;
     GraphSettingsFragment graphSettingsFragment = null;
     private SharedPreferences pref;
     private List<SNR> listSnr;
 
     private static final char
     SELECT_RAW = 0,
-    SELECT_SNR = 1;
+    SELECT_SNR = 1,
+    SELECT_FFT = 2;
     private int flag;
 
     @Nullable
@@ -43,22 +45,22 @@ public class TimeFreqGraphFragment extends Fragment {
         // добавить проверку savedInstanceState
         View view = inflater.inflate(R.layout.time_freq_graph_fragment,container,false);
         pref = PreferenceManager.getDefaultSharedPreferences(this.requireContext());
-        freqGraphView = view.findViewById(R.id.graph);
-        freqGraphView.setxMin(pref.getFloat("FreqGraphView"+"xMin",1000));
-        freqGraphView.setxMax(pref.getFloat("FreqGraphView"+"xMax",3000));
-        freqGraphView.setyMax(pref.getFloat("FreqGraphView"+"yMax",3000));
-        freqGraphView.setyMin(pref.getFloat("FreqGraphView"+"yMin",-3000));
+        graphView = view.findViewById(R.id.graph);
+        graphView.setxMin(pref.getFloat("GraphView"+"xMin",1000));
+        graphView.setxMax(pref.getFloat("GraphView"+"xMax",3000));
+        graphView.setyMax(pref.getFloat("GraphView"+"yMax",3000));
+        graphView.setyMin(pref.getFloat("GraphView"+"yMin",-3000));
         listSnr = new ArrayList<SNR>();
-        resetAllFreqLines();
+        resetAllLines();
         // обновление графика происходит при получении нового кадра, номер кадра передаётся в качестве аргумента
         RadarBox.dataThreadService.getLiveFrameCounter().observe(getViewLifecycleOwner(),this::update);
-        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+        flag = Integer.parseInt(pref.getString("select_signal","0"));
         SettingsDSP.SettingsDspFragment.restorePreferences(getContext());// создание фрагмента с настройками графика, который будет выдвигаться с помощью свайпа
         // создание фрагмента с настройками графика, который будет выдвигаться с помощью свайпа
         graphSettingsFragment = new GraphSettingsFragment();
         // Передаём весь объект с графиками в бандл, чтобы его мог открыть фрагмент с настройками
         Bundle args = new Bundle();
-        args.putSerializable("GraphView", freqGraphView);
+        args.putSerializable("GraphView", graphView);
         graphSettingsFragment.setArguments(args);
         // Настраиваем действие свайпа вверх-вниз, когда ориентация вертикальная и влево-вправо, когда горизонтальная
         final GestureDetector gestureDetector = new GestureDetector(getActivity(), new GestureDetector.SimpleOnGestureListener(){
@@ -109,7 +111,7 @@ public class TimeFreqGraphFragment extends Fragment {
             }
         });
 
-        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+        flag = Integer.parseInt(pref.getString("select_signal","0"));
         SettingsDSP.SettingsDspFragment.restorePreferences(getContext());
         view.findViewById(R.id.graph_settings_container).addOnLayoutChangeListener(
                 (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
@@ -149,16 +151,18 @@ public class TimeFreqGraphFragment extends Fragment {
                     .commit();
     }
 
-    private void resetAllFreqLines() {
-        if(!freqGraphView.getLines().isEmpty())
-            freqGraphView.getLines().clear();
+    private void resetAllLines() {
+        if(!graphView.getLines().isEmpty())
+            graphView.getLines().clear();
 
-        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+        flag = Integer.parseInt(pref.getString("select_signal","0"));
         if (flag==SELECT_RAW)
             resetFreqLines();
         else if (flag==SELECT_SNR) {
             resetSNRLines();
             resetSNR();
+        } else if (flag==SELECT_FFT) {
+            resetTimeLines();
         }
     }
 
@@ -171,16 +175,43 @@ public class TimeFreqGraphFragment extends Fragment {
         for(int rx = 0; rx<rxN; rx++) {
             for(int tx=0; tx<txN; tx++) {
                 int line = rx*txN+tx;
-                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                    graphView.addLine(new Line2D(tempY, tempY,
                             GraphColor.values()[line % GraphColor.values().length].argb,
                             "r" + rx + "t" + tx + "re"));
-                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                    graphView.addLine(new Line2D(tempY, tempY,
                             GraphColor.values()[(line + 1) % GraphColor.values().length].argb,
                             "r" + rx + "t" + tx + "im"));
-                    freqGraphView.addLine(new Line2D(tempY, tempY,
+                    graphView.addLine(new Line2D(tempY, tempY,
                             GraphColor.values()[(line + 2) % GraphColor.values().length].argb,
                             "r" + rx + "t" + tx + "abs"));
             }
+        }
+    }
+
+    private void resetTimeLines() {
+        float[] tempY = new float[1];
+        if(RadarBox.processing.getProcessingSequence().stream()
+                .noneMatch(operationDSP -> operationDSP.getName().equals("FFT")))
+            return;
+        OperationDSP operationFFT =
+                RadarBox.processing.getProcessingSequence().stream()
+                        .filter(operationDSP -> operationDSP.getName().equals("FFT")).findFirst().get();
+        int signalsCount = operationFFT.getOutputSignals().size();
+        if(signalsCount==0)
+            return;
+
+        graphView.getLines().clear();
+
+        for(int line=0; line<signalsCount; line++) {
+            graphView.addLine(new Line2D(tempY, tempY,
+                    GraphColor.values()[line % GraphColor.values().length].argb,
+                    operationFFT.getOutputSignals().get(line).getName() + "re"));
+            graphView.addLine(new Line2D(tempY, tempY,
+                    GraphColor.values()[line % GraphColor.values().length].argb,
+                    operationFFT.getOutputSignals().get(line).getName() + "im"));
+            graphView.addLine(new Line2D(tempY, tempY,
+                    GraphColor.values()[line % GraphColor.values().length].argb,
+                    operationFFT.getOutputSignals().get(line).getName() + "abs"));
         }
     }
 
@@ -193,7 +224,7 @@ public class TimeFreqGraphFragment extends Fragment {
         for(int rx = 0; rx<rxN; rx++) {
             for(int tx=0; tx<txN; tx++) {
                 int line = rx*txN+tx;
-                freqGraphView.addLine(new Line2D(tempY, tempY,
+                graphView.addLine(new Line2D(tempY, tempY,
                         GraphColor.values()[(line + 2) % GraphColor.values().length].argb,
                         "r" + rx + "t" + tx + "snr"));
             }
@@ -215,23 +246,24 @@ public class TimeFreqGraphFragment extends Fragment {
     }
 
     private void update(long frameNumber) {
-        flag = Integer.parseInt(pref.getString("select_freq_signal","0"));
+        flag = Integer.parseInt(pref.getString("select_signal","0"));
 
         if (flag == SELECT_RAW) {
             updateFreq(frameNumber);
-        }
-        else if (flag == SELECT_SNR) {
+        } else if (flag == SELECT_SNR) {
             updateSNR(frameNumber); // TODO исправить ошибку в считывании SNR
+        } else if(flag == SELECT_FFT) {
+            updateFFT(frameNumber);
         }
-        freqGraphView.invalidate();
+        graphView.invalidate();
     }
 
     private void updateFreq(long frameNumber) {
         int rxN = RadarBox.freqSignals.getRxN();
         int txN = RadarBox.freqSignals.getTxN();
         int chN = rxN*txN;
-        if(freqGraphView.getLines().size()!=chN*3)
-            resetAllFreqLines();
+        if(graphView.getLines().size()!=chN*3)
+            resetAllLines();
 
         float[] tempVector = new float[RadarBox.freqSignals.getFrequenciesMHz().length];
         for(int i = 0; i<tempVector.length;i++)
@@ -239,9 +271,9 @@ public class TimeFreqGraphFragment extends Fragment {
         // координата X
         for(int rx = 0; rx<rxN; rx++) {
             for (int tx = 0; tx < txN; tx++) {
-                    freqGraphView.getLine("r" + rx + "t" + tx + "re").setX(tempVector);
-                    freqGraphView.getLine("r" + rx + "t" + tx + "im").setX(tempVector);
-                    freqGraphView.getLine("r" + rx + "t" + tx + "abs").setX(tempVector);
+                    graphView.getLine("r" + rx + "t" + tx + "re").setX(tempVector);
+                    graphView.getLine("r" + rx + "t" + tx + "im").setX(tempVector);
+                    graphView.getLine("r" + rx + "t" + tx + "abs").setX(tempVector);
             }
         }
         // координата Y
@@ -251,14 +283,14 @@ public class TimeFreqGraphFragment extends Fragment {
                 if(RadarBox.freqSignals.getRawFreqOneChannelSignal(rx,tx,rawFreqSignal)>=0) {
                         for (int i = 0; i < tempVector.length; i++)
                             tempVector[i] = rawFreqSignal[2 * i];
-                        freqGraphView.getLine("r" + rx + "t" + tx + "re").setY(tempVector);
+                        graphView.getLine("r" + rx + "t" + tx + "re").setY(tempVector);
                         for (int i = 0; i < tempVector.length; i++)
                             tempVector[i] = rawFreqSignal[2 * i + 1];
-                        freqGraphView.getLine("r" + rx + "t" + tx + "im").setY(tempVector);
+                        graphView.getLine("r" + rx + "t" + tx + "im").setY(tempVector);
                         for (int i = 0; i < tempVector.length; i++)
                             tempVector[i] = (float)Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
                                     + rawFreqSignal[2 * i + 1] * rawFreqSignal[2 * i + 1]);
-                        freqGraphView.getLine("r" + rx + "t" + tx + "abs").setY(tempVector);
+                        graphView.getLine("r" + rx + "t" + tx + "abs").setY(tempVector);
                     }
                 }
             }
@@ -269,8 +301,8 @@ public class TimeFreqGraphFragment extends Fragment {
         int rxN = RadarBox.freqSignals.getRxN();
         int txN = RadarBox.freqSignals.getTxN();
         int chN = rxN*txN;
-        if(freqGraphView.getLines().size()!=chN)
-            resetAllFreqLines();
+        if(graphView.getLines().size()!=chN)
+            resetAllLines();
 
         float[] tempVector = new float[RadarBox.freqSignals.getFrequenciesMHz().length];
         for(int i = 0; i<tempVector.length;i++)
@@ -278,7 +310,7 @@ public class TimeFreqGraphFragment extends Fragment {
         // координата X
         for(int rx = 0; rx<rxN; rx++) {
             for (int tx = 0; tx < txN; tx++) {
-                    freqGraphView.getLine("r" + rx + "t" + tx + "snr").setX(tempVector);
+                    graphView.getLine("r" + rx + "t" + tx + "snr").setX(tempVector);
 
             }
         }
@@ -292,18 +324,55 @@ public class TimeFreqGraphFragment extends Fragment {
                             tempVector[i] = (float)Math.sqrt(rawFreqSignal[2 * i] * rawFreqSignal[2 * i]
                                     + rawFreqSignal[2 * i + 1] * rawFreqSignal[2 * i + 1]);
                         listSnr.get(line).calculateSNR(tempVector);
-                        freqGraphView.getLine("r" + rx + "t" + tx + "snr").setY(listSnr.get(line).getArrayAvgSNR());
+                        graphView.getLine("r" + rx + "t" + tx + "snr").setY(listSnr.get(line).getArrayAvgSNR());
                 }
             }
         }
     }
 
+    private void updateFFT(long frameNumber) {
+
+        if(RadarBox.processing.getProcessingSequence().stream()
+                .noneMatch(operationDSP -> operationDSP.getName().equals("FFT")))
+            return;
+        OperationDSP operationFFT =
+                RadarBox.processing.getProcessingSequence().stream()
+                .filter(operationDSP -> operationDSP.getName().equals("FFT")).findFirst().get();
+        int signalsCount = operationFFT.getOutputSignals().size();
+        if(signalsCount==0)
+            return;
+
+        if(graphView.getLines().size()!=signalsCount)
+            resetAllLines();
+
+        float[] tempVector = new float[operationFFT.getOutputSignals().get(0).getLength()];
+        for(int i = 0; i<tempVector.length;i++)
+            tempVector[i]=operationFFT.getOutputSignals().get(0).getX()[i];
+
+        for(int rxtx = 0; rxtx < signalsCount; rxtx++) {
+            // координаты X и Y действительная часть
+            graphView.getLine(operationFFT.getOutputSignals().get(rxtx).getName()+"re")
+                    .setX(operationFFT.getOutputSignals().get(rxtx).getX());
+            for(int i =0; i<tempVector.length; i++)
+                tempVector[i]=operationFFT.getOutputSignals().get(rxtx).getY()[i].re;
+            graphView.getLine(operationFFT.getOutputSignals().get(rxtx).getName()+"re")
+                    .setY(tempVector);
+            // координаты X и Y мнимая часть
+            graphView.getLine(operationFFT.getOutputSignals().get(rxtx).getName()+"im")
+                    .setX(operationFFT.getOutputSignals().get(rxtx).getX());
+            for(int i =0; i<tempVector.length; i++)
+                tempVector[i]=operationFFT.getOutputSignals().get(rxtx).getY()[i].im;
+            graphView.getLine(operationFFT.getOutputSignals().get(rxtx).getName()+"im")
+                    .setY(tempVector);
+        }
+    }
+
     @Override
     public void onPause() {
-        pref.edit().putFloat("FreqGraphView"+"xMax",(float)freqGraphView.getxMax()).apply();
-        pref.edit().putFloat("FreqGraphView"+"xMin",(float)freqGraphView.getxMin()).apply();
-        pref.edit().putFloat("FreqGraphView"+"yMax",(float)freqGraphView.getyMax()).apply();
-        pref.edit().putFloat("FreqGraphView"+"yMin",(float)freqGraphView.getyMin()).apply();
+        pref.edit().putFloat("GraphView"+"xMax",(float) graphView.getxMax()).apply();
+        pref.edit().putFloat("GraphView"+"xMin",(float) graphView.getxMin()).apply();
+        pref.edit().putFloat("GraphView"+"yMax",(float) graphView.getyMax()).apply();
+        pref.edit().putFloat("GraphView"+"yMin",(float) graphView.getyMin()).apply();
         if(graphSettingsFragment.isAdded())
             closeGraphSettings();
         super.onPause();
@@ -312,6 +381,6 @@ public class TimeFreqGraphFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        resetAllFreqLines();
+        resetAllLines();
     }
 }
